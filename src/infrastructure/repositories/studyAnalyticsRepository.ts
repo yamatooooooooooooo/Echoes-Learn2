@@ -243,15 +243,38 @@ export class StudyAnalyticsRepository {
    * 科目パフォーマンスデータを更新
    */
   async updateSubjectPerformance(performance: SubjectPerformance): Promise<void> {
-    console.log('科目パフォーマンスデータを更新中...', performance.subjectId);
-    
-    // 実際の実装ではFirestoreに保存
-    const perfRef = collection(this.firestore, 'users', performance.userId, 'subject_performances');
-    const docRef = doc(perfRef, performance.id);
-    await setDoc(docRef, {
-      ...performance,
-      updatedAt: serverTimestamp()
-    });
+    try {
+      console.log('科目パフォーマンスデータを更新中...', performance.subjectId);
+      
+      if (!performance.userId) {
+        console.warn('ユーザーIDが指定されていません');
+        return;
+      }
+
+      if (!performance.id) {
+        console.log('IDが指定されていないため、新規ドキュメントとして保存します');
+        // IDがないので新規ドキュメントとして追加
+        const perfRef = collection(this.firestore, 'users', performance.userId, 'subject_performances');
+        const docRef = await addDoc(perfRef, {
+          ...performance,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        console.log('新規パフォーマンスデータを作成しました:', docRef.id);
+        return;
+      }
+      
+      // 実際の実装ではFirestoreに保存
+      const perfRef = collection(this.firestore, 'users', performance.userId, 'subject_performances');
+      const docRef = doc(perfRef, performance.id);
+      await setDoc(docRef, {
+        ...performance,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('パフォーマンスデータの更新中にエラーが発生しました:', error);
+      throw error;
+    }
   }
   
   /**

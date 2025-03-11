@@ -101,6 +101,15 @@ const sidebarItems: SidebarItem[] = [
   }
 ];
 
+// アクセシビリティ対応: aria-hiddenの代わりにinert属性を使用
+const applyAccessibility = (element: HTMLElement, shouldBeHidden: boolean) => {
+  if (shouldBeHidden) {
+    element.setAttribute('inert', '');
+  } else {
+    element.removeAttribute('inert');
+  }
+};
+
 /**
  * Notion風サイドバーコンポーネント
  * アプリケーションのナビゲーションメニューを提供する
@@ -489,6 +498,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
     </Box>
   );
+
+  // サイドバーの開閉状態が変わった時にアクセシビリティ対応を行う
+  useEffect(() => {
+    const mainContent = document.querySelector('main');
+    if (mainContent && isMobile) {
+      applyAccessibility(mainContent as HTMLElement, open);
+    }
+    return () => {
+      if (mainContent && isMobile) {
+        applyAccessibility(mainContent as HTMLElement, false);
+      }
+    };
+  }, [open, isMobile]);
 
   return (
     <>
