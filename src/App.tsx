@@ -149,7 +149,8 @@ const App: React.FC = () => {
               p: { xs: 1, sm: 2, md: 3 },
               width: { sm: `calc(100% - ${drawerWidth}px)` },
               ml: { sm: drawerOpen ? `${drawerWidth}px` : 0 },
-              mt: { xs: '56px', sm: '64px' },
+              mt: { xs: '64px', sm: '64px' },
+              pt: { xs: 3, sm: 4 },
               overflow: 'auto',
               transition: theme.transitions.create(['margin', 'width'], {
                 easing: theme.transitions.easing.sharp,

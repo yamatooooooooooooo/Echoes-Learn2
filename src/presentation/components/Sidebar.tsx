@@ -521,10 +521,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           boxShadow: 'none',
           borderBottom: '1px solid',
           borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
-          backgroundColor: 'transparent',
+          backgroundColor: theme.palette.background.paper,
           color: theme.palette.text.primary,
-          backdropFilter: 'blur(8px)',
-          display: 'flex'
         }}
       >
         <Toolbar>
