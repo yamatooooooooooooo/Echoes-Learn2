@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useServices } from '../contexts/ServicesContext';
 import { UserSettings, DEFAULT_USER_SETTINGS, UserSettingsUpdateInput } from '../domain/models/UserSettingsModel';
 
@@ -7,13 +7,12 @@ import { UserSettings, DEFAULT_USER_SETTINGS, UserSettingsUpdateInput } from '..
  */
 export const useUserSettings = () => {
   const { userSettingsRepository } = useServices();
-  // デフォルト値にダミーのID、日付を追加して型を一致させる
-  const defaultSettings: UserSettings = {
+  const defaultSettings = useMemo(() => ({
     ...DEFAULT_USER_SETTINGS,
     id: 'default',
     createdAt: new Date(),
     updatedAt: new Date()
-  };
+  }), []); // 空の依存配列でメモ化
   
   const [userSettings, setUserSettings] = useState<UserSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState<boolean>(true);

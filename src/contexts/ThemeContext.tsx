@@ -46,7 +46,7 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
   const [error, setError] = useState<string | null>(null);
 
   // テーマを適用する関数
-  const applyTheme = () => {
+  const applyTheme = (mode: ThemeMode) => {
     try {
       let theme: 'light' | 'dark' = 'light';
       
@@ -66,39 +66,27 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
     }
   };
 
-  // 初回レンダリング時とモード変更時にテーマを適用
+  // テーマの変更を監視し、適用する
   useEffect(() => {
-    applyTheme();
-  }, [mode]);
+    applyTheme(mode);
+  }, [mode, applyTheme]);
 
-  // システムのテーマ変更を監視
+  // システムのダークモード設定を監視
   useEffect(() => {
-    if (mode === 'system' || mode === 'auto') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      
-      const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-        setCurrentTheme(e.matches ? 'dark' : 'light');
-      };
-      
-      // 一部のブラウザではaddEventListenerではなくaddListenerを使用
-      if (mediaQuery.addEventListener) {
-        mediaQuery.addEventListener('change', handleSystemThemeChange);
-      } else {
-        // @ts-ignore - 古いブラウザ向け
-        mediaQuery.addListener(handleSystemThemeChange);
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (mode === 'system') {
+        applyTheme('system');
       }
-      
-      // クリーンアップ関数
-      return () => {
-        if (mediaQuery.removeEventListener) {
-          mediaQuery.removeEventListener('change', handleSystemThemeChange);
-        } else {
-          // @ts-ignore - 古いブラウザ向け
-          mediaQuery.removeListener(handleSystemThemeChange);
-        }
-      };
-    }
-  }, [mode]);
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, [mode, applyTheme]);
 
   // テーマの切り替え
   const toggleTheme = () => {

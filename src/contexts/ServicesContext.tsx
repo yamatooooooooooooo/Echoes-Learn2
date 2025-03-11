@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useContext } from 'react';
+import { createContext, ReactNode, useContext } from 'react';
 import { ApplicationServices } from '../application/services';
 import { SubjectService } from '../domain/services/SubjectService';
 import { ProgressService } from '../domain/services/ProgressService';
@@ -44,20 +44,6 @@ export const useServices = () => {
     throw new Error('useServices must be used within a ServicesProvider');
   }
   return context.services;
-};
-
-const testFirebaseConnection = async (firestore: Firestore): Promise<boolean> => {
-  try {
-    // 読み取り専用のテストクエリを実行
-    const testRef = collection(firestore, 'public');
-    const testQuery = query(testRef, limit(1));
-    await getDocs(testQuery);
-    console.log('Firebase接続テスト成功');
-    return true;
-  } catch (error) {
-    console.error('Firebase接続テスト失敗:', error);
-    return false;
-  }
 };
 
 export default ServicesContext; 

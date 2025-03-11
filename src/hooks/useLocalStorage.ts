@@ -44,27 +44,25 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
     }
   };
 
-  // ウィンドウのストレージイベントを監視して、他のタブからの変更を反映
+  // ストレージの変更を監視する
   useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === key && event.newValue) {
-        setStoredValue(JSON.parse(event.newValue) as T);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === key && e.newValue !== JSON.stringify(storedValue)) {
+        try {
+          const newValue = e.newValue ? JSON.parse(e.newValue) : initialValue;
+          setValue(newValue);
+        } catch (error) {
+          console.error(`Error parsing storage item with key "${key}":`, error);
+        }
       }
     };
     
-    // 同じタブ内でのイベントも監視
-    const handleLocalEvent = () => {
-      setStoredValue(readValue());
-    };
+    // 初期値の読み込み
+    readValue();
     
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('local-storage', handleLocalEvent);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('local-storage', handleLocalEvent);
-    };
-  }, [key]);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [key, readValue]);
 
   return [storedValue, setValue];
 } 
