@@ -65,7 +65,7 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
     
     // 入力タイプに応じた値の変換
     if (type === 'number') {
-      parsedValue = value === '' ? '' : Number(value);
+      parsedValue = value === '' ? 0 : Number(value);
     }
     
     // startPageとendPageの場合はpagesReadを計算
@@ -194,16 +194,16 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
     const endPage = Number(data.endPage);
     const totalPages = Number(subject.totalPages || 0);
     
-    if (data.startPage === undefined || data.startPage === null || data.startPage === '') {
+    if (!data.startPage && data.startPage !== 0) {
       errors.startPage = '開始ページは必須です';
-    } else if (startPage < 0) {
-      errors.startPage = '開始ページは0以上である必要があります';
+    } else if (isNaN(startPage) || startPage < 0) {
+      errors.startPage = '開始ページは0以上の数値である必要があります';
     }
     
-    if (data.endPage === undefined || data.endPage === null || data.endPage === '') {
+    if (!data.endPage && data.endPage !== 0) {
       errors.endPage = '終了ページは必須です';
-    } else if (endPage < startPage) {
-      errors.endPage = '終了ページは開始ページ以上である必要があります';
+    } else if (isNaN(endPage) || endPage < startPage) {
+      errors.endPage = '終了ページは開始ページ以上の数値である必要があります';
     } else if (totalPages > 0 && endPage > totalPages) {
       errors.endPage = `終了ページは教科書の総ページ数(${totalPages})以下である必要があります`;
     }
@@ -212,14 +212,13 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
       errors.recordDate = '記録日は必須です';
     }
     
-    const studyDuration = Number(data.studyDuration || 0);
-    
-    if (data.studyDuration === undefined || data.studyDuration === null || data.studyDuration === '') {
-      errors.studyDuration = '学習時間は必須です';
-    } else if (studyDuration < 0) {
-      errors.studyDuration = '学習時間は0以上である必要があります';
-    } else if (studyDuration > 1440) {
-      errors.studyDuration = '学習時間は24時間（1440分）以内である必要があります';
+    const studyDuration = Number(data.studyDuration);
+    if (data.studyDuration !== undefined) {
+      if (isNaN(studyDuration) || studyDuration < 0) {
+        errors.studyDuration = '学習時間は0以上の数値である必要があります';
+      } else if (studyDuration > 1440) {
+        errors.studyDuration = '学習時間は24時間（1440分）以内である必要があります';
+      }
     }
     
     return errors;
