@@ -1,0 +1,963 @@
+import React, { useState, useEffect } from 'react';
+import './styles/App.css';
+import { db } from './index';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
+import MaterialDemo from './components/MaterialDemo';
+import ThemeToggle from './components/ThemeToggle';
+import SubjectCard from './components/SubjectCard';
+import { useTheme as useMuiTheme } from '@mui/material/styles';
+
+// イラストのインポート
+import studentIllustration from './assets/student.svg';
+import bookIllustration from './assets/book.svg';
+import timeIllustration from './assets/time.svg';
+
+import { 
+  TextField, 
+  Button, 
+  Paper, 
+  Box, 
+  Typography, 
+  Alert, 
+  Snackbar,
+  Grid,
+  InputAdornment,
+  Card,
+  CardContent,
+  CardActions,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Divider,
+  Chip,
+  CircularProgress,
+  Stack,
+  IconButton,
+  Tooltip,
+  Container,
+  useMediaQuery,
+  Hidden,
+  SwipeableDrawer,
+  Fab
+} from '@mui/material';
+import { 
+  CalendarToday as CalendarIcon,
+  Book as BookIcon,
+  Timer as TimerIcon,
+  MenuBook as MenuBookIcon,
+  Event as EventIcon,
+  AccessTime as AccessTimeIcon,
+  Bookmark as BookmarkIcon,
+  Assignment as AssignmentIcon,
+  Add as AddIcon,
+  Menu as MenuIcon,
+  Brightness4 as Brightness4Icon
+} from '@mui/icons-material';
+
+// 科目一覧を表示するコンポーネント
+function SubjectList({ subjects, isLoading }) {
+  const theme = useMuiTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  
+  // 日付のフォーマットを行う関数
+  const formatDate = (dateString) => {
+    if (!dateString) return '未設定';
+    
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}年${month}月${day}日`;
+  };
+  
+  // 現在の日付を取得
+  const today = new Date();
+  
+  // 試験日までの残り日数を計算する関数
+  const getDaysRemaining = (examDateString) => {
+    if (!examDateString) return null;
+    
+    const examDate = new Date(examDateString);
+    const timeDiff = examDate - today;
+    const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    return daysRemaining;
+  };
+
+  // 残り日数に基づいて色を決定する関数
+  const getStatusColor = (daysRemaining) => {
+    if (daysRemaining < 7) return 'error';
+    if (daysRemaining < 14) return 'warning';
+    return 'default';
+  };
+
+  return (
+    <Paper 
+      elevation={0} 
+      sx={{ 
+        p: { xs: 2, sm: 3 }, 
+        my: { xs: 2, sm: 3 }, 
+        mx: 'auto', 
+        maxWidth: { xs: '100%', sm: 800, md: 1000 }, 
+        borderRadius: { xs: 1, sm: 2 },
+        bgcolor: 'background.paper',
+        border: '1px solid',
+        borderColor: 'divider'
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography 
+          variant="h5" 
+          component="h2" 
+          sx={{ 
+            fontWeight: 600,
+            fontSize: { xs: '1.25rem', sm: '1.5rem' }
+          }}
+        >
+          科目一覧
+        </Typography>
+        
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          size="small"
+        >
+          科目を追加
+        </Button>
+      </Box>
+
+      {isLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : subjects.length === 0 ? (
+        <Box 
+          sx={{ 
+            textAlign: 'center', 
+            py: 4, 
+            px: 2,
+            bgcolor: 'background.subtle',
+            borderRadius: 2,
+            border: '1px dashed',
+            borderColor: 'divider'
+          }}
+        >
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            登録されている科目はありません
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            「科目を追加」ボタンから新しい科目を登録してください
+          </Typography>
+        </Box>
+      ) : (
+        <Box>
+          {subjects.map((subject) => (
+            <Card 
+              key={subject.id}
+              sx={{ mb: 2, p: 2 }}
+            >
+              <Typography variant="h6">{subject.name || 'タイトルなし'}</Typography>
+              <Typography>試験日: {formatDate(subject?.examDate)}</Typography>
+              <Typography>ページ: {subject?.currentPage || 0} / {subject?.totalPages || 0}</Typography>
+            </Card>
+          ))}
+        </Box>
+      )}
+    </Paper>
+  );
+}
+
+function App() {
+  const theme = useMuiTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // 科目登録フォームの状態を管理
+  const [formData, setFormData] = useState({
+    name: '',
+    totalPages: '',
+    examDate: '',
+    bufferDays: ''
+  });
+  
+  // 進捗記録フォームの状態を管理
+  const [progressData, setProgressData] = useState({
+    subjectId: '',
+    recordDate: new Date().toISOString().split('T')[0], // 今日の日付をデフォルト値に
+    startPage: '',
+    endPage: '',
+    pagesRead: 0
+  });
+
+  // 科目リストの状態
+  const [subjects, setSubjects] = useState([]);
+  // 科目リストの読み込み状態
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState(true);
+  
+  // 送信状態を管理 (科目登録用)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+  
+  // 送信状態を管理 (進捗記録用)
+  const [isSubmittingProgress, setIsSubmittingProgress] = useState(false);
+  const [progressSubmitMessage, setProgressSubmitMessage] = useState('');
+  
+  // コンポーネントがマウントされたら科目リストを取得
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
+
+  // Firestoreから科目リストを取得する関数
+  const fetchSubjects = async () => {
+    setIsLoadingSubjects(true);
+    try {
+      const subjectsRef = collection(db, 'subjects');
+      const snapshot = await getDocs(subjectsRef);
+      const subjectsList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setSubjects(subjectsList);
+    } catch (error) {
+      console.error('科目リストの取得中にエラーが発生しました:', error);
+    } finally {
+      setIsLoadingSubjects(false);
+    }
+  };
+
+  // モバイルメニューを開く
+  const handleMobileMenuOpen = () => {
+    setMobileMenuOpen(true);
+  };
+  
+  // モバイルメニューを閉じる
+  const handleMobileMenuClose = () => {
+    setMobileMenuOpen(false);
+  };
+  
+  // 入力フィールドの変更を処理 (科目登録用)
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+  
+  // 入力フィールドの変更を処理 (進捗記録用)
+  const handleProgressChange = (e) => {
+    const { name, value } = e.target;
+    const newProgressData = {
+      ...progressData,
+      [name]: value
+    };
+    
+    // startPageとendPageが両方入力されている場合はpagesReadを計算
+    if (name === 'startPage' || name === 'endPage') {
+      const startPage = name === 'startPage' ? parseInt(value) || 0 : parseInt(progressData.startPage) || 0;
+      const endPage = name === 'endPage' ? parseInt(value) || 0 : parseInt(progressData.endPage) || 0;
+      
+      if (startPage > 0 && endPage > 0) {
+        newProgressData.pagesRead = endPage - startPage + 1;
+      }
+    }
+    
+    setProgressData(newProgressData);
+  };
+
+  // 科目登録フォーム送信を処理
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitMessage('');
+
+    try {
+      // 数値型に変換
+      const subjectData = {
+        name: formData.name,
+        totalPages: Number(formData.totalPages),
+        examDate: formData.examDate,
+        bufferDays: Number(formData.bufferDays)
+      };
+      
+      // addSubject関数を呼び出して科目を登録
+      await addSubject(subjectData);
+      
+      // 成功メッセージを表示
+      setSubmitMessage(`科目「${formData.name}」が正常に登録されました`);
+      // フォームをリセット
+      setFormData({
+        name: '',
+        totalPages: '',
+        examDate: '',
+        bufferDays: ''
+      });
+    } catch (error) {
+      console.error('科目の登録中にエラーが発生しました:', error);
+      setSubmitMessage('科目の登録中にエラーが発生しました。もう一度お試しください。');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Firestoreに科目を登録する関数
+  const addSubject = async (subjectData) => {
+    try {
+      // subjectsコレクションへの参照を取得
+      const subjectsRef = collection(db, 'subjects');
+      
+      // ドキュメントを追加し、参照を取得
+      const docRef = await addDoc(subjectsRef, {
+        ...subjectData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      console.log('科目がFirestoreに登録されました。ID:', docRef.id);
+      
+      // 科目リストを更新
+      fetchSubjects();
+      
+      return docRef.id;
+    } catch (error) {
+      console.error('Firestoreへの保存中にエラーが発生しました:', error);
+      throw new Error('科目の登録に失敗しました');
+    }
+  };
+
+  return (
+    <div className="App">
+      {/* モバイル用のメニューボタン */}
+      {isMobile && (
+        <Box 
+          sx={{ 
+            position: 'fixed', 
+            bottom: 16, 
+            right: 16, 
+            zIndex: 1000 
+          }}
+        >
+          <Fab 
+            color="primary" 
+            aria-label="menu" 
+            onClick={handleMobileMenuOpen}
+          >
+            <MenuIcon />
+          </Fab>
+        </Box>
+      )}
+      
+      {/* モバイル用のドロワーメニュー */}
+      <SwipeableDrawer
+        anchor="bottom"
+        open={mobileMenuOpen}
+        onClose={handleMobileMenuClose}
+        onOpen={handleMobileMenuOpen}
+        sx={{
+          '& .MuiDrawer-paper': {
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            maxHeight: '80%',
+          },
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6" sx={{ mb: 2, textAlign: 'center' }}>
+            メニュー
+          </Typography>
+          <List>
+            <ListItem button onClick={handleMobileMenuClose}>
+              <ListItemIcon>
+                <BookIcon />
+              </ListItemIcon>
+              <ListItemText primary="科目管理" />
+            </ListItem>
+            <ListItem button onClick={handleMobileMenuClose}>
+              <ListItemIcon>
+                <AssignmentIcon />
+              </ListItemIcon>
+              <ListItemText primary="進捗記録" />
+            </ListItem>
+            <ListItem button onClick={handleMobileMenuClose}>
+              <ListItemIcon>
+                <CalendarIcon />
+              </ListItemIcon>
+              <ListItemText primary="学習スケジュール" />
+            </ListItem>
+            <Divider sx={{ my: 1 }} />
+            <ListItem>
+              <ListItemIcon>
+                <Brightness4Icon />
+              </ListItemIcon>
+              <ListItemText primary="ダークモード" />
+              <ThemeToggle />
+            </ListItem>
+          </List>
+        </Box>
+      </SwipeableDrawer>
+      
+      {/* ヘッダーセクション */}
+      <Box 
+        sx={{ 
+          bgcolor: 'background.subtle', 
+          py: { xs: 3, sm: 4 }, 
+          borderBottom: '1px solid', 
+          borderColor: 'divider',
+          mb: { xs: 3, sm: 4 }
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+            <ThemeToggle />
+          </Box>
+          <Grid 
+            container 
+            spacing={isMobile ? 2 : 3} 
+            alignItems="center"
+            direction={isMobile ? "column-reverse" : "row"}
+          >
+            <Grid item xs={12} sm={12} md={6} sx={{ textAlign: isMobile ? 'center' : 'left' }}>
+              <Typography 
+                variant="h3" 
+                component="h1" 
+                gutterBottom 
+                sx={{ 
+                  fontWeight: 700,
+                  fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.5rem' }
+                }}
+              >
+                Echoes Learn
+              </Typography>
+              <Typography 
+                variant="h5" 
+                color="text.secondary" 
+                gutterBottom
+                sx={{ 
+                  fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
+                  mb: { xs: 1, sm: 2 }
+                }}
+              >
+                効率的な学習管理で、目標達成をサポート
+              </Typography>
+              <Typography 
+                variant="body1" 
+                paragraph
+                sx={{ 
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  display: { xs: 'none', sm: 'block' }
+                }}
+              >
+                試験日までの計画を自動で作成し、進捗を可視化。
+                最適なペースで学習を進めましょう。
+              </Typography>
+              <Button 
+                variant="contained" 
+                size={isMobile ? "medium" : "large"}
+                sx={{ 
+                  mt: { xs: 1, sm: 2 }, 
+                  borderRadius: { xs: 1, sm: 2 },
+                  px: { xs: 3, sm: 4 },
+                  py: { xs: 1, sm: 1.5 },
+                  fontWeight: 600
+                }}
+              >
+                今すぐ始める
+              </Button>
+            </Grid>
+            <Grid 
+              item 
+              xs={12} 
+              sm={12} 
+              md={6} 
+              sx={{ 
+                textAlign: 'center',
+                mb: { xs: 2, sm: 0 } 
+              }}
+            >
+              <Box 
+                component="img" 
+                src={studentIllustration} 
+                alt="学習する学生のイラスト" 
+                sx={{ 
+                  maxWidth: { xs: '60%', sm: '70%', md: '80%' }, 
+                  height: 'auto',
+                  animation: 'float 3s ease-in-out infinite',
+                  '@keyframes float': {
+                    '0%': { transform: 'translateY(0px)' },
+                    '50%': { transform: 'translateY(-10px)' },
+                    '100%': { transform: 'translateY(0px)' }
+                  }
+                }} 
+              />
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* 特徴セクション */}
+      <Container maxWidth="lg" sx={{ mb: { xs: 4, sm: 6 } }}>
+        <Typography 
+          variant="h4" 
+          component="h2" 
+          align="center" 
+          gutterBottom 
+          sx={{ 
+            mb: { xs: 3, sm: 4 },
+            fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+          }}
+        >
+          学習をもっと効率的に
+        </Typography>
+        
+        <Grid container spacing={isMobile ? 2 : isTablet ? 3 : 4}>
+          <Grid item xs={12} sm={6} md={4}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                borderRadius: { xs: 1, sm: 2 },
+                border: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              <Box 
+                component="img" 
+                src={bookIllustration} 
+                alt="本のイラスト" 
+                sx={{ 
+                  width: { xs: 60, sm: 70, md: 80 }, 
+                  height: { xs: 60, sm: 70, md: 80 }, 
+                  mb: { xs: 1.5, sm: 2 },
+                  animation: 'pulse 2s ease-in-out infinite',
+                  '@keyframes pulse': {
+                    '0%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.05)' },
+                    '100%': { transform: 'scale(1)' }
+                  }
+                }} 
+              />
+              <Typography 
+                variant="h6" 
+                gutterBottom
+                sx={{ 
+                  fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+                  fontWeight: 600
+                }}
+              >
+                科目管理
+              </Typography>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ 
+                  fontSize: { xs: '0.8125rem', sm: '0.875rem' }
+                }}
+              >
+                複数の科目を一元管理。試験日や総ページ数を登録して、学習計画を自動作成します。
+              </Typography>
+            </Paper>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={4}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                borderRadius: { xs: 1, sm: 2 },
+                border: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              <Box 
+                component="img" 
+                src={timeIllustration} 
+                alt="時計のイラスト" 
+                sx={{ 
+                  width: { xs: 60, sm: 70, md: 80 }, 
+                  height: { xs: 60, sm: 70, md: 80 }, 
+                  mb: { xs: 1.5, sm: 2 },
+                  animation: 'rotate 10s linear infinite',
+                  '@keyframes rotate': {
+                    '0%': { transform: 'rotate(0deg)' },
+                    '100%': { transform: 'rotate(360deg)' }
+                  }
+                }} 
+              />
+              <Typography 
+                variant="h6" 
+                gutterBottom
+                sx={{ 
+                  fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+                  fontWeight: 600
+                }}
+              >
+                進捗管理
+              </Typography>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ 
+                  fontSize: { xs: '0.8125rem', sm: '0.875rem' }
+                }}
+              >
+                日々の学習進捗を記録して、目標達成度を可視化。最適なペースで学習を進められます。
+              </Typography>
+            </Paper>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={4}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                borderRadius: { xs: 1, sm: 2 },
+                border: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              <Box 
+                sx={{ 
+                  width: { xs: 60, sm: 70, md: 80 }, 
+                  height: { xs: 60, sm: 70, md: 80 }, 
+                  mb: { xs: 1.5, sm: 2 },
+                  borderRadius: '50%',
+                  bgcolor: 'primary.light',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  animation: 'bounce 2s ease-in-out infinite',
+                  '@keyframes bounce': {
+                    '0%, 100%': { transform: 'translateY(0)' },
+                    '50%': { transform: 'translateY(-15px)' }
+                  }
+                }} 
+              >
+                <AssignmentIcon sx={{ fontSize: 40, color: 'white' }} />
+              </Box>
+              <Typography 
+                variant="h6" 
+                gutterBottom
+                sx={{ 
+                  fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+                  fontWeight: 600
+                }}
+              >
+                優先度計算
+              </Typography>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ 
+                  fontSize: { xs: '0.8125rem', sm: '0.875rem' }
+                }}
+              >
+                試験日や残りページ数から優先度を自動計算。何を優先すべきか一目でわかります。
+              </Typography>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Container>
+
+      {/* Material UIデモを追加 */}
+      <MaterialDemo />
+      
+      <div className="App-main">
+        {/* 科目一覧 */}
+        <SubjectList subjects={subjects} isLoading={isLoadingSubjects} />
+
+        {/* 科目登録フォーム - Material UI版 */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: { xs: 2, sm: 3 }, 
+            my: { xs: 2, sm: 3 }, 
+            mx: 'auto', 
+            maxWidth: { xs: '100%', sm: 600 }, 
+            borderRadius: { xs: 1, sm: 2 },
+            bgcolor: '#ffffff',
+            border: '1px solid #e0e0e0'
+          }}
+        >
+          <Typography 
+            variant="h5" 
+            component="h2" 
+            gutterBottom 
+            sx={{ 
+              fontWeight: 600, 
+              mb: { xs: 2, sm: 3 },
+              borderBottom: '1px solid #f0f0f0',
+              pb: { xs: 1, sm: 2 },
+              fontSize: { xs: '1.25rem', sm: '1.5rem' }
+            }}
+          >
+            科目登録
+          </Typography>
+          
+          {submitMessage && (
+            <Snackbar 
+              open={!!submitMessage} 
+              autoHideDuration={6000} 
+              onClose={() => setSubmitMessage('')}
+              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+              <Alert 
+                onClose={() => setSubmitMessage('')} 
+                severity={submitMessage.includes('エラー') ? 'error' : 'success'} 
+                sx={{ width: '100%' }}
+              >
+                {submitMessage}
+              </Alert>
+            </Snackbar>
+          )}
+          
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+            <Grid container spacing={isMobile ? 2 : 3}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  id="name"
+                  name="name"
+                  label="科目名"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="例: 数学III"
+                  variant="outlined"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <BookIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ 
+                    mb: { xs: 1.5, sm: 2 },
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: '#e0e0e0',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#bdbdbd',
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  id="totalPages"
+                  name="totalPages"
+                  label="総ページ数"
+                  value={formData.totalPages}
+                  onChange={handleChange}
+                  required
+                  inputProps={{ min: 1 }}
+                  placeholder="例: 300"
+                  variant="outlined"
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end">ページ</InputAdornment>,
+                  }}
+                  sx={{ mb: { xs: 1.5, sm: 2 } }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  id="examDate"
+                  name="examDate"
+                  label="試験日"
+                  value={formData.examDate}
+                  onChange={handleChange}
+                  required
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <CalendarIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{ mb: { xs: 1.5, sm: 2 } }}
+                />
+              </Grid>
+              
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  id="bufferDays"
+                  name="bufferDays"
+                  label="バッファ日数"
+                  value={formData.bufferDays}
+                  onChange={handleChange}
+                  required
+                  inputProps={{ min: 0 }}
+                  placeholder="例: 5"
+                  variant="outlined"
+                  helperText="試験日の何日前までに学習を終えるか設定します"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <TimerIcon color="action" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: <InputAdornment position="end">日</InputAdornment>,
+                  }}
+                  sx={{ mb: { xs: 2, sm: 3 } }}
+                />
+              </Grid>
+            </Grid>
+            
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: isMobile ? 'center' : 'flex-end', 
+              mt: { xs: 1, sm: 2 } 
+            }}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={isSubmitting}
+                fullWidth={isMobile}
+                sx={{ 
+                  px: { xs: 3, sm: 4 },
+                  py: { xs: 1, sm: 1 },
+                  borderRadius: { xs: 1, sm: 2 },
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  boxShadow: 0,
+                  '&:hover': {
+                    boxShadow: 1
+                  }
+                }}
+              >
+                {isSubmitting ? '送信中...' : '登録する'}
+              </Button>
+            </Box>
+          </Box>
+        </Paper>
+
+        {/* 進捗記録フォーム */}
+        <div className="form-container progress-form">
+          <h2>進捗記録</h2>
+          
+          {progressSubmitMessage && (
+            <div className={`alert ${progressSubmitMessage.includes('エラー') ? 'alert-error' : 'alert-success'}`}>
+              {progressSubmitMessage}
+            </div>
+          )}
+          
+          <form onSubmit={handleProgressSubmit}>
+            <div className="form-group">
+              <label htmlFor="subjectId">科目</label>
+              <select
+                id="subjectId"
+                name="subjectId"
+                value={progressData.subjectId}
+                onChange={handleProgressChange}
+                required
+                className="subject-select"
+              >
+                <option value="">科目を選択してください</option>
+                {subjects.map(subject => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.name} (全{subject.totalPages}ページ)
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="recordDate">記録日</label>
+              <input
+                type="date"
+                id="recordDate"
+                name="recordDate"
+                value={progressData.recordDate}
+                onChange={handleProgressChange}
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="startPage">開始ページ</label>
+              <input
+                type="number"
+                id="startPage"
+                name="startPage"
+                value={progressData.startPage}
+                onChange={handleProgressChange}
+                required
+                min="1"
+                placeholder="例: 10"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="endPage">終了ページ</label>
+              <input
+                type="number"
+                id="endPage"
+                name="endPage"
+                value={progressData.endPage}
+                onChange={handleProgressChange}
+                required
+                min="1"
+                placeholder="例: 20"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="pagesRead">読了ページ数</label>
+              <input
+                type="number"
+                id="pagesRead"
+                name="pagesRead"
+                value={progressData.pagesRead}
+                disabled
+                className="calculated-field"
+              />
+              <small className="field-hint">自動計算: 終了ページ - 開始ページ + 1</small>
+            </div>
+            
+            <button 
+              type="submit" 
+              className="submit-button"
+              disabled={isSubmittingProgress || !progressData.subjectId}
+            >
+              {isSubmittingProgress ? '記録中...' : '進捗を記録'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App; 

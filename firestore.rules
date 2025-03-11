@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 認証済みユーザーのみアクセス可能
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // リクエストされたユーザーIDが自分自身のものかどうか
+    function isUserAuthenticated(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // 科目コレクション
+    match /subjects/{subjectId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // 進捗コレクション
+    match /progress/{progressId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // 学習セッションコレクション
+    match /study_sessions/{sessionId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // ユーザー経験値コレクション
+    match /user_experience/{userId} {
+      allow read: if isUserAuthenticated(userId);
+      allow write: if isUserAuthenticated(userId);
+    }
+    
+    // アチーブメント定義コレクション
+    match /achievements/{achievementId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // 管理者のみ書き込み可能（Cloud Functionsから操作）
+    }
+    
+    // ユーザーアチーブメントコレクション
+    match /user_achievements/{userAchievementId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // チャレンジコレクション
+    match /challenges/{challengeId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // 管理者のみ書き込み可能（Cloud Functionsから操作）
+    }
+    
+    // ユーザーチャレンジ進捗コレクション
+    match /user_challenges/{userChallengeId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // ユーザー設定コレクション
+    match /user_settings/{userId} {
+      allow read: if isUserAuthenticated(userId);
+      allow write: if isUserAuthenticated(userId);
+    }
+    
+    // ユーザードキュメント（ネストされたコレクション用）
+    match /users/{userId} {
+      allow read, write: if isUserAuthenticated(userId);
+      
+      // 各ユーザーのデータコレクション
+      match /{collection}/{docId} {
+        allow read, write: if isUserAuthenticated(userId);
+      }
+    }
+    
+    // ダッシュボード設定
+    match /dashboard_settings/{userId} {
+      allow read: if isUserAuthenticated(userId);
+      allow write: if isUserAuthenticated(userId);
+    }
+    
+    // グローバル設定 - 読み取りのみ許可
+    match /global_settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+    
+    // デフォルトルール（明示的に許可されていないすべてのアクセスを拒否）
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

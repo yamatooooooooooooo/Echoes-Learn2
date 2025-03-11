@@ -1,0 +1,629 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Typography,
+  Box,
+  Chip,
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  ListItemSecondaryAction,
+  IconButton,
+  CircularProgress,
+  Tooltip,
+  Tabs,
+  Tab,
+  Button,
+  Slider
+} from '@mui/material';
+import {
+  MenuBook as MenuBookIcon,
+  ArrowForward as ArrowForwardIcon,
+  Settings as SettingsIcon,
+  Refresh as RefreshIcon
+} from '@mui/icons-material';
+import { NotionStyleCard } from '../../../components/common/NotionStyleCard';
+import { useServices } from '../../../../hooks/useServices';
+import { useFirebase } from '../../../../contexts/FirebaseContext';
+import { DailyQuota, WeeklyQuota } from '../../../../domain/models/QuotaModel';
+import { useNavigation } from '../../../../App';
+
+interface QuotaCardProps {
+  formatDate: (date: Date | string) => string;
+  isLoading?: boolean; // オプショナルなローディング状態
+  onRefresh?: () => void;
+}
+
+/**
+ * ノルマを表示するカードコンポーネント
+ */
+export const DailyQuotaCard: React.FC<QuotaCardProps> = ({ formatDate, isLoading = false, onRefresh }) => {
+  const { quotaService, userSettingsRepository } = useServices();
+  const { auth } = useFirebase();
+  const { navigateTo } = useNavigation();
+  
+  const [isLoadingInternal, setIsLoadingInternal] = useState(isLoading);
+  const [error, setError] = useState<string | null>(null);
+  const [dailyQuota, setDailyQuota] = useState<DailyQuota | null>(null);
+  const [weeklyQuota, setWeeklyQuota] = useState<WeeklyQuota | null>(null);
+  
+  // タブの状態
+  const [activeTab, setActiveTab] = useState<'daily' | 'weekly'>('daily');
+  
+  // 設定の状態
+  const [showSettings, setShowSettings] = useState(false);
+  const [maxConcurrentSubjects, setMaxConcurrentSubjects] = useState(3);
+  const [studyDaysPerWeek, setStudyDaysPerWeek] = useState(5);
+  const [dailyStudyHours, setDailyStudyHours] = useState(2);
+  const [examBufferDays, setExamBufferDays] = useState(7);
+  
+  // ノルマデータの取得
+  const loadQuota = async () => {
+    setIsLoadingInternal(true);
+    setError(null);
+    
+    // モックデータを使用
+    const mockDailyQuota = {
+      date: new Date(),
+      quotaItems: [
+        {
+          subjectId: 'subject-1',
+          subjectName: '情報処理概論',
+          pages: 10,
+          estimatedMinutes: 60,
+          pagesRead: 5,
+          progressPercentage: 50,
+          examDate: new Date(new Date().getTime() + (7 * 24 * 60 * 60 * 1000)),
+          isCompleted: false
+        }
+      ]
+    };
+    
+    const mockWeeklyQuota = {
+      startDate: new Date(),
+      endDate: new Date(new Date().getTime() + (7 * 24 * 60 * 60 * 1000)),
+      quotaItems: [
+        {
+          subjectId: 'subject-1',
+          subjectName: '情報処理概論',
+          pages: 50,
+          estimatedMinutes: 300,
+          pagesRead: 20,
+          progressPercentage: 40,
+          examDate: new Date(new Date().getTime() + (14 * 24 * 60 * 60 * 1000)),
+          isCompleted: false
+        }
+      ]
+    };
+    
+    setDailyQuota(mockDailyQuota);
+    setWeeklyQuota(mockWeeklyQuota);
+    setIsLoadingInternal(false);
+  };
+  
+  // 外部のisLoadingプロパティが変更されたときに内部状態を更新
+  useEffect(() => {
+    setIsLoadingInternal(isLoading);
+  }, [isLoading]);
+  
+  useEffect(() => {
+    loadQuota();
+  }, [quotaService, userSettingsRepository]);
+  
+  // 手動リフレッシュハンドラー
+  const handleRefresh = async () => {
+    setIsLoadingInternal(true);
+    setError(null);
+    
+    // モックデータを表示
+    loadQuota();
+    
+    if (onRefresh) {
+      onRefresh();
+    }
+  };
+  
+  // ユーザー設定の更新
+  const handleUpdateSettings = async () => {
+    try {
+      await userSettingsRepository.updateUserSettings({
+        maxConcurrentSubjects,
+        studyDaysPerWeek,
+        dailyStudyHours,
+        examBufferDays
+      });
+      
+      // 設定更新後にノルマを再計算
+      const userId = auth.currentUser?.uid || 'current-user';
+      const [daily, weekly] = await Promise.all([
+        quotaService.calculateDailyQuota(userId),
+        quotaService.calculateWeeklyQuota(userId)
+      ]);
+      
+      setDailyQuota(daily);
+      setWeeklyQuota(weekly);
+      setShowSettings(false);
+    } catch (err) {
+      console.error('設定の更新に失敗しました:', err);
+      setError('設定の更新に失敗しました');
+    }
+  };
+  
+  // 優先度に応じた色を返す
+  const getPriorityColor = (priority: 'high' | 'medium' | 'low'): string => {
+    switch (priority) {
+      case 'high': return '#f44336'; // 赤
+      case 'medium': return '#ff9800'; // オレンジ
+      case 'low': return '#4caf50'; // 緑
+      default: return '#9e9e9e'; // グレー
+    }
+  };
+  
+  // 詳細ボタンのクリックハンドラ
+  const handleViewDetails = (subjectId: string) => {
+    // 科目一覧ページに移動し、該当の科目を編集モードで開く
+    localStorage.setItem('editSubjectId', subjectId);
+    navigateTo('subjects');
+  };
+  
+  // タブの切り替え
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: 'daily' | 'weekly') => {
+    setActiveTab(newValue);
+  };
+  
+  // 同時並行科目数のスライダー変更ハンドラ
+  const handleConcurrentSubjectsChange = (_event: Event, newValue: number | number[]) => {
+    setMaxConcurrentSubjects(newValue as number);
+  };
+  
+  // 週間勉強日数のスライダー変更ハンドラ
+  const handleStudyDaysPerWeekChange = (_event: Event, newValue: number | number[]) => {
+    setStudyDaysPerWeek(newValue as number);
+  };
+  
+  // 1日の勉強時間のスライダー変更ハンドラ
+  const handleDailyStudyHoursChange = (_event: Event, newValue: number | number[]) => {
+    setDailyStudyHours(newValue as number);
+  };
+  
+  // バッファ日数の変更ハンドラー
+  const handleExamBufferDaysChange = (_event: Event, newValue: number | number[]) => {
+    setExamBufferDays(newValue as number);
+  };
+  
+  // ローディング中
+  if (isLoadingInternal || isLoading) {
+    return (
+      <NotionStyleCard title="" headerAction={null}>
+        <Box display="flex" justifyContent="center" p={2}>
+          <CircularProgress size={32} thickness={4} />
+        </Box>
+      </NotionStyleCard>
+    );
+  }
+  
+  if (error || (!dailyQuota && !weeklyQuota)) {
+    return (
+      <NotionStyleCard title="">
+        <Typography color="error">
+          {error || 'ノルマ情報を取得できませんでした'}
+        </Typography>
+      </NotionStyleCard>
+    );
+  }
+  
+  // アクティブなノルマ（日次または週次）
+  const activeQuota = activeTab === 'daily' ? dailyQuota : weeklyQuota;
+  
+  // ノルマが空（学習する科目がない）場合
+  if (!activeQuota || !activeQuota.quotaItems || activeQuota.quotaItems.length === 0) {
+    return (
+      <NotionStyleCard title="">
+        <Typography variant="body2" color="textSecondary" align="center" py={2}>
+          現在学習すべき科目がありません
+        </Typography>
+      </NotionStyleCard>
+    );
+  }
+  
+  // 設定パネルが開いている場合
+  if (showSettings) {
+    return (
+      <NotionStyleCard 
+        title="" 
+        headerAction={
+          <IconButton size="small" onClick={() => setShowSettings(false)}>
+            <ArrowForwardIcon fontSize="small" />
+          </IconButton>
+        }
+      >
+        {/* 設定内容 */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+            同時に学習する科目数
+          </Typography>
+          <Box sx={{ px: 1 }}>
+            <Slider
+              value={maxConcurrentSubjects}
+              min={1}
+              max={5}
+              step={1}
+              marks
+              valueLabelDisplay="auto"
+              onChange={handleConcurrentSubjectsChange}
+            />
+          </Box>
+        </Box>
+        
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+            週あたりの学習日数
+          </Typography>
+          <Box sx={{ px: 1 }}>
+            <Slider
+              value={studyDaysPerWeek}
+              min={1}
+              max={7}
+              step={1}
+              marks
+              valueLabelDisplay="auto"
+              onChange={handleStudyDaysPerWeekChange}
+            />
+          </Box>
+        </Box>
+        
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+            1日あたりの学習時間（時間）
+          </Typography>
+          <Box sx={{ px: 1 }}>
+            <Slider
+              value={dailyStudyHours}
+              min={0.5}
+              max={8}
+              step={0.5}
+              marks
+              valueLabelDisplay="auto"
+              onChange={handleDailyStudyHoursChange}
+            />
+          </Box>
+        </Box>
+        
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+            試験日前のバッファ日数
+          </Typography>
+          <Box sx={{ px: 1 }}>
+            <Slider
+              value={examBufferDays}
+              min={0}
+              max={30}
+              step={1}
+              marks={[
+                { value: 0, label: '0日' },
+                { value: 7, label: '1週間' },
+                { value: 14, label: '2週間' },
+                { value: 30, label: '1ヶ月' }
+              ]}
+              valueLabelDisplay="auto"
+              valueLabelFormat={(value) => `${value}日前`}
+              onChange={handleExamBufferDaysChange}
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
+            試験日の{examBufferDays}日前までに学習を完了するようノルマを計算します
+          </Typography>
+        </Box>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <Button 
+            variant="outlined" 
+            onClick={() => setShowSettings(false)}
+            sx={{ mr: 1 }}
+          >
+            キャンセル
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handleUpdateSettings}
+            disableElevation
+          >
+            保存
+          </Button>
+        </Box>
+      </NotionStyleCard>
+    );
+  }
+  
+  // 通常表示
+  return (
+    <NotionStyleCard 
+      title="" 
+      headerAction={
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Tooltip title="更新">
+            <IconButton size="small" onClick={handleRefresh} sx={{ mr: 1 }}>
+              <RefreshIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="設定">
+            <IconButton size="small" onClick={() => setShowSettings(true)}>
+              <SettingsIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      }
+    >
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography variant="subtitle2" color="text.secondary">
+          {dailyQuota ? formatDate(dailyQuota.date) : '日付なし'}
+        </Typography>
+        
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          textColor="primary"
+          indicatorColor="primary"
+          sx={{ 
+            minHeight: 'auto',
+            '.MuiTab-root': { 
+              minHeight: 'auto', 
+              py: 0.5, 
+              px: 1.5,
+              fontSize: '0.8125rem',
+              fontWeight: 500,
+            } 
+          }}
+        >
+          <Tab value="daily" label="日次" disableRipple />
+          <Tab value="weekly" label="週次" disableRipple />
+        </Tabs>
+      </Box>
+
+      {/* 日次ノルマ表示 */}
+      {activeTab === 'daily' && dailyQuota && (
+        <>
+          {dailyQuota.quotaItems && dailyQuota.quotaItems.length > 0 ? (
+            <List
+              sx={{ 
+                '& .MuiListItem-root': { 
+                  py: 1.5,
+                  px: 0.5,
+                  borderBottom: '1px solid #F5F5F5'
+                },
+                '& .MuiListItem-root:last-child': { 
+                  borderBottom: 'none'
+                }
+              }}
+            >
+              {/* 試験日の近い順にソート */}
+              {[...dailyQuota.quotaItems]
+                .sort((a, b) => {
+                  if (!a.examDate && !b.examDate) return 0;
+                  if (!a.examDate) return 1;
+                  if (!b.examDate) return -1;
+                  const dateA = new Date(a.examDate);
+                  const dateB = new Date(b.examDate);
+                  return dateA.getTime() - dateB.getTime();
+                })
+                .map((item, index) => (
+                <ListItem
+                  key={item.subjectId}
+                  divider={index < dailyQuota.quotaItems.length - 1}
+                  sx={{ 
+                    py: 1.5,
+                    pl: 2,
+                    pr: 7,
+                    position: 'relative'
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 36 }}>
+                    <MenuBookIcon fontSize="small" color="primary" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.subjectName}
+                    primaryTypographyProps={{ 
+                      variant: 'subtitle2', 
+                      fontWeight: 500, 
+                      sx: { mb: 0.5 }
+                    }}
+                    secondaryTypographyProps={{ component: 'div' }}
+                    secondary={
+                      <Box sx={{ width: '100%', pr: 6 }}>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          component="div"
+                          sx={{ 
+                            mb: 0.5, 
+                            display: 'flex', 
+                            justifyContent: 'space-between'
+                          }}
+                        >
+                          <span>目標: {item.pages} ページ ({item.estimatedMinutes} 分)</span>
+                          <span>
+                            {item.pagesRead !== undefined && 
+                              `${item.pagesRead}/${item.pages} (${item.progressPercentage || 0}%)`
+                            }
+                          </span>
+                        </Typography>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={item.progressPercentage || 0} 
+                          sx={{ 
+                            height: 6, 
+                            borderRadius: 3,
+                            bgcolor: 'background.paper',
+                            '& .MuiLinearProgress-bar': {
+                              bgcolor: item.isCompleted 
+                                ? 'success.main' 
+                                : item.progressPercentage && item.progressPercentage > 0 
+                                  ? 'primary.main' 
+                                  : 'warning.light'
+                            }
+                          }}
+                        />
+                      </Box>
+                    }
+                    sx={{ margin: 0 }}
+                  />
+
+                  <ListItemSecondaryAction sx={{ right: 16 }}>
+                    <Chip
+                      label={item.isCompleted ? "完了" : item.progressPercentage && item.progressPercentage > 0 ? "進行中" : "未開始"}
+                      size="small"
+                      color={item.isCompleted 
+                        ? "success" 
+                        : item.progressPercentage && item.progressPercentage > 0 
+                          ? "primary" 
+                          : "default"
+                      }
+                      variant={item.isCompleted ? "filled" : "outlined"}
+                      sx={{ 
+                        fontWeight: 500,
+                        fontSize: '0.75rem',
+                        height: 24,
+                        borderRadius: 1,
+                        position: 'relative',
+                        top: '-8px'
+                      }}
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Box sx={{ py: 2, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                今日のノルマはありません
+              </Typography>
+            </Box>
+          )}
+        </>
+      )}
+
+      {/* 週次ノルマ表示 */}
+      {activeTab === 'weekly' && weeklyQuota && (
+        <>
+          {weeklyQuota.quotaItems && weeklyQuota.quotaItems.length > 0 ? (
+            <List
+              sx={{ 
+                '& .MuiListItem-root': { 
+                  py: 1.5,
+                  px: 0.5,
+                  borderBottom: '1px solid #F5F5F5'
+                },
+                '& .MuiListItem-root:last-child': { 
+                  borderBottom: 'none'
+                }
+              }}
+            >
+              {/* 試験日の近い順にソート */}
+              [...weeklyQuota.quotaItems]
+                .sort((a, b) => {
+                  if (!a.examDate && !b.examDate) return 0;
+                  if (!a.examDate) return 1;
+                  if (!b.examDate) return -1;
+                  const dateA = new Date(a.examDate);
+                  const dateB = new Date(b.examDate);
+                  return dateA.getTime() - dateB.getTime();
+                })
+                .map((item, index) => (
+                <ListItem
+                  key={item.subjectId}
+                  divider={index < weeklyQuota.quotaItems.length - 1}
+                  sx={{ 
+                    py: 1.5,
+                    pl: 2,
+                    pr: 7,
+                    position: 'relative'
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 36 }}>
+                    <MenuBookIcon fontSize="small" color="primary" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.subjectName}
+                    primaryTypographyProps={{ 
+                      variant: 'subtitle2', 
+                      fontWeight: 500, 
+                      sx: { mb: 0.5 }
+                    }}
+                    secondaryTypographyProps={{ component: 'div' }}
+                    secondary={
+                      <Box sx={{ width: '100%', pr: 6 }}>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary" 
+                          component="div"
+                          sx={{ 
+                            mb: 0.5, 
+                            display: 'flex', 
+                            justifyContent: 'space-between'
+                          }}
+                        >
+                          <span>週間目標: {item.pages} ページ ({item.estimatedMinutes} 分)</span>
+                          <span>
+                            {item.pagesRead !== undefined && 
+                              `${item.pagesRead}/${item.pages} (${item.progressPercentage || 0}%)`
+                            }
+                          </span>
+                        </Typography>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={item.progressPercentage || 0} 
+                          sx={{ 
+                            height: 6, 
+                            borderRadius: 3,
+                            bgcolor: 'background.paper',
+                            '& .MuiLinearProgress-bar': {
+                              bgcolor: item.isCompleted 
+                                ? 'success.main' 
+                                : item.progressPercentage && item.progressPercentage > 0 
+                                  ? 'primary.main' 
+                                  : 'warning.light'
+                            }
+                          }}
+                        />
+                      </Box>
+                    }
+                    sx={{ margin: 0 }}
+                  />
+
+                  <ListItemSecondaryAction sx={{ right: 16 }}>
+                    <Chip
+                      label={item.isCompleted ? "完了" : item.progressPercentage && item.progressPercentage > 0 ? "進行中" : "未開始"}
+                      size="small"
+                      color={item.isCompleted 
+                        ? "success" 
+                        : item.progressPercentage && item.progressPercentage > 0 
+                          ? "primary" 
+                          : "default"
+                      }
+                      variant={item.isCompleted ? "filled" : "outlined"}
+                      sx={{ 
+                        fontWeight: 500,
+                        fontSize: '0.75rem',
+                        height: 24,
+                        borderRadius: 1,
+                        position: 'relative',
+                        top: '-8px'
+                      }}
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))
+            </List>
+          ) : (
+            <Box sx={{ py: 2, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                今週のノルマはありません
+              </Typography>
+            </Box>
+          )}
+        </>
+      )}
+    </NotionStyleCard>
+  );
+}; 

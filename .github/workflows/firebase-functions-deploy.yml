@@ -1,0 +1,45 @@
+name: Firebase Functions Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'functions/**'
+      - 'echoes functions/**'
+      - 'learnfunctions1/**'
+
+jobs:
+  deploy_functions:
+    name: Deploy Firebase Functions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # デフォルトの関数をデプロイ
+      - name: Install Dependencies for Default Functions
+        run: cd functions && npm ci
+
+      - name: Deploy Default Functions
+        run: npx firebase-tools deploy --only functions:default --token "${{ secrets.FIREBASE_TOKEN }}"
+        
+      # Echoes関数をデプロイ
+      - name: Install Dependencies for Echoes Functions
+        run: cd "echoes functions" && npm ci
+        
+      - name: Deploy Echoes Functions
+        run: npx firebase-tools deploy --only functions:functions --token "${{ secrets.FIREBASE_TOKEN }}"
+        
+      # Learn関数をデプロイ
+      - name: Install Dependencies for Learn Functions
+        run: cd learnfunctions1 && npm ci
+        
+      - name: Deploy Learn Functions
+        run: npx firebase-tools deploy --only functions:learnfunctions --token "${{ secrets.FIREBASE_TOKEN }}" 

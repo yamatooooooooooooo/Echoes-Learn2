@@ -1,0 +1,41 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './styles/index.css';
+import App from './App';
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getAnalytics } from 'firebase/analytics';
+import CssBaseline from '@mui/material/CssBaseline';
+import { ThemeProvider } from './contexts/ThemeContext';
+
+// Firebaseの設定
+const firebaseConfig = {
+  apiKey: "AIzaSyDEGwmRO3ZUcpaqqGEW3wS4MKS7ajslHR4",
+  authDomain: "echoes-learn2.firebaseapp.com",
+  projectId: "echoes-learn2",
+  storageBucket: "echoes-learn2.firebasestorage.app",
+  messagingSenderId: "364983430830",
+  appId: "1:364983430830:web:e10c2452512f005c3ac73f"
+};
+
+// Firebaseを初期化
+const app = initializeApp(firebaseConfig);
+
+// Firebase各サービスを初期化
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+export const analytics = getAnalytics(app);
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <ThemeProvider>
+      {/* CssBaselineは、ブラウザ間の一貫したベースラインスタイルを提供します */}
+      <CssBaseline />
+      <App />
+    </ThemeProvider>
+  </React.StrictMode>
+); 

@@ -1,0 +1,456 @@
+import React, { useState, useContext } from 'react';
+import {
+  TextField,
+  Button,
+  Grid,
+  Box,
+  Paper,
+  Container,
+  MenuItem,
+  Rating,
+  Slider,
+  Autocomplete,
+  Alert,
+  Snackbar,
+  Typography,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select
+} from '@mui/material';
+import {
+  MoodOutlined as MoodIcon,
+  SentimentSatisfied as SentimentSatisfiedIcon
+} from '@mui/icons-material';
+
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { ja } from 'date-fns/locale';
+
+import { format } from 'date-fns';
+import { SelectChangeEvent } from '@mui/material/Select';
+import { ServicesContext } from '../../../../contexts/ServicesContext';
+import { z } from 'zod';
+import { useMaintenanceMessage } from '../../../../hooks/useMaintenanceMessage';
+
+// スキーマ定義
+const SubjectSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  currentPage: z.number(),
+  totalPages: z.number(),
+  examDate: z.instanceof(Date).optional(),
+  textbookName: z.string().optional(),
+  priority: z.enum(['high', 'medium', 'low']).optional(),
+  category: z.string().optional()
+});
+
+type Subject = z.infer<typeof SubjectSchema>;
+
+// モデル定義
+interface StudySessionFormProps {
+  onSave: () => void;
+  onCancel?: () => void;
+  initialValues?: Partial<StudySessionInput>;
+  editMode?: boolean;
+  sessionId?: string;
+}
+
+interface StudySession {
+  id: string;
+  subjectId: string;
+  date: string;
+  startTime: string;
+  duration: number;
+  pagesCompleted: number;
+  effectivenessRating: number;
+  notes: string;
+  createdAt: any;
+  [key: string]: any;
+}
+
+interface StudySessionInput {
+  id?: string;
+  subjectId: string;
+  subjectName: string;
+  date: string;
+  startTime: string;
+  duration: number;
+  pagesCompleted: number;
+  startPage?: number;
+  endPage?: number;
+  effectivenessRating: number;
+  focusRating: number;
+  difficultyRating: number;
+  notes: string;
+  timeOfDay: string;
+  location?: string;
+  mood?: number;
+  tags?: string[];
+  efficiency?: number;
+  environment?: string;
+  focusLevel?: number;
+  memo?: string;
+}
+
+// 定数定義
+const TIME_OF_DAY_OPTIONS = ["朝", "昼", "夕方", "夜", "深夜"];
+const LOCATION_OPTIONS = ["自宅", "図書館", "カフェ", "学校", "その他"];
+const ENVIRONMENT_OPTIONS = ["静か", "少し騒がしい", "騒がしい", "音楽あり", "自然音"];
+
+// 日付フォーマット関数
+const getDateFormatted = () => {
+  return format(new Date(), 'yyyy-MM-dd');
+};
+
+const getTimeFormatted = () => {
+  return format(new Date(), 'HH:mm');
+};
+
+// 効率計算関数（簡略化）
+function calculateEfficiency(formValues: Partial<StudySessionInput>): number {
+  // 仮の効率計算ロジック
+  return 85; // パーセンテージ
+}
+
+// メインコンポーネント
+const StudySessionForm: React.FC<StudySessionFormProps> = ({
+  onSave,
+  onCancel,
+  initialValues,
+  editMode = false,
+  sessionId
+}) => {
+  const servicesContext = useContext(ServicesContext);
+  
+  if (!servicesContext) {
+    throw new Error('ServicesContextが見つかりません');
+  }
+  
+  const { services } = servicesContext;
+  
+  // Form state
+  const [formValues, setFormValues] = useState<Partial<StudySessionInput>>(initialValues || {
+    subjectId: '',
+    subjectName: '',
+    date: getDateFormatted(),
+    startTime: format(new Date(), 'HH:mm'),
+    duration: 60,
+    pagesCompleted: 0,
+    effectivenessRating: 3,
+    focusRating: 3,
+    difficultyRating: 3,
+    notes: '',
+    timeOfDay: "昼"
+  });
+
+  // UI state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  
+  // メンテナンスメッセージフックを使用
+  const { showMaintenanceMessage, wrapWithMaintenanceMessage, MaintenanceMessageComponent } = useMaintenanceMessage({
+    message: '学習セッション記録機能は現在メンテナンス中です。近日中に実装予定です。'
+  });
+  
+  // イベントハンドラ
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormValues(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
+    const { name, value } = e.target;
+    setFormValues(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue)) {
+      setFormValues(prev => ({ ...prev, [name]: numValue }));
+    }
+  };
+  
+  // フォームのバリデーション
+  const validate = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    
+    if (!formValues.subjectId) {
+      errors.subjectId = '科目を選択してください';
+    }
+    
+    if (!formValues.date) {
+      errors.date = '日付を入力してください';
+    }
+    
+    if (!formValues.pagesCompleted || formValues.pagesCompleted <= 0) {
+      errors.pagesCompleted = '1ページ以上入力してください';
+    }
+    
+    if (!formValues.duration || formValues.duration <= 0) {
+      errors.duration = '1分以上入力してください';
+    }
+    
+    return errors;
+  };
+  
+  // フォーム送信処理
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // バリデーション
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setFormErrors(validationErrors);
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // メンテナンスメッセージを表示
+    showMaintenanceMessage();
+    setIsSubmitting(false);
+    
+    // 実際のデータ保存はメンテナンス中
+    // onSave(formData);
+  };
+  
+  return (
+    <Container maxWidth="md">
+      <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          {editMode ? "学習セッションを編集" : "新しい学習セッションを記録"}
+        </Typography>
+        
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={3}>
+            {/* 科目選択 */}
+            <Grid item xs={12}>
+              <FormControl fullWidth error={!!formErrors.subjectId}>
+                <InputLabel>科目</InputLabel>
+                <Select
+                  name="subjectId"
+                  value={formValues.subjectId || ''}
+                  onChange={handleChange}
+                >
+                  <MenuItem value="">科目を選択</MenuItem>
+                  <MenuItem value="1">数学</MenuItem>
+                  <MenuItem value="2">物理</MenuItem>
+                  <MenuItem value="3">英語</MenuItem>
+                </Select>
+                {formErrors.subjectId && (
+                  <Typography color="error" variant="caption">
+                    {formErrors.subjectId}
+                  </Typography>
+                )}
+              </FormControl>
+            </Grid>
+            
+            {/* 日付と時間 */}
+            <Grid item xs={12} sm={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ja}>
+                <DatePicker 
+                  label="日付"
+                  value={formValues.date ? new Date(formValues.date) : null}
+                  onChange={(date) => {
+                    if (date) {
+                      setFormValues(prev => ({ 
+                        ...prev, 
+                        date: format(date, 'yyyy-MM-dd') 
+                      }));
+                    }
+                  }}
+                  slotProps={{ textField: { fullWidth: true } }}
+                />
+              </LocalizationProvider>
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ja}>
+                <TimePicker 
+                  label="開始時間"
+                  value={formValues.startTime ? new Date(`2000-01-01T${formValues.startTime}`) : null}
+                  onChange={(time) => {
+                    if (time) {
+                      setFormValues(prev => ({ 
+                        ...prev, 
+                        startTime: format(time, 'HH:mm') 
+                      }));
+                    }
+                  }}
+                  slotProps={{ textField: { fullWidth: true } }}
+                />
+              </LocalizationProvider>
+            </Grid>
+            
+            {/* 学習時間 */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                required
+                fullWidth
+                name="duration"
+                label="学習時間（分）"
+                type="number"
+                value={formValues.duration}
+                onChange={handleNumberChange}
+                InputProps={{ inputProps: { min: 1 } }}
+              />
+            </Grid>
+            
+            {/* ページ数 */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                required
+                fullWidth
+                name="pagesCompleted"
+                label="完了ページ数"
+                type="number"
+                value={formValues.pagesCompleted}
+                onChange={handleNumberChange}
+                InputProps={{ inputProps: { min: 0 } }}
+              />
+            </Grid>
+            
+            {/* 評価 */}
+            <Grid item xs={12} sm={6}>
+              <Box display="flex" alignItems="center">
+                <Typography variant="body1" sx={{ mr: 2 }}>
+                  効果評価:
+                </Typography>
+                <Rating
+                  name="effectivenessRating"
+                  value={formValues.effectivenessRating}
+                  onChange={(_, newValue) => {
+                    setFormValues(prev => ({ ...prev, effectivenessRating: newValue || 0 }));
+                  }}
+                />
+              </Box>
+            </Grid>
+            
+            {/* 環境 */}
+            <Grid item xs={12} sm={6}>
+              <Autocomplete
+                options={ENVIRONMENT_OPTIONS}
+                freeSolo
+                value={formValues.environment}
+                onChange={(_, newValue) => {
+                  setFormValues(prev => ({
+                    ...prev,
+                    environment: newValue || ''
+                  }));
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} label="学習環境" fullWidth />
+                )}
+              />
+            </Grid>
+            
+            {/* 集中度 */}
+            <Grid item xs={12} sm={6}>
+              <Box display="flex" alignItems="center">
+                <Typography variant="body1" sx={{ mr: 2 }}>
+                  集中度:
+                </Typography>
+                <Rating
+                  name="focusLevel"
+                  value={formValues.focusLevel}
+                  onChange={(_, newValue) => {
+                    setFormValues(prev => ({ ...prev, focusLevel: newValue || 0 }));
+                  }}
+                />
+                <Typography variant="body2" sx={{ ml: 1, color: 'text.secondary' }}>
+                  {formValues.focusLevel}/5
+                </Typography>
+              </Box>
+            </Grid>
+            
+            {/* 気分 */}
+            <Grid item xs={12} sm={6}>
+              <Box>
+                <Typography variant="body1" gutterBottom>
+                  気分:
+                </Typography>
+                <Box display="flex" alignItems="center">
+                  <MoodIcon color="action" sx={{ mr: 1 }} />
+                  <Slider
+                    value={Number(formValues.mood) || 3}
+                    min={1}
+                    max={5}
+                    step={1}
+                    onChange={(_, value) => {
+                      setFormValues(prev => ({ ...prev, mood: value as number }));
+                    }}
+                    valueLabelDisplay="auto"
+                    marks
+                    sx={{ mx: 2 }}
+                  />
+                  <SentimentSatisfiedIcon color="action" sx={{ ml: 1 }} />
+                </Box>
+              </Box>
+            </Grid>
+            
+            {/* メモ */}
+            <Grid item xs={12}>
+              <TextField
+                name="memo"
+                label="メモ"
+                multiline
+                rows={3}
+                value={formValues.memo}
+                onChange={handleChange}
+                fullWidth
+                placeholder="この学習セッションに関するメモや気づいたことを記録しましょう..."
+              />
+            </Grid>
+            
+            {/* ボタン */}
+            <Grid item xs={12}>
+              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                {onCancel && (
+                  <Button 
+                    variant="outlined" 
+                    onClick={onCancel}
+                    disabled={isSubmitting}
+                  >
+                    キャンセル
+                  </Button>
+                )}
+                <Button 
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  disabled={isSubmitting}
+                  startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
+                >
+                  {editMode ? "更新" : "記録する"}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </form>
+        
+        {/* メンテナンスメッセージコンポーネント */}
+        <MaintenanceMessageComponent />
+      </Paper>
+      
+      {/* 通知 */}
+      <Snackbar open={!!success} autoHideDuration={6000} onClose={() => setSuccess(null)}>
+        <Alert severity="success" onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      </Snackbar>
+    </Container>
+  );
+};
+
+export default StudySessionForm; 

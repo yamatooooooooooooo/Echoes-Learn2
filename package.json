@@ -1,0 +1,66 @@
+{
+  "name": "echoes-learn",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@hello-pangea/dnd": "^18.0.1",
+    "@mui/icons-material": "^6.4.7",
+    "@mui/material": "^6.4.7",
+    "@mui/x-date-pickers": "^7.27.3",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@types/react-router-dom": "^5.3.3",
+    "canvas-confetti": "^1.9.3",
+    "date-fns": "^2.30.0",
+    "firebase": "^11.4.0",
+    "firebase-admin": "^13.2.0",
+    "firebase-tools": "^13.33.0",
+    "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.3.0",
+    "react-scripts": "5.0.1",
+    "recharts": "^2.15.1",
+    "typescript": "^4.9.5",
+    "zod": "^3.24.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "backup": "node scripts/backup-firestore.js",
+    "backup:staging": "node scripts/backup-firestore.js echoes-learn2-staging",
+    "backup:prod": "node scripts/backup-firestore.js echoes-learn2"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/react-hooks": "^8.0.1",
+    "@types/jest": "^29.5.14",
+    "esbuild": "^0.25.0",
+    "esbuild-node-externals": "^1.18.0"
+  }
+}

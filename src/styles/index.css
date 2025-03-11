@@ -1,0 +1,204 @@
+/* レスポンシブデザインのためのグローバルスタイル */
+
+/* ビューポート設定 - @viewportはサポートされていないブラウザがあるため、メタタグで設定します */
+/* @viewport {
+  width: device-width;
+  initial-scale: 1;
+  maximum-scale: 5;
+  user-scalable: yes;
+} */
+
+/* モバイルファースト: デフォルトのスタイルは小さい画面向け */
+html {
+  box-sizing: border-box;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Sans JP', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+  /* モバイルでの慣性スクロール */
+  -webkit-overflow-scrolling: touch;
+  /* タップハイライトを無効化 */
+  -webkit-tap-highlight-color: transparent;
+  /* ピンチズームの挙動を制御 */
+  touch-action: pan-x pan-y;
+  /* モバイルでテキスト選択を改善 */
+  user-select: text;
+}
+
+/* スクロールの滑らかさを向上 */
+html, body {
+  scroll-behavior: smooth;
+}
+
+/* 画像のレスポンシブ対応 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* スペーシングを調整する例 */
+.container {
+  padding: 16px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.button {
+  min-height: 44px; /* タッチ操作に適した最小のサイズ */
+  min-width: 44px;  /* タッチ操作に適した最小の幅 */
+}
+
+/* フォーム要素のモバイル最適化 */
+input, select, textarea, button {
+  font-size: 16px; /* iOSでズームインを防止 */
+  max-width: 100%;
+}
+
+/* スマートフォン(横向き)と小型タブレット向け */
+@media (min-width: 600px) {
+  body {
+    font-size: 16px;
+  }
+  
+  .container {
+    padding: 24px;
+  }
+}
+
+/* タブレット向け */
+@media (min-width: 900px) {
+  .container {
+    padding: 32px;
+  }
+}
+
+/* デスクトップ向け */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+}
+
+/* 大画面向け */
+@media (min-width: 1600px) {
+  .container {
+    max-width: 1400px;
+  }
+}
+
+/* 高密度ディスプレイ (Retina等) の最適化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* タッチデバイス向けの最適化 */
+@media (hover: none) {
+  .button:hover {
+    /* ホバーエフェクトを無効化 */
+    background-color: inherit;
+  }
+  
+  /* タッチデバイスでのアクティブ状態を強調 */
+  .button:active {
+    opacity: 0.7;
+  }
+}
+
+/* 画面サイズ別のフォントサイズ調整 */
+h1 {
+  font-size: 1.75rem;
+}
+
+@media (min-width: 600px) {
+  h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 900px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+}
+
+/* フォーカス状態の視覚的なアクセシビリティ向上 */
+:focus {
+  outline: 2px solid #2E77EE;
+  outline-offset: 2px;
+}
+
+/* キーボードナビゲーションのみでフォーカス表示 */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid #2E77EE;
+  outline-offset: 2px;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* ダークモード対応のための追加スタイル */
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* スムーズなトランジション効果を追加 */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* アニメーション効果を無効にする要素 */
+button, a, input, textarea, select {
+  transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* アニメーション効果が不要な要素 */
+.no-transition {
+  transition: none !important;
+}
+
+/* 印刷向けスタイル */
+@media print {
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+    color: #000;
+    background: #fff;
+  }
+  
+  a {
+    text-decoration: underline;
+    color: #000;
+  }
+}
+
+/* コンテンツが非表示になるのを防ぐ */
+.overflow-guard {
+  overflow: visible;
+  max-width: 100%;
+} 
