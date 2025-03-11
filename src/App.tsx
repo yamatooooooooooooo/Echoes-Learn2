@@ -151,6 +151,7 @@ const App: React.FC = () => {
               ml: { sm: drawerOpen ? `${drawerWidth}px` : 0 },
               mt: { xs: 0, sm: 0 },
               pt: { xs: 5, sm: 6 },
+              height: '100vh',
               overflow: 'auto',
               transition: theme.transitions.create(['margin', 'width'], {
                 easing: theme.transitions.easing.sharp,
@@ -185,8 +186,8 @@ const App: React.FC = () => {
 
             {/* コンテンツエリア */}
             <Box sx={{ 
-              flex: 1, 
-              overflow: 'auto',
+              flex: 1,
+              height: 'auto',
               pb: 4 // 下部に余白を追加
             }}>
               <NavigationContext.Provider value={{ navigateTo }}>
