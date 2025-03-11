@@ -25,21 +25,21 @@ jobs:
 
       # デフォルトの関数をデプロイ
       - name: Install Dependencies for Default Functions
-        run: cd functions && npm ci
+        run: cd functions && npm ci --legacy-peer-deps
 
       - name: Deploy Default Functions
         run: npx firebase-tools deploy --only functions:default --token "${{ secrets.FIREBASE_TOKEN }}"
         
       # Echoes関数をデプロイ
       - name: Install Dependencies for Echoes Functions
-        run: cd "echoes functions" && npm ci
+        run: cd "echoes functions" && npm ci --legacy-peer-deps
         
       - name: Deploy Echoes Functions
         run: npx firebase-tools deploy --only functions:functions --token "${{ secrets.FIREBASE_TOKEN }}"
         
       # Learn関数をデプロイ
       - name: Install Dependencies for Learn Functions
-        run: cd learnfunctions1 && npm ci
+        run: cd learnfunctions1 && npm ci --legacy-peer-deps
         
       - name: Deploy Learn Functions
         run: npx firebase-tools deploy --only functions:learnfunctions --token "${{ secrets.FIREBASE_TOKEN }}" 
