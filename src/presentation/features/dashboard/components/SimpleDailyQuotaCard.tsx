@@ -13,12 +13,15 @@ import {
   Chip,
   Paper,
   IconButton,
-  Tooltip
+  Tooltip,
+  Badge
 } from '@mui/material';
 import { 
   Timer as TimerIcon, 
   MenuBook as BookIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon
 } from '@mui/icons-material';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { DailyQuota } from '../../../../domain/models/QuotaModel';
@@ -84,6 +87,27 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
       default:
         return '#9e9e9e';  // グレー
     }
+  };
+  
+  // 達成状況の判定関数
+  const getCompletionStatus = (item) => {
+    // 科目のIDを使って、対応する科目のデータを取得
+    const subjectData = subjects.find(subject => subject.id === item.subjectId);
+    
+    // 今日の進捗があるかどうか（実際のアプリでは、当日の進捗データを確認する必要があります）
+    const hasProgressToday = subjectData && 
+      subjectData.lastProgressDate && 
+      new Date(subjectData.lastProgressDate).toDateString() === new Date().toDateString();
+    
+    // 当日にノルマのページ数以上を読んだかどうか
+    const metQuotaToday = hasProgressToday && 
+      subjectData.lastProgressPages && 
+      subjectData.lastProgressPages >= item.pages;
+    
+    return {
+      hasProgressToday,
+      metQuotaToday
+    };
   };
   
   if (isLoading) {
@@ -167,7 +191,9 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
         </Box>
         
         <List disablePadding>
-          {dailyQuota.quotaItems.map((item) => (
+          {dailyQuota.quotaItems.map((item) => {
+            const { hasProgressToday, metQuotaToday } = getCompletionStatus(item);
+            return (
             <Paper 
               key={item.subjectId} 
               elevation={1} 
@@ -175,13 +201,47 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
                 mb: 1,
                 p: 1,
                 borderLeft: `4px solid ${getPriorityColor(item.priority)}`,
+                background: metQuotaToday ? 'rgba(76, 175, 80, 0.1)' : 'inherit',
               }}
             >
               <ListItem disablePadding sx={{ py: 0.5 }}>
                 <ListItemText
                   primary={
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="body1">{item.subjectName}</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography variant="body1">{item.subjectName}</Typography>
+                        {metQuotaToday && (
+                          <Tooltip title="今日のノルマ達成">
+                            <CheckCircleIcon 
+                              color="success" 
+                              fontSize="small" 
+                              sx={{ ml: 1 }} 
+                            />
+                          </Tooltip>
+                        )}
+                        {hasProgressToday && !metQuotaToday && (
+                          <Tooltip title="進行中">
+                            <Badge 
+                              color="warning" 
+                              variant="dot" 
+                              sx={{ ml: 1 }}
+                            >
+                              <Typography variant="caption">進行中</Typography>
+                            </Badge>
+                          </Tooltip>
+                        )}
+                        {!hasProgressToday && (
+                          <Tooltip title="未着手">
+                            <Badge 
+                              color="error" 
+                              variant="dot" 
+                              sx={{ ml: 1 }}
+                            >
+                              <Typography variant="caption">未着手</Typography>
+                            </Badge>
+                          </Tooltip>
+                        )}
+                      </Box>
                       <Chip 
                         label={`${item.pages} ページ`} 
                         size="small"
@@ -218,7 +278,7 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
                 />
               </ListItem>
             </Paper>
-          ))}
+          )})}
         </List>
         <MaintenanceMessageComponent />
       </CardContent>

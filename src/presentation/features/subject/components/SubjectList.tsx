@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Alert, Collapse, SelectChangeEvent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Typography, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Switch, Tooltip, CircularProgress, Grid, Snackbar, Paper } from '@mui/material';
+import { Box, Alert, Collapse, SelectChangeEvent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Typography, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Switch, Tooltip, CircularProgress, Grid, Snackbar, Paper, IconButton, List, ListItem, ListItemButton, ListItemText, Chip, LinearProgress } from '@mui/material';
 import { 
   ViewModule as ViewModuleIcon, 
   ViewList as ViewListIcon, 
   CalendarViewMonth as CalendarViewMonthIcon,
   AssignmentTurnedIn as AssignmentTurnedInIcon,
   Add,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
 import { Subject, SubjectCreateInput, SubjectUpdateInput } from '../../../../domain/models/SubjectModel';
 import { SubjectForm } from './SubjectForm';
@@ -391,10 +392,12 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
     loadSubjects();
   }, [loadSubjects]);
 
-  // 進捗記録モーダルを開く処理
+  // 進捗記録モーダルを開く処理を改善
   const handleOpenProgressModal = (subject: Subject) => {
     setSelectedSubjectForProgress(subject);
     setIsProgressModalOpen(true);
+    // スクロールを最上部に
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
   // 進捗記録モーダルを閉じる
@@ -529,14 +532,48 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
               <Grid container spacing={2}>
                 {sortedSubjects.map(subject => (
                   <Grid item xs={12} sm={6} md={4} key={subject.id}>
-                    <SubjectCard
-                      subject={subject}
-                      onProgressAdded={loadSubjects}
-                      onSubjectUpdated={handleUpdateSubject}
-                      onEdit={handleEditSubject}
-                      onDelete={handleDeleteConfirm}
-                      formatDate={formatDate}
-                    />
+                    <Box sx={{ 
+                      position: 'relative',
+                      height: '100%',
+                    }}>
+                      {/* 進捗記録ボタンを目立つ位置に配置 */}
+                      <Box sx={{ 
+                        position: 'absolute', 
+                        top: 8, 
+                        right: 8, 
+                        zIndex: 10 
+                      }}>
+                        <Tooltip title="進捗を記録">
+                          <IconButton 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenProgressModal(subject);
+                            }}
+                            color="primary"
+                            size="small"
+                            sx={{
+                              backgroundColor: 'primary.main',
+                              color: 'white',
+                              '&:hover': {
+                                backgroundColor: 'primary.dark',
+                              },
+                              boxShadow: 2
+                            }}
+                          >
+                            <AssignmentTurnedInIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                      
+                      <SubjectCard
+                        subject={subject}
+                        onProgressAdded={loadSubjects}
+                        onSubjectUpdated={handleUpdateSubject}
+                        onEdit={handleEditSubject}
+                        onDelete={handleDeleteConfirm}
+                        formatDate={formatDate}
+                      />
+                    </Box>
                   </Grid>
                 ))}
                 
