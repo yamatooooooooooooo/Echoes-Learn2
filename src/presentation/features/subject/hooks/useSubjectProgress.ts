@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useServices } from '../../../../hooks/useServices';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { Progress, ProgressCreateInput, ProgressUpdateInput } from '../../../../domain/models/ProgressModel';
@@ -39,6 +39,36 @@ export const useSubjectProgress = (
   const [message, setMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
   const [error, setError] = useState('');
+  
+  // 進捗記録データを保持するための状態を追加
+  const [progressRecords, setProgressRecords] = useState<Progress[]>([]);
+  const [loadingProgressRecords, setLoadingProgressRecords] = useState(false);
+  const [progressRecordsError, setProgressRecordsError] = useState<Error | null>(null);
+
+  // 科目IDに基づいて進捗記録を取得
+  useEffect(() => {
+    const fetchProgressRecords = async () => {
+      if (!subject.id || !auth.currentUser) return;
+      
+      setLoadingProgressRecords(true);
+      setProgressRecordsError(null);
+      
+      try {
+        const records = await progressRepository.getSubjectProgress(
+          auth.currentUser.uid,
+          subject.id
+        );
+        setProgressRecords(records);
+      } catch (error) {
+        console.error('進捗記録の取得に失敗しました:', error);
+        setProgressRecordsError(error instanceof Error ? error : new Error('進捗記録の取得に失敗しました'));
+      } finally {
+        setLoadingProgressRecords(false);
+      }
+    };
+    
+    fetchProgressRecords();
+  }, [subject.id, auth.currentUser, progressRepository]);
 
   const toggleProgressForm = () => {
     setIsAdding(!isAdding);
@@ -256,6 +286,10 @@ export const useSubjectProgress = (
     handleSaveProgress,
     message,
     showMessage,
-    error
+    error,
+    // 進捗記録データ関連のプロパティを追加
+    progressRecords,
+    loadingProgressRecords,
+    progressRecordsError
   };
 }; 

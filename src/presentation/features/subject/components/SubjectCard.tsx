@@ -25,7 +25,8 @@ import {
   Delete as DeleteIcon,
   Timeline as TimelineIcon,
   Info as InfoIcon,
-  History as HistoryIcon
+  History as HistoryIcon,
+  BarChart as BarChartIcon
 } from '@mui/icons-material';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { Progress } from '../../../../domain/models/ProgressModel';
@@ -36,10 +37,11 @@ import { ProgressForm } from './ProgressForm';
 import { ProgressList } from './ProgressList';
 import { ProgressHistory } from './ProgressHistory';
 import { ProgressDeleteDialog } from './ProgressDeleteDialog';
+import { ProgressCharts } from './ProgressCharts';
 import { useSubjectProgress } from '../hooks/useSubjectProgress';
 
 // タブの種類
-type TabType = 'details' | 'history';
+type TabType = 'details' | 'history' | 'charts';
 
 interface SubjectCardProps {
   subject: Subject;
@@ -88,7 +90,11 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     handleSaveProgress,
     message,
     showMessage,
-    error
+    error,
+    // 追加の進捗記録データを受け取る
+    progressRecords,
+    loadingProgressRecords,
+    progressRecordsError
   } = useSubjectProgress(
     subject, 
     onProgressAdded, 
@@ -190,9 +196,6 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     }
   };
 
-  // ProgressHistoryコンポーネントに渡すデータ
-  const progressRecords: Progress[] = [];
-
   return (
     <Card 
       ref={cardRef}
@@ -239,6 +242,12 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                   label="進捗履歴" 
                   value="history"
                   icon={<HistoryIcon fontSize="small" />}
+                  iconPosition="start"
+                />
+                <Tab 
+                  label="グラフ" 
+                  value="charts"
+                  icon={<BarChartIcon fontSize="small" />}
                   iconPosition="start"
                 />
               </Tabs>
@@ -303,11 +312,37 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                   {/* 進捗履歴表示 */}
                   <ProgressHistory
                     progressRecords={progressRecords}
-                    loading={false}
-                    error={null}
+                    loading={loadingProgressRecords}
+                    error={progressRecordsError}
                     onEdit={handleEditProgress}
                     onDelete={handleDeleteProgress}
                     formatDate={formatDate}
+                  />
+                </>
+              )}
+              
+              {/* 「グラフ」タブの内容 */}
+              {activeTab === 'charts' && (
+                <>
+                  {/* 進捗記録ボタン */}
+                  <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+                    <Button 
+                      variant="outlined" 
+                      color="primary" 
+                      size="small" 
+                      onClick={handleToggleProgressForm}
+                      startIcon={<TimelineIcon />}
+                    >
+                      進捗を記録
+                    </Button>
+                  </Box>
+                  
+                  {/* グラフ表示 */}
+                  <ProgressCharts
+                    progressRecords={progressRecords}
+                    subject={subject}
+                    loading={loadingProgressRecords}
+                    error={progressRecordsError}
                   />
                 </>
               )}

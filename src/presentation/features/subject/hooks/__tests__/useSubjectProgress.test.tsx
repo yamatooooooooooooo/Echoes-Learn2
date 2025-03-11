@@ -2,6 +2,8 @@ import { renderHook, act } from '@testing-library/react-hooks';
 import { useSubjectProgress } from '../useSubjectProgress';
 import { Subject } from '../../../../../domain/models/SubjectModel';
 import { Progress } from '../../../../../domain/models/ProgressModel';
+import { useServices } from '../../../../../hooks/useServices';
+import { useFirebase } from '../../../../../contexts/FirebaseContext';
 
 // モック
 jest.mock('../../../../../hooks/useServices', () => ({
@@ -32,7 +34,8 @@ describe('useSubjectProgress', () => {
     totalPages: 100,
     currentPage: 30,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    examDate: new Date()
   };
 
   const mockProgress: Progress = {
@@ -185,5 +188,53 @@ describe('useSubjectProgress', () => {
 
     expect(mockOnProgressDeleted).toHaveBeenCalled();
     expect(result.current.isDeleteDialogOpen).toBe(false);
+  });
+
+  it('進捗レコードを取得する', async () => {
+    // レポジトリのモック
+    const mockProgressRepository = {
+      getSubjectProgress: jest.fn().mockResolvedValue([
+        { id: 'progress1', subjectId: 'subject1', userId: 'user1' },
+        { id: 'progress2', subjectId: 'subject1', userId: 'user1' }
+      ]),
+      addProgress: jest.fn(),
+      updateProgress: jest.fn(),
+      deleteProgress: jest.fn()
+    };
+    
+    const mockSubjectRepository = { /* モックの実装 */ };
+    
+    // useServicesのモック
+    (useServices as jest.Mock).mockReturnValue({
+      progressRepository: mockProgressRepository,
+      subjectRepository: mockSubjectRepository
+    });
+    
+    // useFirebaseのモック
+    (useFirebase as jest.Mock).mockReturnValue({
+      auth: { currentUser: { uid: 'user1' } }
+    });
+    
+    const mockSubject = { 
+      id: 'subject1',
+      name: 'テスト科目',
+      currentPage: 0,
+      totalPages: 100,
+      examDate: new Date()
+    } as Subject;
+    
+    const { result, waitForNextUpdate } = renderHook(() => useSubjectProgress(mockSubject));
+    
+    // 初期状態では空の配列
+    expect(result.current.progressRecords).toEqual([]);
+    expect(result.current.loadingProgressRecords).toBe(true);
+    
+    // 非同期処理の完了を待つ
+    await waitForNextUpdate();
+    
+    // データが取得されていることを確認
+    expect(mockProgressRepository.getSubjectProgress).toHaveBeenCalledWith('user1', 'subject1');
+    expect(result.current.progressRecords).toHaveLength(2);
+    expect(result.current.loadingProgressRecords).toBe(false);
   });
 });
