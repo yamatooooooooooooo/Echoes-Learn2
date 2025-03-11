@@ -1,20 +1,15 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
-import { Box, CssBaseline, IconButton, Typography, Button, useMediaQuery, useTheme } from '@mui/material';
+import { Box, CssBaseline, Typography, Button, useMediaQuery, useTheme } from '@mui/material';
 import { SubjectList } from './presentation/features/subject/components/SubjectList';
 import DashboardScreen from './presentation/features/dashboard/components/DashboardScreen';
 import { Sidebar } from './presentation/components/Sidebar';
 import { Routes, Route } from 'react-router-dom';
-import GamificationPage from './presentation/features/gamification/pages/GamificationPage';
 import LoginPage from './presentation/features/auth/pages/LoginPage';
 import SignupPage from './presentation/features/auth/pages/SignupPage';
 import PrivateRoute from './presentation/components/PrivateRoute';
 import ErrorBoundary from './presentation/components/common/ErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
-import StudySessionPage from './presentation/features/study/pages/StudySessionPage';
 import { getAnalytics, logEvent } from 'firebase/analytics';
-import MenuIcon from '@mui/icons-material/Menu';
-import ProgressStatsPage from './presentation/features/progress/pages/ProgressStatsPage';
-import { ThemeToggle } from './presentation/components/common/ThemeToggle';
 
 // ナビゲーションコンテキスト
 interface NavigationContextType {

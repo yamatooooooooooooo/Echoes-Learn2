@@ -2,7 +2,9 @@ import { initializeApp, FirebaseApp } from 'firebase/app';
 import { 
   getFirestore, 
   Firestore,
-  connectFirestoreEmulator
+  connectFirestoreEmulator,
+  enableIndexedDbPersistence,
+  CACHE_SIZE_UNLIMITED
 } from 'firebase/firestore';
 import { 
   getAuth, 
@@ -65,6 +67,43 @@ interface FirebaseServices {
   remoteConfig?: RemoteConfig;
 }
 
+// Firebaseアプリを初期化する関数
+const initializeFirebaseApp = (): FirebaseApp => {
+  try {
+    return initializeApp(firebaseConfig);
+  } catch (error) {
+    console.error('Firebase app initialization error:', error);
+    throw error;
+  }
+}
+
+// Firestoreを初期化する関数
+const initializeFirestore = (app: FirebaseApp): Firestore => {
+  try {
+    const firestore = getFirestore(app);
+    
+    // 開発環境でエミュレーターを使用
+    if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_USE_FIREBASE_EMULATORS === 'true') {
+      connectFirestoreEmulator(firestore, 'localhost', 8080);
+    } else {
+      // 本番環境ではオフラインキャッシュを有効化
+      // これはPromiseを返すので、非同期処理として扱います
+      enableIndexedDbPersistence(firestore).catch((err) => {
+        if (err.code === 'failed-precondition') {
+          console.warn('Firestore persistence could not be enabled: multiple tabs open');
+        } else if (err.code === 'unimplemented') {
+          console.warn('Firestore persistence is not available in this browser');
+        }
+      });
+    }
+    
+    return firestore;
+  } catch (error) {
+    console.error('Firestore initialization error:', error);
+    throw error;
+  }
+}
+
 /**
  * Firebase初期化関数
  * アプリケーションで使用する各Firebaseサービスを初期化して返す
@@ -73,9 +112,10 @@ export const initializeFirebase = (): FirebaseServices => {
   try {
     console.log('Initializing Firebase...');
     
-    const app = initializeApp(firebaseConfig);
+    // アプリ全体のFirebase初期化は一度だけ行う
+    const app = initializeFirebaseApp();
     const auth = getAuth(app);
-    const firestore = getFirestore(app);
+    const firestore = initializeFirestore(app);
     const storage = getStorage(app);
     const functions = getFunctions(app);
     
@@ -126,7 +166,7 @@ export const initializeFirebase = (): FirebaseServices => {
       // 各サービスのエミュレーターに接続
       try {
         connectAuthEmulator(auth, 'http://localhost:9099');
-        connectFirestoreEmulator(firestore, 'localhost', 8080);
+        // Note: Firestoreのエミュレーター接続は上で行っています
         connectStorageEmulator(storage, 'localhost', 9199);
         connectFunctionsEmulator(functions, 'localhost', 5001);
       } catch (emulatorError) {
