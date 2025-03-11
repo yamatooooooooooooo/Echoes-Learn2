@@ -130,11 +130,8 @@ const App: React.FC = () => {
               p: { xs: 1, sm: 2, md: 3 },
               width: { sm: `calc(100% - ${drawerWidth}px)` },
               ml: { sm: `${drawerWidth}px` },
-              overflow: 'auto',
-              bgcolor: 'background.default',
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100vh',
+              mt: '64px', // AppBarの高さ分マージンを追加
+              overflow: 'auto'
             }}
           >
             {/* モバイル表示時のヘッダー */}

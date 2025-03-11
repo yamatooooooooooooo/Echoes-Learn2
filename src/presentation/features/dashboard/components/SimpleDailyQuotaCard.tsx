@@ -126,7 +126,7 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
   }
   
   return (
-    <Card elevation={2} sx={{ mb: 3 }}>
+    <Card elevation={2} sx={{ mb: 3, maxWidth: '100%', width: '100%' }}>
       <CardHeader 
         title="今日のノルマ" 
         titleTypographyProps={{ variant: 'h6' }}

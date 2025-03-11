@@ -202,13 +202,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ) : (
         // タブレット・デスクトップ用ドロワー
         <Drawer
-          variant="temporary"
+          variant="permanent"
           open={open}
-          onClose={onToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
           sx={{
+            display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': { 
               width: isTablet ? 260 : 240, 
               boxSizing: 'border-box',
@@ -219,7 +216,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             },
             zIndex: theme.zIndex.drawer + 1,
           }}
-          ref={drawerRef}
         >
           {drawerContent}
         </Drawer>

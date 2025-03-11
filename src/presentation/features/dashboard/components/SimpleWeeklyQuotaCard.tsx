@@ -141,7 +141,7 @@ const SimpleWeeklyQuotaCard: React.FC<SimpleWeeklyQuotaCardProps> = ({
   const dailyDates = Object.keys(weeklyQuota.dailyDistribution).sort();
   
   return (
-    <Card elevation={2} sx={{ mb: 3 }}>
+    <Card elevation={2} sx={{ mb: 3, maxWidth: '100%', width: '100%' }}>
       <CardHeader 
         title="今週のノルマ" 
         titleTypographyProps={{ variant: 'h6' }}

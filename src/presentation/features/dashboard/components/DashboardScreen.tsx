@@ -94,7 +94,7 @@ const DashboardScreen: React.FC = () => {
   }
   
   return (
-    <Box sx={{ width: '100%', maxWidth: '1000px', mx: 'auto' }}>
+    <Box sx={{ width: '100%', maxWidth: '1200px', mx: 'auto', p: 2 }}>
       <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
         学習ダッシュボード
       </Typography>

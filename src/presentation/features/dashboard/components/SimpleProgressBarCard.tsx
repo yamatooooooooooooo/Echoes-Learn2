@@ -39,9 +39,9 @@ const SimpleProgressBarCard: React.FC<SimpleProgressBarCardProps> = ({
   
   if (isLoading) {
     return (
-      <Card elevation={2} sx={{ mb: 3 }}>
+      <Card elevation={2} sx={{ mb: 3, maxWidth: '100%', width: '100%' }}>
         <CardHeader 
-          title="科目ごとの進捗" 
+          title="学習進捗" 
           titleTypographyProps={{ variant: 'h6' }}
         />
         <CardContent>
@@ -53,9 +53,9 @@ const SimpleProgressBarCard: React.FC<SimpleProgressBarCardProps> = ({
   
   if (subjects.length === 0) {
     return (
-      <Card elevation={2} sx={{ mb: 3 }}>
+      <Card elevation={2} sx={{ mb: 3, maxWidth: '100%', width: '100%' }}>
         <CardHeader 
-          title="科目ごとの進捗" 
+          title="学習進捗" 
           titleTypographyProps={{ variant: 'h6' }}
         />
         <CardContent>
@@ -78,9 +78,9 @@ const SimpleProgressBarCard: React.FC<SimpleProgressBarCardProps> = ({
   });
   
   return (
-    <Card elevation={2} sx={{ mb: 3 }}>
+    <Card elevation={2} sx={{ mb: 3, maxWidth: '100%', width: '100%' }}>
       <CardHeader 
-        title="科目ごとの進捗" 
+        title="学習進捗" 
         titleTypographyProps={{ variant: 'h6' }}
       />
       <CardContent>
