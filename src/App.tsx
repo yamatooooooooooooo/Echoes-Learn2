@@ -63,7 +63,13 @@ const App: React.FC = () => {
   };
 
   const handleMenuSelect = (menu: string) => {
-    setSelectedMenu(menu);
+    // 現在は「ダッシュボード」と「科目管理」のみ有効
+    if (menu === 'dashboard' || menu === 'subjects') {
+      setSelectedMenu(menu);
+    } else {
+      setSelectedMenu('dashboard');
+    }
+    
     // モバイルでは自動的にドロワーを閉じる
     if (isMobile) {
       setDrawerOpen(false);
@@ -72,7 +78,13 @@ const App: React.FC = () => {
 
   // ナビゲーション関数
   const navigateTo = (menu: string) => {
-    setSelectedMenu(menu);
+    // 現在は「ダッシュボード」と「科目管理」のみ有効
+    if (menu === 'dashboard' || menu === 'subjects') {
+      setSelectedMenu(menu);
+    } else {
+      setSelectedMenu('dashboard');
+    }
+    
     // モバイルでは自動的にドロワーを閉じる
     if (isMobile) {
       setDrawerOpen(false);
@@ -97,12 +109,13 @@ const App: React.FC = () => {
         return <DashboardScreen />;
       case 'subjects':
         return <SubjectList formatDate={formatDate} />;
-      case 'progress':
-        return <ProgressStatsPage />;
-      case 'study':
-        return <StudySessionPage />;
-      case 'gamification':
-        return <GamificationPage />;
+      // 以下のケースは一時的に無効化
+      // case 'progress':
+      //   return <ProgressStatsPage />;
+      // case 'study':
+      //   return <StudySessionPage />;
+      // case 'gamification':
+      //   return <GamificationPage />;
       default:
         return <DashboardScreen />;
     }

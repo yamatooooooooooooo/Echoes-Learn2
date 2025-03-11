@@ -38,10 +38,11 @@ interface SidebarProps {
 const menuItems = [
   { id: 'dashboard', text: 'ダッシュボード', icon: <DashboardIcon /> },
   { id: 'subjects', text: '科目管理', icon: <MenuBookIcon /> },
-  { id: 'progress', text: '学習進捗', icon: <ShowChartIcon /> },
-  { id: 'study', text: '学習記録', icon: <HistoryIcon /> },
-  { id: 'gamification', text: '学習成果', icon: <EmojiEventsIcon /> },
-  { id: 'settings', text: '設定', icon: <SettingsIcon /> }
+  // 以下の項目は一時的に非表示
+  // { id: 'progress', text: '学習進捗', icon: <ShowChartIcon /> },
+  // { id: 'study', text: '学習記録', icon: <HistoryIcon /> },
+  // { id: 'gamification', text: '学習成果', icon: <EmojiEventsIcon /> },
+  // { id: 'settings', text: '設定', icon: <SettingsIcon /> }
 ];
 
 /**
