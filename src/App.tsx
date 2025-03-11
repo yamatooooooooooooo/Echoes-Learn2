@@ -1,5 +1,5 @@
-import React, { useState, createContext, useContext } from 'react';
-import { Box, CssBaseline, IconButton, Typography, Button } from '@mui/material';
+import React, { useState, createContext, useContext, useEffect } from 'react';
+import { Box, CssBaseline, IconButton, Typography, Button, useMediaQuery, useTheme } from '@mui/material';
 import { SubjectList } from './presentation/features/subject/components/SubjectList';
 import DashboardScreen from './presentation/features/dashboard/components/DashboardScreen';
 import { Sidebar } from './presentation/components/Sidebar';
@@ -48,22 +48,33 @@ const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
 };
 
 const App: React.FC = () => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [drawerOpen, setDrawerOpen] = useState(!isMobile);
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
   
+  // 画面サイズが変更されたときにドロワーの状態を調整
+  useEffect(() => {
+    setDrawerOpen(!isMobile);
+  }, [isMobile]);
+
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
   };
 
   const handleMenuSelect = (menu: string) => {
     setSelectedMenu(menu);
+    // モバイルでは自動的にドロワーを閉じる
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
   };
 
   // ナビゲーション関数
   const navigateTo = (menu: string) => {
     setSelectedMenu(menu);
     // モバイルでは自動的にドロワーを閉じる
-    if (window.innerWidth < 960) {
+    if (isMobile) {
       setDrawerOpen(false);
     }
   };
@@ -128,14 +139,25 @@ const App: React.FC = () => {
             sx={{
               flexGrow: 1,
               p: { xs: 1, sm: 2, md: 3 },
-              width: { sm: `calc(100% - ${drawerWidth}px)` },
-              ml: { sm: `${drawerWidth}px` },
-              mt: '64px', // AppBarの高さ分マージンを追加
-              overflow: 'auto'
+              width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` },
+              ml: { xs: 0, sm: drawerOpen ? `${drawerWidth}px` : 0 },
+              mt: { xs: '64px', sm: '64px' }, // AppBarの高さ分マージンを追加
+              pt: { xs: 2, sm: 3 }, // 上部のパディングを追加してカードがAppBarと重ならないようにする
+              overflow: 'auto',
+              transition: theme.transitions.create(['margin', 'width'], {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.leavingScreen,
+              }),
+              ...(drawerOpen && {
+                transition: theme.transitions.create(['margin', 'width'], {
+                  easing: theme.transitions.easing.easeOut,
+                  duration: theme.transitions.duration.enteringScreen,
+                }),
+              }),
             }}
           >
-            {/* モバイル表示時のヘッダー */}
-            <Box
+            {/* モバイル表示時のヘッダー - Sidebarにヘッダーを移したので不要 */}
+            {/* <Box
               sx={{
                 display: { sm: 'none', xs: 'flex' },
                 p: 1,
@@ -148,12 +170,15 @@ const App: React.FC = () => {
                 <MenuIcon />
               </IconButton>
               
-              {/* テーマ切り替えボタン */}
               <ThemeToggle />
-            </Box>
+            </Box> */}
 
             {/* コンテンツエリア */}
-            <Box sx={{ flex: 1, overflow: 'auto' }}>
+            <Box sx={{ 
+              flex: 1, 
+              overflow: 'auto',
+              pb: 4 // 下部に余白を追加
+            }}>
               <NavigationContext.Provider value={{ navigateTo }}>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />

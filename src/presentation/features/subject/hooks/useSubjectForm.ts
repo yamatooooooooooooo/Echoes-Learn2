@@ -1,61 +1,71 @@
 import { useState } from 'react';
 import { SubjectCreateInput, Subject } from '../../../../domain/models/SubjectModel';
-import { SubjectRepository } from '../../../../infrastructure/repositories/subjectRepository';
-import { useFirebase } from '../../../../contexts/FirebaseContext';
+import { useServices } from '../../../../hooks/useServices';
+import { useAuth } from '../../../../contexts/AuthContext';
 
-export const useSubjectForm = (onSuccess?: (subject: Subject) => void) => {
-  const [isLoading, setIsLoading] = useState(false);
+interface UseSubjectFormProps {
+  subject?: Subject | null;
+  onSuccess?: (subjectId: string) => void;
+}
+
+export const useSubjectForm = ({ subject, onSuccess }: UseSubjectFormProps = {}) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Firebaseサービスを取得
-  const { firestore, auth } = useFirebase();
-  const subjectRepository = new SubjectRepository(firestore, auth);
-
-  const createSubject = async (data: SubjectCreateInput) => {
-    setIsLoading(true);
+  const { subjectRepository } = useServices();
+  const { currentUser } = useAuth();
+  
+  const handleSubmit = async (data: SubjectCreateInput) => {
+    if (!currentUser) {
+      setError('認証エラーが発生しました。再度ログインしてください。');
+      return;
+    }
+    
+    setIsSubmitting(true);
     setError(null);
     
     try {
-      // 認証状態の確認
-      const currentUser = auth.currentUser;
-      const userId = currentUser?.uid;
-      
-      if (!userId) {
-        setError('認証されていません。ログインしてください。');
-        setIsLoading(false);
-        return null;
+      if (subject) {
+        // 既存の科目を更新
+        await subjectRepository.updateSubject(subject.id, data);
+        if (onSuccess) onSuccess(subject.id);
+      } else {
+        // 新規科目を追加
+        const subjectId = await subjectRepository.addSubject(currentUser.uid, data);
+        if (onSuccess) onSuccess(subjectId);
       }
-      
-      // ユーザーIDを設定
-      const subjectData = {
-        ...data,
-        userId
-      };
-      
-      // 科目を登録
-      const subjectId = await subjectRepository.addSubject(userId, subjectData);
-      
-      // 登録した科目を取得
-      const newSubject = await subjectRepository.getSubject(subjectId);
-      
-      // 成功コールバックを実行
-      if (onSuccess && newSubject) {
-        onSuccess(newSubject);
-      }
-      
-      return newSubject;
     } catch (err) {
-      console.error('科目の作成に失敗しました:', err);
-      setError('科目の作成に失敗しました。もう一度お試しください。');
-      return null;
+      console.error('科目の保存に失敗しました:', err);
+      setError('科目の保存に失敗しました。もう一度お試しください。');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
-
+  
+  const deleteSubject = async (subjectId: string) => {
+    if (!currentUser) {
+      setError('認証エラーが発生しました。再度ログインしてください。');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      await subjectRepository.deleteSubject(subjectId);
+    } catch (err) {
+      console.error('科目の削除に失敗しました:', err);
+      setError('科目の削除に失敗しました。もう一度お試しください。');
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   return {
-    createSubject,
-    isLoading,
+    handleSubmit,
+    deleteSubject,
+    isSubmitting,
     error
   };
 }; 

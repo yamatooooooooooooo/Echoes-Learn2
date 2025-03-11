@@ -8,16 +8,18 @@ import {
   updateDoc, 
   deleteDoc, 
   query, 
-  where, 
-  orderBy 
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
+  Timestamp 
 } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
 import { Progress, ProgressCreateInput, ProgressUpdateInput } from '../../domain/models/ProgressModel';
 import { IProgressRepository } from '../../domain/interfaces/repositories/IProgressRepository';
 
 /**
- * 進捗記録リポジトリの実装クラス
- * Firestoreとの連携を行う
+ * 進捗情報を管理するリポジトリ
  */
 export class ProgressRepository implements IProgressRepository {
   constructor(
@@ -26,30 +28,40 @@ export class ProgressRepository implements IProgressRepository {
   ) {}
 
   /**
-   * 進捗記録を追加
+   * 特定の科目の進捗記録を取得
    */
-  async addProgress(userId: string, progressData: ProgressCreateInput): Promise<string> {
+  async getSubjectProgress(userId: string, subjectId: string): Promise<Progress[]> {
     try {
-      // タイムスタンプを追加
-      const progressWithTimestamp = {
-        ...progressData,
-        userId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      // Firestoreに保存
       const progressRef = collection(this.firestore, 'users', userId, 'progress');
-      const docRef = await addDoc(progressRef, progressWithTimestamp);
-      return docRef.id;
+      const q = query(
+        progressRef, 
+        where('subjectId', '==', subjectId),
+        orderBy('recordDate', 'desc')
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      const progress: Progress[] = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        progress.push({
+          id: doc.id,
+          ...data,
+          recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
+          updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date(),
+          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date()
+        } as Progress);
+      });
+      
+      return progress;
     } catch (error) {
-      console.error('進捗記録の追加に失敗しました:', error);
+      console.error('進捗データの取得中にエラーが発生しました:', error);
       throw error;
     }
   }
 
   /**
-   * 指定IDの進捗記録を取得
+   * 指定IDの進捗情報を取得
    */
   async getProgress(progressId: string): Promise<Progress | null> {
     try {
@@ -66,83 +78,51 @@ export class ProgressRepository implements IProgressRepository {
       }
       
       const data = progressSnap.data();
-      // 日付をDateオブジェクトに変換
-      return {
+      const progress: Progress = {
         id: progressSnap.id,
         ...data,
         recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
-        createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
-        updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date()
+        updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date(),
+        createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date()
       } as Progress;
-    } catch (error) {
-      console.error('進捗記録の取得に失敗しました:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * 指定ユーザーの全進捗記録を取得
-   */
-  async getAllProgress(userId: string): Promise<Progress[]> {
-    try {
-      const progressRef = collection(this.firestore, 'users', userId, 'progress');
-      const q = query(progressRef, orderBy('recordDate', 'desc'));
-      const snapshot = await getDocs(q);
-      
-      const progress: Progress[] = [];
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        progress.push({
-          id: doc.id,
-          ...data,
-          recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
-          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
-          updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date()
-        } as Progress);
-      });
       
       return progress;
     } catch (error) {
-      console.error('進捗記録の取得に失敗しました:', error);
+      console.error('進捗データの取得中にエラーが発生しました:', error);
       throw error;
     }
   }
 
   /**
-   * 特定の科目の進捗記録を取得
+   * 進捗情報を追加
    */
-  async getSubjectProgress(userId: string, subjectId: string): Promise<Progress[]> {
+  async addProgress(userId: string, progressData: ProgressCreateInput): Promise<string> {
     try {
+      // 日付データを適切な形式に変換
+      const firestoreData = {
+        ...progressData,
+        recordDate: progressData.recordDate ? 
+          (typeof progressData.recordDate === 'string' ? 
+            Timestamp.fromDate(new Date(progressData.recordDate)) : 
+            Timestamp.fromDate(progressData.recordDate)
+          ) : 
+          Timestamp.fromDate(new Date()),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      
+      // Firestoreにデータを追加
       const progressRef = collection(this.firestore, 'users', userId, 'progress');
-      const q = query(
-        progressRef,
-        where('subjectId', '==', subjectId),
-        orderBy('recordDate', 'desc')
-      );
-      
-      const snapshot = await getDocs(q);
-      
-      const progress: Progress[] = [];
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        progress.push({
-          id: doc.id,
-          ...data,
-          recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
-          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
-          updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date()
-        } as Progress);
-      });
-      
-      return progress;
+      const docRef = await addDoc(progressRef, firestoreData);
+      return docRef.id;
     } catch (error) {
-      console.error('科目の進捗記録の取得に失敗しました:', error);
+      console.error('進捗データの追加中にエラーが発生しました:', error);
       throw error;
     }
   }
 
   /**
-   * 進捗記録を更新
+   * 進捗情報を更新
    */
   async updateProgress(progressId: string, progressData: ProgressUpdateInput): Promise<void> {
     try {
@@ -151,22 +131,28 @@ export class ProgressRepository implements IProgressRepository {
         throw new Error('認証されていません');
       }
       
-      // updatedAtを更新
-      const updateData = {
-        ...progressData,
-        updatedAt: new Date()
-      };
+      // 日付データを適切な形式に変換
+      const updateData: any = {...progressData};
+      
+      if (progressData.recordDate) {
+        updateData.recordDate = typeof progressData.recordDate === 'string' ? 
+          Timestamp.fromDate(new Date(progressData.recordDate)) : 
+          Timestamp.fromDate(progressData.recordDate);
+      }
+      
+      // 更新日時を設定
+      updateData.updatedAt = serverTimestamp();
       
       const progressRef = doc(this.firestore, 'users', userId, 'progress', progressId);
       await updateDoc(progressRef, updateData);
     } catch (error) {
-      console.error('進捗記録の更新に失敗しました:', error);
+      console.error('進捗データの更新中にエラーが発生しました:', error);
       throw error;
     }
   }
 
   /**
-   * 進捗記録を削除
+   * 進捗情報を削除
    */
   async deleteProgress(progressId: string): Promise<void> {
     try {
@@ -178,7 +164,103 @@ export class ProgressRepository implements IProgressRepository {
       const progressRef = doc(this.firestore, 'users', userId, 'progress', progressId);
       await deleteDoc(progressRef);
     } catch (error) {
-      console.error('進捗記録の削除に失敗しました:', error);
+      console.error('進捗データの削除中にエラーが発生しました:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * 最近の進捗記録を取得
+   */
+  async getRecentProgress(userId: string, limitCount: number = 10): Promise<Progress[]> {
+    try {
+      const progressRef = collection(this.firestore, 'users', userId, 'progress');
+      const q = query(
+        progressRef,
+        orderBy('recordDate', 'desc'),
+        limit(limitCount)
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      const progressList: Progress[] = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        progressList.push({
+          id: doc.id,
+          ...data,
+          recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
+          updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date(),
+          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date()
+        } as Progress);
+      });
+      
+      return progressList;
+    } catch (error) {
+      console.error('最近の進捗データの取得中にエラーが発生しました:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ユーザーの全進捗情報を取得
+   */
+  async getAllProgress(userId: string): Promise<Progress[]> {
+    try {
+      const progressRef = collection(this.firestore, 'users', userId, 'progress');
+      const q = query(progressRef, orderBy('recordDate', 'desc'));
+      
+      const snapshot = await getDocs(q);
+      
+      const progressList: Progress[] = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        progressList.push({
+          id: doc.id,
+          ...data,
+          recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
+          updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date(),
+          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date()
+        } as Progress);
+      });
+      
+      return progressList;
+    } catch (error) {
+      console.error('進捗データの取得中にエラーが発生しました:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * 特定の期間の進捗情報を取得
+   */
+  async getProgressByDateRange(userId: string, startDate: Date, endDate: Date): Promise<Progress[]> {
+    try {
+      const progressRef = collection(this.firestore, 'users', userId, 'progress');
+      const q = query(
+        progressRef,
+        where('recordDate', '>=', Timestamp.fromDate(startDate)),
+        where('recordDate', '<=', Timestamp.fromDate(endDate)),
+        orderBy('recordDate', 'desc')
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      const progressList: Progress[] = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        progressList.push({
+          id: doc.id,
+          ...data,
+          recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
+          updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date(),
+          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date()
+        } as Progress);
+      });
+      
+      return progressList;
+    } catch (error) {
+      console.error('期間指定での進捗データの取得中にエラーが発生しました:', error);
       throw error;
     }
   }

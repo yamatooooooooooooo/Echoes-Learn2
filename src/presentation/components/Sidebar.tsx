@@ -152,10 +152,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           boxShadow: 'none',
           borderBottom: '1px solid',
           borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
-          backgroundColor: 'transparent',
-          color: '#333333',
+          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+          color: theme.palette.text.primary,
           backdropFilter: 'blur(8px)',
-          display: 'none'
+          display: 'flex'
         }}
       >
         <Toolbar>
@@ -186,15 +186,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           }}
           sx={{
             '& .MuiDrawer-paper': { 
-              width: '85%', // モバイルでは幅を広めに取る
+              width: '85%',
               maxWidth: 280, 
               boxSizing: 'border-box',
-              backgroundColor: '#FFFFFF',
-              borderRight: '1px solid #E0E0E0',
+              backgroundColor: theme.palette.background.paper,
+              borderRight: '1px solid',
+              borderColor: theme.palette.divider,
               marginTop: 0,
               boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)'
             },
-            zIndex: theme.zIndex.drawer + 1,
+            zIndex: theme.zIndex.drawer + 2,
           }}
         >
           {drawerContent}
@@ -202,19 +203,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ) : (
         // タブレット・デスクトップ用ドロワー
         <Drawer
-          variant="permanent"
+          variant={!isMobile ? "permanent" : "temporary"}
           open={open}
           sx={{
+            width: isTablet ? 260 : 240,
+            flexShrink: 0,
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': { 
               width: isTablet ? 260 : 240, 
               boxSizing: 'border-box',
-              backgroundColor: '#FFFFFF',
-              borderRight: '1px solid #E0E0E0',
-              marginTop: 0,
+              backgroundColor: theme.palette.background.paper,
+              borderRight: '1px solid',
+              borderColor: theme.palette.divider,
+              marginTop: '64px',
+              height: 'calc(100% - 64px)',
               boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)'
             },
-            zIndex: theme.zIndex.drawer + 1,
+            zIndex: theme.zIndex.drawer,
           }}
         >
           {drawerContent}

@@ -2,9 +2,7 @@ import { useState, useCallback } from 'react';
 import { ProgressCreateInput, Progress } from '../../../../domain/models/ProgressModel';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { useServices } from '../../../../hooks/useServices';
-import { useFirebase } from '../../../../contexts/FirebaseContext';
-import { ProgressError } from '../../../../domain/errors/ProgressError';
-import { ProgressService } from '../../../../domain/services/ProgressService';
+import { useAuth } from '../../../../contexts/AuthContext';
 import { format } from 'date-fns';
 
 interface UseProgressFormParams {
@@ -24,7 +22,7 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
   
   // サービスを取得
   const { progressRepository, subjectRepository } = useServices();
-  const { auth } = useFirebase();
+  const { currentUser } = useAuth();
   
   // 今日の日付を取得（YYYY-MM-DD形式）
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -112,55 +110,57 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
   // フォーム送信
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!subject) {
+      setError('科目が選択されていません');
+      return;
+    }
+    
+    if (!currentUser) {
+      setError('認証エラーが発生しました。再度ログインしてください。');
+      return;
+    }
+    
+    // バリデーション
+    const validationErrors = validateProgress(formData, subject);
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      return;
+    }
+    
     setIsSubmitting(true);
     setError(null);
-    setFieldErrors({});
     
     try {
-      // バリデーション
-      const subjectToValidate = subject || (isEditMode && progress ? { totalPages: Infinity } as Subject : undefined);
+      let progressId: string;
       
-      if (!subjectToValidate) {
-        throw new Error('科目情報が必要です');
-      }
+      // 数値型に変換したデータを準備
+      const numericFormData = {
+        ...formData,
+        startPage: Number(formData.startPage),
+        endPage: Number(formData.endPage),
+        pagesRead: Number(formData.pagesRead),
+        studyDuration: Number(formData.studyDuration || 0)
+      };
       
-      const validationErrors = validateProgress(formData, subjectToValidate);
-      if (Object.keys(validationErrors).length > 0) {
-        setFieldErrors(validationErrors);
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // 認証状態の確認
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        setError('認証されていません。ログインしてください。');
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // ProgressServiceのインスタンス作成
-      const progressService = new ProgressService(progressRepository, subjectRepository);
-      
-      let progressId = '';
-      
-      if (isEditMode && progress?.id) {
-        // 既存の進捗を更新
-        await progressService.updateProgress(progress.id, {
-          startPage: formData.startPage,
-          endPage: formData.endPage,
-          pagesRead: formData.pagesRead,
-          recordDate: formData.recordDate,
-          studyDuration: formData.studyDuration,
-          memo: formData.memo
-        });
+      if (isEditMode && progress && progress.id) {
+        // 進捗情報を更新
+        await progressRepository.updateProgress(progress.id, numericFormData);
         progressId = progress.id;
       } else {
-        // 新規進捗記録を作成
-        progressId = await progressService.recordProgress(currentUser.uid, formData);
+        // 進捗情報を追加
+        progressId = await progressRepository.addProgress(currentUser.uid, {
+          ...numericFormData,
+          subjectId: subject.id // subjectは既に存在チェック済み
+        });
+        
+        // 科目の現在のページを更新
+        await subjectRepository.updateSubject(subject.id, {
+          currentPage: numericFormData.endPage
+        });
       }
       
-      // 成功コールバック
+      // 成功時のコールバック
       if (onSuccess) {
         onSuccess(progressId);
       }
@@ -168,16 +168,8 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
       // フォームをリセット
       resetForm();
     } catch (error) {
-      console.error('進捗の記録に失敗しました:', error);
-      
-      // ProgressErrorの場合は構造化されたエラー処理
-      if (error instanceof ProgressError && error.field) {
-        setFieldErrors({
-          [error.field]: error.message
-        });
-      } else {
-        setError(error instanceof Error ? error.message : '予期しないエラーが発生しました');
-      }
+      console.error('進捗情報の保存に失敗しました:', error);
+      setError('進捗情報の保存に失敗しました。もう一度お試しください。');
     } finally {
       setIsSubmitting(false);
     }
@@ -198,30 +190,36 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
       errors.subjectId = '科目IDは必須です';
     }
     
-    if (data.startPage < 0) {
+    const startPage = Number(data.startPage);
+    const endPage = Number(data.endPage);
+    const totalPages = Number(subject.totalPages || 0);
+    
+    if (data.startPage === undefined || data.startPage === null || data.startPage === '') {
+      errors.startPage = '開始ページは必須です';
+    } else if (startPage < 0) {
       errors.startPage = '開始ページは0以上である必要があります';
     }
     
-    if (data.endPage < data.startPage) {
+    if (data.endPage === undefined || data.endPage === null || data.endPage === '') {
+      errors.endPage = '終了ページは必須です';
+    } else if (endPage < startPage) {
       errors.endPage = '終了ページは開始ページ以上である必要があります';
-    }
-    
-    if (data.endPage > subject.totalPages && subject.totalPages !== Infinity) {
-      errors.endPage = `終了ページは科目の総ページ数（${subject.totalPages}）以下である必要があります`;
+    } else if (totalPages > 0 && endPage > totalPages) {
+      errors.endPage = `終了ページは教科書の総ページ数(${totalPages})以下である必要があります`;
     }
     
     if (!data.recordDate) {
-      errors.recordDate = '記録日を選択してください';
+      errors.recordDate = '記録日は必須です';
     }
     
-    // 日付が有効かチェック
-    try {
-      const date = new Date(data.recordDate);
-      if (isNaN(date.getTime())) {
-        throw new ProgressError('有効な日付を入力してください', 'INVALID_DATE_FORMAT', 'recordDate');
-      }
-    } catch (error) {
-      throw new ProgressError('有効な日付を入力してください', 'INVALID_DATE_FORMAT', 'recordDate');
+    const studyDuration = Number(data.studyDuration || 0);
+    
+    if (data.studyDuration === undefined || data.studyDuration === null || data.studyDuration === '') {
+      errors.studyDuration = '学習時間は必須です';
+    } else if (studyDuration < 0) {
+      errors.studyDuration = '学習時間は0以上である必要があります';
+    } else if (studyDuration > 1440) {
+      errors.studyDuration = '学習時間は24時間（1440分）以内である必要があります';
     }
     
     return errors;
