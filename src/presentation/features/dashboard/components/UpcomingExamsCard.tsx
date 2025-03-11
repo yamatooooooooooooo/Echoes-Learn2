@@ -93,7 +93,7 @@ export const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }
 
   if (!examGroups.length) {
     return (
-      <Card elevation={2} sx={{ mb: 3 }}>
+      <Box>
         <CardHeader 
           title="試験スケジュール" 
           titleTypographyProps={{ variant: 'h6' }}
@@ -104,18 +104,22 @@ export const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }
             今後の試験予定はありません
           </Typography>
         </CardContent>
-      </Card>
+      </Box>
     );
   }
 
   return (
-    <Card elevation={2} sx={{ mb: 3 }}>
+    <Box>
       <CardHeader 
         title="試験スケジュール" 
         titleTypographyProps={{ variant: 'h6' }}
         avatar={<EventIcon />}
       />
-      <CardContent>
+      <CardContent sx={{ 
+        maxHeight: { xs: '200px', sm: '250px', md: '300px' }, 
+        overflow: 'auto',
+        p: { xs: 1, sm: 2 }
+      }}>
         {examGroups.map((group, index) => (
           <Box key={group.date.toISOString()} sx={{ mb: index < examGroups.length - 1 ? 3 : 0 }}>
             <Paper 
@@ -180,6 +184,6 @@ export const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }
           </Box>
         ))}
       </CardContent>
-    </Card>
+    </Box>
   );
 }; 

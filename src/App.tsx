@@ -146,13 +146,8 @@ const App: React.FC = () => {
             component="main"
             sx={{
               flexGrow: 1,
-              p: { xs: 1, sm: 2, md: 3 },
               width: { sm: `calc(100% - ${drawerWidth}px)` },
               ml: { sm: drawerOpen ? `${drawerWidth}px` : 0 },
-              mt: { xs: 0, sm: 0 },
-              pt: { xs: 5, sm: 6 },
-              height: '100vh',
-              overflow: 'auto',
               transition: theme.transitions.create(['margin', 'width'], {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.leavingScreen,
@@ -165,31 +160,24 @@ const App: React.FC = () => {
                   duration: theme.transitions.duration.enteringScreen,
                 }),
               }),
+              height: '100vh',
+              overflow: 'auto',
+              display: 'flex',
+              flexDirection: 'column'
             }}
           >
-            {/* モバイル表示時のヘッダー - Sidebarにヘッダーを移したので不要 */}
-            {/* <Box
-              sx={{
-                display: { sm: 'none', xs: 'flex' },
-                p: 1,
-                mb: 1,
-                alignItems: 'center',
-                justifyContent: 'space-between',
+            {/* スクロール可能なコンテンツエリア */}
+            <Box 
+              sx={{ 
+                padding: { xs: 1, sm: 2, md: 3 },
+                paddingTop: { xs: 5, sm: 6 },
+                flexGrow: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                overflowX: 'hidden',
+                overflowY: 'auto'
               }}
             >
-              <IconButton color="inherit" onClick={handleDrawerToggle} edge="start">
-                <MenuIcon />
-              </IconButton>
-              
-              <ThemeToggle />
-            </Box> */}
-
-            {/* コンテンツエリア */}
-            <Box sx={{ 
-              flex: 1,
-              height: 'auto',
-              pb: 4 // 下部に余白を追加
-            }}>
               <NavigationContext.Provider value={{ navigateTo }}>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
@@ -198,11 +186,7 @@ const App: React.FC = () => {
                     path="/"
                     element={<PrivateRoute />}
                   >
-                    <Route index element={
-                      <>
-                        {renderContent()}
-                      </>
-                    } />
+                    <Route index element={<>{renderContent()}</>} />
                   </Route>
                 </Routes>
               </NavigationContext.Provider>

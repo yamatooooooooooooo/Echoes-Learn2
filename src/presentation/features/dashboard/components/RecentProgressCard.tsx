@@ -146,6 +146,8 @@ export const RecentProgressCard: React.FC<RecentProgressCardProps> = ({
     <NotionStyleCard title="">
       <List
         sx={{ 
+          maxHeight: { xs: '200px', sm: '250px', md: '300px' },
+          overflowY: 'auto',
           '& .MuiListItem-root': { 
             py: 1.5,
             px: 0.5,
