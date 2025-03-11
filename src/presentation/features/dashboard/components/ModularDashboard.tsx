@@ -142,9 +142,7 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
       case 'exams':
         return (
           <UpcomingExamsCard
-            exams={dashboardData.upcomingExams}
-            formatDate={formatDate}
-            isLoading={isLoading}
+            subjects={dashboardData.subjects || []}
           />
         );
       case 'recentProgress':

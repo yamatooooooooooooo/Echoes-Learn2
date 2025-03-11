@@ -33,7 +33,7 @@ interface UpcomingExamsCardProps {
 /**
  * 今後の試験と科目を日付でグループ化して表示するカード
  */
-const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }) => {
+export const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }) => {
   // 科目を試験日ごとにグループ化
   const examGroups = useMemo(() => {
     const groups: { [key: string]: ExamGroup } = {};
@@ -182,6 +182,4 @@ const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }) => {
       </CardContent>
     </Card>
   );
-};
-
-export default UpcomingExamsCard; 
+}; 

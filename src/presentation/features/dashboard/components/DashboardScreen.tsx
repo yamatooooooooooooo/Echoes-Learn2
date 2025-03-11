@@ -4,7 +4,7 @@ import SimpleDailyQuotaCard from './SimpleDailyQuotaCard';
 import SimpleWeeklyQuotaCard from './SimpleWeeklyQuotaCard';
 import SimpleProgressBarCard from './SimpleProgressBarCard';
 import { RecentProgressCard } from './RecentProgressCard';
-import UpcomingExamsCard from './UpcomingExamsCard';
+import { UpcomingExamsCard } from './UpcomingExamsCard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../../../../contexts/AuthContext';
 
