@@ -72,9 +72,9 @@ const DashboardScreen: React.FC = () => {
         maxWidth: '1200px', 
         mx: 'auto', 
         p: { xs: 1, sm: 2 },
-        pt: { xs: 2, sm: 2, md: 3 },
-        bgcolor: '#FAFAFA',
-        minHeight: '100vh'
+        pt: { xs: 2, sm: 3, md: 4 },
+        bgcolor: 'background.default',
+        minHeight: 'calc(100vh - 40px)'
       }}
     >
       {/* ダッシュボードヘッダー */}

@@ -366,7 +366,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        position: 'relative'
+        position: 'relative',
+        pt: 5
       }} 
       role="navigation"
       ref={drawerRef}
@@ -514,29 +515,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      <AppBar 
-        position="fixed" 
+      {/* AppBarを削除 */}
+      
+      {/* メニューボタンを独立して配置 */}
+      <IconButton
+        color="inherit"
+        aria-label={open ? 'メニューを閉じる' : 'メニューを開く'}
+        edge="start"
+        onClick={onToggle}
         sx={{ 
-          zIndex: theme.zIndex.drawer + 1,
-          boxShadow: 'none',
-          borderBottom: '1px solid',
-          borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
+          position: 'fixed',
+          top: 16,
+          left: 16,
+          zIndex: theme.zIndex.drawer + 2,
           backgroundColor: theme.palette.background.paper,
-          color: theme.palette.text.primary,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          '&:hover': {
+            backgroundColor: alpha(theme.palette.primary.main, 0.08),
+          }
         }}
       >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label={open ? 'メニューを閉じる' : 'メニューを開く'}
-            edge="start"
-            onClick={onToggle}
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
+        <MenuIcon />
+      </IconButton>
       
       {/* モバイル用ドロワー */}
       {isMobile ? (
@@ -556,7 +556,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               backgroundColor: theme.palette.background.paper,
               borderRight: '1px solid',
               borderColor: theme.palette.divider,
-              marginTop: 0,
               boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)'
             },
             zIndex: theme.zIndex.drawer + 2,
@@ -580,8 +579,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               backgroundColor: theme.palette.background.paper,
               borderRight: '1px solid',
               borderColor: theme.palette.divider,
-              marginTop: '64px',
-              height: 'calc(100% - 64px)',
+              height: '100%',
               boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
               transition: resizing ? 'none' : theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
