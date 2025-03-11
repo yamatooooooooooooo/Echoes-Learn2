@@ -681,7 +681,8 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
             <ProgressForm
               subject={selectedSubjectForProgress}
               onSuccess={handleProgressSuccess}
-              onCancel={handleCloseProgressModal}
+              onClose={handleCloseProgressModal}
+              open={isProgressModalOpen}
             />
           )}
         </DialogContent>

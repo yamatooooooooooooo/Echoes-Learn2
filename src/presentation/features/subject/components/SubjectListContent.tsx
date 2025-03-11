@@ -9,7 +9,7 @@ interface SubjectListContentProps {
   formatDate: (date: Date | string | undefined) => string;
   onSubjectUpdated: (subject: Subject) => void;
   onSubjectEdit: (subject: Subject) => void;
-  onSubjectDelete: (subjectId: string) => void;
+  onSubjectDelete: (subject: Subject) => void;
 }
 
 /**

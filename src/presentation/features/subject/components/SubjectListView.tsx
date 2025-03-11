@@ -37,7 +37,7 @@ interface SubjectListViewProps {
   formatDate: (date: Date | string | undefined) => string;
   onSubjectUpdated: (subject: Subject) => void;
   onSubjectEdit: (subject: Subject) => void;
-  onSubjectDelete: (subjectId: string) => void;
+  onSubjectDelete: (subject: Subject) => void;
 }
 
 /**
@@ -291,7 +291,7 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
                       size="small" 
                       onClick={(e) => {
                         e.stopPropagation();
-                        onSubjectDelete(subject.id);
+                        onSubjectDelete(subject);
                       }}
                     >
                       <DeleteIcon fontSize="small" />
