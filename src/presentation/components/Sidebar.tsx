@@ -153,7 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           boxShadow: 'none',
           borderBottom: '1px solid',
           borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)',
-          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: 'transparent',
           color: theme.palette.text.primary,
           backdropFilter: 'blur(8px)',
           display: 'flex'
@@ -169,9 +169,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            {menuItems.find(item => item.id === selectedMenu)?.text || ''}
-          </Typography>
         </Toolbar>
       </AppBar>
       

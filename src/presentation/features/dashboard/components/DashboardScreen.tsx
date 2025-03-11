@@ -51,14 +51,10 @@ const DashboardScreen: React.FC = () => {
         maxWidth: '1200px', 
         mx: 'auto', 
         p: { xs: 1, sm: 2 },
-        pt: { xs: 10, sm: 11, md: 12 }, // ヘッダーの高さを考慮して上部にパディングを追加
+        pt: { xs: 2, sm: 2, md: 3 },
         overflowX: 'hidden'
       }}
     >
-      <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-        ダッシュボード
-      </Typography>
-      
       {/* 試験スケジュールカード */}
       <Box sx={{ mb: 4 }}>
         <UpcomingExamsCard subjects={dashboardData?.subjects || []} />

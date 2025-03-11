@@ -179,7 +179,12 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
     .map(([moduleId]) => moduleId);
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ 
+      width: '100%',
+      maxWidth: '1200px',
+      mx: 'auto',
+      p: { xs: 1, sm: 2 }
+    }}>
       {/* 設定アクション */}
       <Box sx={{ 
         display: 'flex', 
