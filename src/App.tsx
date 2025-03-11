@@ -99,7 +99,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary
-      fallback={
+      fallbackComponent={
         <Box sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="h5" color="error" gutterBottom>
             エラーが発生しました
@@ -117,7 +117,7 @@ const App: React.FC = () => {
           {/* サイドバー */}
           <Sidebar
             open={drawerOpen}
-            onClose={handleDrawerToggle}
+            onToggle={handleDrawerToggle}
             onMenuSelect={handleMenuSelect}
             selectedMenu={selectedMenu}
           />
@@ -140,10 +140,9 @@ const App: React.FC = () => {
             {/* モバイル表示時のヘッダー */}
             <Box
               sx={{
-                display: { sm: 'none' },
+                display: { sm: 'none', xs: 'flex' },
                 p: 1,
                 mb: 1,
-                display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
@@ -164,12 +163,14 @@ const App: React.FC = () => {
                   <Route path="/signup" element={<SignupPage />} />
                   <Route
                     path="/"
-                    element={
-                      <PrivateRoute>
+                    element={<PrivateRoute />}
+                  >
+                    <Route index element={
+                      <>
                         {renderContent()}
-                      </PrivateRoute>
-                    }
-                  />
+                      </>
+                    } />
+                  </Route>
                 </Routes>
               </NavigationContext.Provider>
             </Box>

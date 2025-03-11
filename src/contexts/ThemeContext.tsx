@@ -24,7 +24,7 @@ interface ThemeContextType {
 }
 
 // コンテキストの作成
-export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // プロバイダーコンポーネントのプロパティ型
 interface ThemeProviderProps {
@@ -35,7 +35,7 @@ interface ThemeProviderProps {
  * テーマプロバイダーコンポーネント
  * アプリケーション全体でテーマを管理する
  */
-export function AppThemeProvider({ children }: ThemeProviderProps) {
+export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   // ローカルストレージにテーマ設定を保存
   const [mode, setMode] = useLocalStorage<ThemeMode>('themeMode', 'system');
   const [subjectThemes, setSubjectThemes] = useLocalStorage<SubjectTheme[]>('subjectThemes', []);
@@ -48,161 +48,122 @@ export function AppThemeProvider({ children }: ThemeProviderProps) {
   // テーマを適用する関数
   const applyTheme = () => {
     try {
-      if (mode === 'light') {
-        setCurrentTheme('light');
-      } else if (mode === 'dark') {
-        setCurrentTheme('dark');
-      } else if (mode === 'system') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setCurrentTheme(prefersDark ? 'dark' : 'light');
-      } else if (mode === 'auto') {
-        // 時間帯に応じた自動切り替え（6時〜18時はライト、それ以外はダーク）
-        const hours = new Date().getHours();
-        setCurrentTheme(hours >= 6 && hours < 18 ? 'light' : 'dark');
+      let theme: 'light' | 'dark' = 'light';
+      
+      if (mode === 'light' || mode === 'dark') {
+        theme = mode;
+      } else if (mode === 'system' || mode === 'auto') {
+        // システムのテーマ設定を取得
+        const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        theme = prefersDarkMode ? 'dark' : 'light';
       }
+      
+      setCurrentTheme(theme);
+      setError(null);
     } catch (err) {
-      console.error('テーマの適用に失敗しました:', err);
-      setError('テーマの適用に失敗しました。デフォルト設定を使用します。');
-      setCurrentTheme('light'); // エラー時はライトモードをデフォルトとして使用
+      console.error('テーマの適用に失敗しました', err);
+      setError('テーマの適用に失敗しました');
     }
   };
 
-  // システムのテーマ設定を取得（メディアクエリ）
+  // 初回レンダリング時とモード変更時にテーマを適用
   useEffect(() => {
-    try {
+    applyTheme();
+  }, [mode]);
+
+  // システムのテーマ変更を監視
+  useEffect(() => {
+    if (mode === 'system' || mode === 'auto') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       
-      // システムテーマが変更されたときのハンドラー
       const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-        try {
-          if (mode === 'system') {
-            setCurrentTheme(e.matches ? 'dark' : 'light');
-          }
-        } catch (err) {
-          console.error('システムテーマの変更処理に失敗しました:', err);
-          setError('システムテーマの変更処理に失敗しました。');
-        }
+        setCurrentTheme(e.matches ? 'dark' : 'light');
       };
       
-      // 初期テーマを適用
-      applyTheme();
-      
-      // システムテーマの変更を監視
-      mediaQuery.addEventListener('change', handleSystemThemeChange);
-      
-      // 'auto'モードの場合は1分ごとにチェック（時間帯による切り替え）
-      let intervalId: number | undefined;
-      if (mode === 'auto') {
-        intervalId = window.setInterval(applyTheme, 60000);
-      }
-      
-      return () => {
-        try {
-          mediaQuery.removeEventListener('change', handleSystemThemeChange);
-          if (intervalId) clearInterval(intervalId);
-        } catch (err) {
-          console.error('テーマ監視のクリーンアップに失敗しました:', err);
-        }
-      };
-    } catch (err) {
-      console.error('テーマ設定の初期化に失敗しました:', err);
-      setError('テーマ設定の初期化に失敗しました。デフォルト設定を使用します。');
-      setCurrentTheme('light'); // エラー時はライトモードをデフォルトとして使用
-    }
-  }, [mode]); // modeが変更されたら再実行
-
-  // 科目別テーマを設定する関数
-  const setSubjectTheme = (subjectId: string, themeMode: 'light' | 'dark' | 'inherit') => {
-    const updatedThemes = [...subjectThemes];
-    const existingIndex = updatedThemes.findIndex(theme => theme.subjectId === subjectId);
-    
-    if (existingIndex >= 0) {
-      if (themeMode === 'inherit') {
-        // 'inherit'の場合は設定を削除
-        updatedThemes.splice(existingIndex, 1);
+      // 一部のブラウザではaddEventListenerではなくaddListenerを使用
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleSystemThemeChange);
       } else {
-        updatedThemes[existingIndex].mode = themeMode;
+        // @ts-ignore - 古いブラウザ向け
+        mediaQuery.addListener(handleSystemThemeChange);
       }
-    } else if (themeMode !== 'inherit') {
-      // 新しい設定を追加
-      updatedThemes.push({ subjectId, mode: themeMode });
+      
+      // クリーンアップ関数
+      return () => {
+        if (mediaQuery.removeEventListener) {
+          mediaQuery.removeEventListener('change', handleSystemThemeChange);
+        } else {
+          // @ts-ignore - 古いブラウザ向け
+          mediaQuery.removeListener(handleSystemThemeChange);
+        }
+      };
     }
-    
-    setSubjectThemes(updatedThemes);
+  }, [mode]);
+
+  // テーマの切り替え
+  const toggleTheme = () => {
+    if (mode === 'light') {
+      setMode('dark');
+    } else if (mode === 'dark') {
+      setMode('system');
+    } else {
+      setMode('light');
+    }
   };
 
-  // 科目のテーマを取得する関数
+  // 科目別テーマを設定
+  const setSubjectTheme = (subjectId: string, mode: 'light' | 'dark' | 'inherit') => {
+    const existingIndex = subjectThemes.findIndex(theme => theme.subjectId === subjectId);
+    
+    if (existingIndex >= 0) {
+      const updatedThemes = [...subjectThemes];
+      updatedThemes[existingIndex] = { subjectId, mode };
+      setSubjectThemes(updatedThemes);
+    } else {
+      setSubjectThemes([...subjectThemes, { subjectId, mode }]);
+    }
+  };
+
+  // 科目のテーマを取得
   const getSubjectTheme = (subjectId: string): 'light' | 'dark' => {
     const subjectTheme = subjectThemes.find(theme => theme.subjectId === subjectId);
     
-    if (subjectTheme) {
-      if (subjectTheme.mode === 'inherit') {
-        return currentTheme;
-      }
-      return subjectTheme.mode;
+    if (!subjectTheme || subjectTheme.mode === 'inherit') {
+      return currentTheme;
     }
     
-    // 設定がない場合は現在のグローバルテーマを返す
-    return currentTheme;
+    return subjectTheme.mode;
   };
 
-  // コンテキスト値
+  // コンテキスト値の作成
   const contextValue: ThemeContextType = {
     mode,
     currentTheme,
     setMode,
-    toggleTheme: () => {
-      // 現在のモードに基づいて切り替え
-      if (mode === 'light') {
-        setMode('dark');
-      } else if (mode === 'dark') {
-        setMode('light');
-      } else if (mode === 'system' || mode === 'auto') {
-        // systemまたはautoの場合は、現在適用されているテーマの反対を設定
-        setMode(currentTheme === 'light' ? 'dark' : 'light');
-      }
-    },
+    toggleTheme,
     subjectThemes,
     setSubjectTheme,
     getSubjectTheme
   };
 
-  // 現在のテーマに基づいてMUIテーマを生成
-  const theme = createAppTheme(currentTheme);
-
+  // アプリ全体のテーマを適用したThemeProviderでラップ
   return (
     <ThemeContext.Provider value={contextValue}>
-      <ThemeProvider theme={theme}>
-        {error && (
-          <div style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#f44336', 
-            color: 'white',
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 9999,
-            textAlign: 'center'
-          }}>
-            {error}
-          </div>
-        )}
+      <ThemeProvider theme={createAppTheme(currentTheme)}>
         {children}
       </ThemeProvider>
     </ThemeContext.Provider>
   );
-}
+};
 
-/**
- * テーマにアクセスするためのカスタムフック
- */
-export function useTheme(): ThemeContextType {
+// テーマコンテキストを使用するためのカスタムフック
+export const useTheme = () => {
   const context = useContext(ThemeContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useTheme must be used within a AppThemeProvider');
   }
   return context;
-}
+};
 
-export default ThemeContext; 
+// ThemeContextをエクスポート
+export { ThemeContext };

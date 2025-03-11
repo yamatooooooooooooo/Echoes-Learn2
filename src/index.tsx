@@ -5,7 +5,7 @@ import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 import { ServicesProvider } from './hooks/useServices';
 import { FirebaseProvider } from './contexts/FirebaseContext';
-import { AppThemeProvider } from './contexts/ThemeContext';
+import { AppThemeProvider } from './contexts';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
 
