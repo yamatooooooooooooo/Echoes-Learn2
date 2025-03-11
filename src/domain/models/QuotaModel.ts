@@ -13,6 +13,8 @@ export interface StudyQuota {
   isCompleted: boolean;      // 完了済みかどうか
   pagesRead?: number;        // 実際に読了したページ数
   progressPercentage?: number; // 進捗率（%）
+  daysRemaining?: number;    // 試験日までの残り日数
+  daysUntilTarget?: number;  // 目標達成日までの残り日数（バッファ含む）
 }
 
 /**
@@ -27,6 +29,7 @@ export interface DailyQuota {
   pages?: number;             // 既存コードとの互換性のため
   targetPages?: number;       // 既存コードとの互換性のため
   completedPages?: number;    // 既存コードとの互換性のため
+  activeSubjectsCount?: number; // 同時進行中の科目数
 }
 
 /**

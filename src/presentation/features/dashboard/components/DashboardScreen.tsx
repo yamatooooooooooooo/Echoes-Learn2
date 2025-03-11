@@ -4,6 +4,7 @@ import SimpleDailyQuotaCard from './SimpleDailyQuotaCard';
 import SimpleWeeklyQuotaCard from './SimpleWeeklyQuotaCard';
 import SimpleProgressBarCard from './SimpleProgressBarCard';
 import { RecentProgressCard } from './RecentProgressCard';
+import UpcomingExamsCard from './UpcomingExamsCard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../../../../contexts/AuthContext';
 
@@ -58,49 +59,9 @@ const DashboardScreen: React.FC = () => {
         ダッシュボード
       </Typography>
       
+      {/* 試験スケジュールカード */}
       <Box sx={{ mb: 4 }}>
-        {dashboardData && dashboardData.upcomingExams && dashboardData.upcomingExams.length > 0 ? (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              今後の試験
-            </Typography>
-            {dashboardData.upcomingExams.slice(0, 3).map((exam, index) => (
-              <Box 
-                key={index} 
-                sx={{ 
-                  mb: 1,
-                  p: 2, 
-                  borderRadius: 1, 
-                  bgcolor: 'background.paper',
-                  boxShadow: 1,
-                  border: '1px solid',
-                  borderColor: 'divider'
-                }}
-              >
-                <Typography variant="subtitle1">{exam.subjectName}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  試験日: {formatDate(exam.examDate)} (残り{exam.remainingDays}日)
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                  <Box sx={{ width: '100%', mr: 1 }}>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={exam.completion} 
-                      sx={{ 
-                        height: 8, 
-                        borderRadius: 1,
-                        backgroundColor: 'rgba(0,0,0,0.05)'
-                      }} 
-                    />
-                  </Box>
-                  <Box sx={{ minWidth: 35 }}>
-                    <Typography variant="body2" color="text.secondary">{`${exam.completion}%`}</Typography>
-                  </Box>
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        ) : null}
+        <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
       </Box>
       
       <Grid container spacing={2}>

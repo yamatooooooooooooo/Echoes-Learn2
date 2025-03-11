@@ -154,6 +154,13 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
         
         <Divider sx={{ mb: 2 }} />
         
+        {/* 同時進行科目 */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+            同時進行科目: {dailyQuota.activeSubjectsCount || dailyQuota.quotaItems.length} 科目
+          </Typography>
+        </Box>
+        
         <List disablePadding>
           {dailyQuota.quotaItems.map((item) => (
             <Paper 
@@ -183,13 +190,24 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
                     </Box>
                   }
                   secondary={
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        試験日: {item.examDate ? new Date(item.examDate).toLocaleDateString('ja-JP') : '未設定'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {item.estimatedMinutes} 分
-                      </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', mt: 0.5 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="caption" color="text.secondary">
+                          試験日: {item.examDate ? new Date(item.examDate).toLocaleDateString('ja-JP') : '未設定'}
+                          {item.daysRemaining && ` (残り${item.daysRemaining}日)`}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.estimatedMinutes} 分
+                        </Typography>
+                      </Box>
+                      
+                      {item.daysUntilTarget && (
+                        <Box sx={{ mt: 0.5 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            学習完了目標: あと{item.daysUntilTarget}日 (バッファ含む)
+                          </Typography>
+                        </Box>
+                      )}
                     </Box>
                   }
                 />

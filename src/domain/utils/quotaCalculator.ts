@@ -30,8 +30,21 @@ export const calculateDailyQuota = (subjects: Subject[]): DailyQuota => {
     return targetDate >= today;
   });
   
+  // 試験日の近い順にソート
+  validSubjects.sort((a, b) => {
+    const dateA = new Date(a.examDate);
+    const dateB = new Date(b.examDate);
+    return dateA.getTime() - dateB.getTime();
+  });
+  
+  // 同時に進行する科目数の上限（デフォルトは3）
+  const maxConcurrentSubjects = 3;
+  
+  // 優先して学習する科目を選択（試験日が近い順に上限数まで）
+  const prioritySubjects = validSubjects.slice(0, maxConcurrentSubjects);
+  
   // 各科目のノルマを計算
-  validSubjects.forEach(subject => {
+  prioritySubjects.forEach(subject => {
     // 試験日が設定されていない場合はスキップ（念のため）
     if (!subject.examDate) return;
     
@@ -55,6 +68,9 @@ export const calculateDailyQuota = (subjects: Subject[]): DailyQuota => {
     // 推定学習時間（1ページあたり2分と仮定）
     const estimatedMinutes = pagesPerDay * 2;
     
+    // 残り日数の計算
+    const daysRemaining = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
     quotaItems.push({
       subjectId: subject.id,
       subjectName: subject.name,
@@ -62,7 +78,9 @@ export const calculateDailyQuota = (subjects: Subject[]): DailyQuota => {
       estimatedMinutes: estimatedMinutes,
       priority: subject.priority || 'medium',
       examDate: examDate,
-      isCompleted: false
+      isCompleted: false,
+      daysRemaining: daysRemaining,
+      daysUntilTarget: daysUntilTarget
     });
     
     totalPages += pagesPerDay;
@@ -80,7 +98,8 @@ export const calculateDailyQuota = (subjects: Subject[]): DailyQuota => {
     totalPages,
     totalMinutes,
     quotaItems,
-    isCompleted: false
+    isCompleted: false,
+    activeSubjectsCount: prioritySubjects.length
   };
 };
 
