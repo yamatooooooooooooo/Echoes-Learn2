@@ -1,5 +1,18 @@
 import React from 'react';
-import { Box, Typography, CircularProgress, Alert, Divider, Grid, LinearProgress } from '@mui/material';
+import { 
+  Box, 
+  Typography, 
+  CircularProgress, 
+  Alert, 
+  Grid, 
+  Paper,
+  IconButton,
+  Tooltip
+} from '@mui/material';
+import { 
+  Dashboard as DashboardIcon,
+  Refresh as RefreshIcon
+} from '@mui/icons-material';
 import SimpleDailyQuotaCard from './SimpleDailyQuotaCard';
 import SimpleWeeklyQuotaCard from './SimpleWeeklyQuotaCard';
 import SimpleProgressBarCard from './SimpleProgressBarCard';
@@ -10,12 +23,19 @@ import { useAuth } from '../../../../contexts/AuthContext';
 import DataCleanupButton from '../../../components/common/DataCleanupButton';
 
 /**
- * ダッシュボード画面
+ * ダッシュボード画面 - Notion風デザイン
  * Firebaseから実際のデータを取得して表示
  */
 const DashboardScreen: React.FC = () => {
-  const { dashboardData, isLoading, error, formatDate } = useDashboardData();
+  const { dashboardData, isLoading, error, formatDate, refreshData } = useDashboardData();
   const { currentUser } = useAuth();
+  
+  // 手動更新
+  const handleRefresh = () => {
+    if (refreshData) {
+      refreshData();
+    }
+  };
   
   if (isLoading) {
     return (
@@ -53,59 +73,164 @@ const DashboardScreen: React.FC = () => {
         mx: 'auto', 
         p: { xs: 1, sm: 2 },
         pt: { xs: 2, sm: 2, md: 3 },
-        overflowX: 'hidden'
+        bgcolor: '#FAFAFA',
+        minHeight: '100vh'
       }}
     >
+      {/* ダッシュボードヘッダー */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 2, 
+          mb: 3, 
+          borderRadius: 2,
+          bgcolor: 'white',
+          border: '1px solid',
+          borderColor: 'divider',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <DashboardIcon 
+              sx={{ 
+                mr: 1.5, 
+                color: 'primary.main',
+                fontSize: '2rem'
+              }} 
+            />
+            <Box>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: { xs: '1.5rem', sm: '1.8rem' }
+                }}
+              >
+                ダッシュボード
+              </Typography>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ mt: 0.5 }}
+              >
+                {dashboardData && dashboardData.subjects && dashboardData.subjects.length > 0 
+                  ? `${dashboardData.subjects.length}科目の進捗状況と学習計画を確認できます` 
+                  : '科目を追加して学習を始めましょう'}
+              </Typography>
+            </Box>
+          </Box>
+          
+          <Tooltip title="データを更新">
+            <IconButton onClick={handleRefresh} size="small">
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Paper>
+      
       {/* 試験スケジュールカード */}
-      <Box sx={{ mb: 4 }}>
-        <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
+      <Box sx={{ mb: 3 }}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            borderRadius: 2,
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider' 
+          }}
+        >
+          <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
+        </Paper>
       </Box>
       
-      <Grid container spacing={2}>
+      {/* ノルマカード */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={6}>
-          <SimpleDailyQuotaCard 
-            subjects={dashboardData?.subjects || []} 
-            isLoading={isLoading} 
-          />
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 2,
+              height: '100%',
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: 'divider' 
+            }}
+          >
+            <SimpleDailyQuotaCard 
+              subjects={dashboardData?.subjects || []} 
+              isLoading={isLoading} 
+            />
+          </Paper>
         </Grid>
         <Grid item xs={12} md={6}>
-          <SimpleWeeklyQuotaCard 
-            subjects={dashboardData?.subjects || []} 
-            isLoading={isLoading} 
-          />
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 2,
+              height: '100%',
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: 'divider' 
+            }}
+          >
+            <SimpleWeeklyQuotaCard 
+              subjects={dashboardData?.subjects || []} 
+              isLoading={isLoading} 
+            />
+          </Paper>
         </Grid>
       </Grid>
       
-      <Box sx={{ mt: 3 }}>
-        <SimpleProgressBarCard 
-          subjects={dashboardData?.subjects || []} 
-          isLoading={isLoading} 
-        />
-      </Box>
-      
-      {dashboardData && dashboardData.recentProgress && dashboardData.recentProgress.length > 0 && (
-        <Box sx={{ mt: 3 }}>
-          <RecentProgressCard 
-            recentProgress={dashboardData.recentProgress} 
-            formatDate={formatDate}
+      {/* 進捗バー */}
+      <Box sx={{ mb: 3 }}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            borderRadius: 2,
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider' 
+          }}
+        >
+          <SimpleProgressBarCard 
+            subjects={dashboardData?.subjects || []} 
             isLoading={isLoading} 
           />
+        </Paper>
+      </Box>
+      
+      {/* 最近の進捗 */}
+      {dashboardData && dashboardData.recentProgress && dashboardData.recentProgress.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 2,
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: 'divider' 
+            }}
+          >
+            <RecentProgressCard 
+              recentProgress={dashboardData.recentProgress} 
+              formatDate={formatDate}
+              isLoading={isLoading} 
+            />
+          </Paper>
         </Box>
       )}
       
       {/* データクリーンアップボタン */}
       <Grid item xs={12}>
-        <DashboardFooter />
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          mt: 3 
+        }}>
+          <DataCleanupButton size="small" />
+        </Box>
       </Grid>
-    </Box>
-  );
-};
-
-// ダッシュボードフッター
-const DashboardFooter = () => {
-  return (
-    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
-      <DataCleanupButton size="small" />
     </Box>
   );
 };

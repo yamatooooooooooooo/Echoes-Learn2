@@ -15,7 +15,10 @@ import {
   Alert,
   CircularProgress,
   Tabs,
-  Tab
+  Tab,
+  Paper,
+  Chip,
+  LinearProgress
 } from '@mui/material';
 import { 
   ExpandMore as ExpandMoreIcon,
@@ -26,7 +29,9 @@ import {
   Timeline as TimelineIcon,
   Info as InfoIcon,
   History as HistoryIcon,
-  BarChart as BarChartIcon
+  BarChart as BarChartIcon,
+  MenuBook as MenuBookIcon,
+  Event as EventIcon
 } from '@mui/icons-material';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { Progress } from '../../../../domain/models/ProgressModel';
@@ -48,12 +53,13 @@ interface SubjectCardProps {
   onProgressAdded?: () => void;
   onSubjectUpdated?: (updatedSubject: Subject) => void;
   onEdit?: (subject: Subject) => void;
-  onDelete?: (subjectId: string) => void;
+  onDelete?: (subject: Subject) => void;
   formatDate: (date: Date | string | undefined) => string;
 }
 
 /**
- * 科目の詳細情報と進捗記録機能を提供するカードコンポーネント
+ * Notion風の科目カードコンポーネント
+ * 科目の詳細情報と進捗記録機能を提供する
  */
 export const SubjectCard: React.FC<SubjectCardProps> = ({
   subject,
@@ -64,9 +70,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   formatDate
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('details');
-  const [selectedProgress, setSelectedProgress] = useState<Progress | undefined>(undefined);
   const cardRef = useRef<HTMLDivElement>(null);
   
   // 計算値
@@ -91,28 +95,13 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     message,
     showMessage,
     error,
-    // 追加の進捗記録データを受け取る
     progressRecords,
     loadingProgressRecords,
     progressRecordsError
   } = useSubjectProgress(
     subject, 
     onProgressAdded, 
-    onSubjectUpdated,
-    // 進捗更新後のコールバック
-    () => {
-      // 進捗履歴を更新するためのコールバック
-      if (onProgressAdded) {
-        onProgressAdded();
-      }
-    },
-    // 進捗削除後のコールバック
-    () => {
-      // 進捗履歴を更新するためのコールバック
-      if (onProgressAdded) {
-        onProgressAdded();
-      }
-    }
+    onSubjectUpdated
   );
 
   // タッチイベントの調整
@@ -153,46 +142,33 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   
   // 削除ボタンクリック
   const handleDeleteClick = () => {
-    setShowDeleteConfirm(true);
-  };
-  
-  // 削除確認
-  const confirmDelete = () => {
-    if (onDelete && subject.id) {
-      onDelete(subject.id);
+    if (onDelete) {
+      onDelete(subject);
     }
-    setShowDeleteConfirm(false);
-  };
-  
-  // 削除キャンセル
-  const cancelDelete = () => {
-    setShowDeleteConfirm(false);
   };
 
-  // 進捗フォーム開閉時にselectedProgressをリセット
+  // 進捗フォーム開閉
   const handleToggleProgressForm = () => {
-    if (!isAdding) {
-      setSelectedProgress(undefined);
-    }
     toggleProgressForm();
   };
 
-  // 進捗編集ハンドラー
-  const handleEditProgress = (progress: Progress) => {
-    setSelectedProgress(progress);
-    startEditing(progress);
+  // 優先度に応じた色を取得
+  const getPriorityColor = (): string => {
+    switch (subject.priority) {
+      case 'high': return '#f44336';
+      case 'medium': return '#ff9800';
+      case 'low': return '#4caf50';
+      default: return '#9e9e9e';
+    }
   };
 
-  // 進捗削除ハンドラー
-  const handleDeleteProgress = (progressId: string) => {
-    openDeleteDialog(progressId);
-  };
-
-  // 進捗フォーム成功ハンドラー
-  const handleProgressSuccess = (progressId: string) => {
-    // 進捗履歴を更新するためのコールバック
-    if (onProgressAdded) {
-      onProgressAdded();
+  // 優先度のラベルを取得
+  const getPriorityLabel = (): string => {
+    switch (subject.priority) {
+      case 'high': return '高';
+      case 'medium': return '中';
+      case 'low': return '低';
+      default: return '未設定';
     }
   };
 
@@ -200,188 +176,260 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     <Card 
       ref={cardRef}
       sx={{ 
-        mb: 2,
+        mb: 0,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider',
+        boxShadow: 'none',
         transition: 'all 0.2s ease-in-out',
         '&:hover': {
-          boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+          boxShadow: '0 4px 8px rgba(0,0,0,0.05)',
+          borderColor: 'primary.light'
         }
       }}
     >
       {/* カードヘッダー */}
-      <CardContent sx={{ p: 2, pb: 2, '&:last-child': { pb: 2 } }}>
-        <SubjectHeader 
-          subject={subject}
-          progress={progress}
-          daysRemaining={daysRemaining}
-          expanded={expanded}
-          onExpandClick={toggleExpanded}
-          onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
-          formatDate={formatDate}
-        />
+      <CardContent sx={{ 
+        p: 2, 
+        pb: 2, 
+        '&:last-child': { pb: 2 },
+        borderBottom: expanded ? '1px solid' : 'none',
+        borderColor: 'divider'
+      }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'flex-start', 
+            width: 'calc(100% - 90px)'
+          }}>
+            <MenuBookIcon sx={{ 
+              mt: 0.5, 
+              mr: 1, 
+              color: getPriorityColor(),
+              fontSize: '1.5rem'
+            }} />
+            <Box>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: '1.1rem',
+                  mb: 0.5,
+                  lineHeight: 1.3
+                }}
+              >
+                {subject.name}
+              </Typography>
+              
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                flexWrap: 'wrap',
+                gap: 1,
+                mb: 1
+              }}>
+                <Chip 
+                  label={getPriorityLabel()} 
+                  size="small" 
+                  sx={{ 
+                    bgcolor: `${getPriorityColor()}20`,
+                    color: getPriorityColor(),
+                    fontWeight: 500,
+                    height: 20,
+                    fontSize: '0.7rem'
+                  }} 
+                />
+                
+                {subject.examDate && (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    fontSize: '0.75rem',
+                    color: daysRemaining && daysRemaining <= 7 ? 'error.main' : 'text.secondary'
+                  }}>
+                    <EventIcon sx={{ fontSize: '0.9rem', mr: 0.5 }} />
+                    {daysRemaining !== null ? `あと${daysRemaining}日` : formatDate(subject.examDate)}
+                  </Box>
+                )}
+              </Box>
+              
+              <Box sx={{ width: '100%', mt: 1 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  mb: 0.5
+                }}>
+                  <Typography variant="body2" color="text.secondary">
+                    進捗: {subject.currentPage || 0}/{subject.totalPages} ページ
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 600,
+                      color: progress >= 70 ? 'success.main' : progress >= 30 ? 'primary.main' : 'warning.main'
+                    }}
+                  >
+                    {progress}%
+                  </Typography>
+                </Box>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={progress} 
+                  sx={{ 
+                    height: 6, 
+                    borderRadius: 3,
+                    bgcolor: 'rgba(0,0,0,0.05)',
+                    '.MuiLinearProgress-bar': {
+                      bgcolor: progress >= 70 ? 'success.main' : progress >= 30 ? 'primary.main' : 'warning.main'
+                    }
+                  }} 
+                />
+              </Box>
+            </Box>
+          </Box>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <Box sx={{ display: 'flex' }}>
+              <IconButton 
+                size="small" 
+                onClick={handleEditClick}
+                sx={{ p: 0.5 }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+              <IconButton 
+                size="small" 
+                onClick={handleDeleteClick}
+                sx={{ p: 0.5 }}
+              >
+                <DeleteIcon fontSize="small" color="error" />
+              </IconButton>
+            </Box>
+            <IconButton 
+              onClick={toggleExpanded} 
+              size="small"
+              sx={{ mt: 'auto', p: 0.5 }}
+            >
+              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Box>
+        </Box>
       </CardContent>
       
       {/* 展開時のコンテンツ */}
       <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <CardContent sx={{ pt: 0, pb: 2, px: 2, '&:last-child': { pb: 2 } }}>
-          {/* 進捗更新中、または追加中以外の場合にタブを表示 */}
-          {!isEditing && !isAdding && (
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-              <Tabs 
-                value={activeTab} 
-                onChange={handleTabChange}
-                variant="fullWidth"
-              >
-                <Tab 
-                  label="詳細" 
-                  value="details" 
-                  icon={<InfoIcon fontSize="small" />} 
-                  iconPosition="start"
-                />
-                <Tab 
-                  label="進捗履歴" 
-                  value="history"
-                  icon={<HistoryIcon fontSize="small" />}
-                  iconPosition="start"
-                />
-                <Tab 
-                  label="グラフ" 
-                  value="charts"
-                  icon={<BarChartIcon fontSize="small" />}
-                  iconPosition="start"
-                />
-              </Tabs>
-            </Box>
+        <CardContent sx={{ pt: 2, pb: 2, px: 2, '&:last-child': { pb: 2 } }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            <Tabs 
+              value={activeTab} 
+              onChange={handleTabChange}
+              variant="fullWidth"
+              sx={{
+                '& .MuiTab-root': {
+                  minHeight: 40,
+                  fontSize: '0.8rem'
+                }
+              }}
+            >
+              <Tab 
+                label="詳細" 
+                value="details" 
+                icon={<InfoIcon fontSize="small" />} 
+                iconPosition="start"
+              />
+              <Tab 
+                label="進捗履歴" 
+                value="history"
+                icon={<HistoryIcon fontSize="small" />}
+                iconPosition="start"
+              />
+              <Tab 
+                label="グラフ" 
+                value="charts"
+                icon={<BarChartIcon fontSize="small" />}
+                iconPosition="start"
+              />
+            </Tabs>
+          </Box>
+          
+          {/* タブコンテンツ */}
+          {activeTab === 'details' && (
+            <>
+              <SubjectInfo subject={subject} formatDate={formatDate} />
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  size="small" 
+                  startIcon={<AddIcon />}
+                  onClick={handleToggleProgressForm}
+                  sx={{ borderRadius: 2 }}
+                >
+                  進捗を記録
+                </Button>
+              </Box>
+            </>
           )}
           
-          {/* 進捗フォーム */}
-          {isAdding && (
-            <ProgressForm 
-              subject={subject}
-              progress={selectedProgress}
-              open={isAdding}
-              onClose={handleToggleProgressForm}
-              onSuccess={handleProgressSuccess}
-              isEditMode={isEditing}
+          {activeTab === 'history' && (
+            <ProgressHistory 
+              subjectId={subject.id} 
+              formatDate={formatDate} 
+              onEdit={startEditing}
+              onDelete={openDeleteDialog}
             />
           )}
           
-          {/* 通常表示モード */}
-          {!isAdding && (
-            <>
-              {/* 「詳細」タブの内容 */}
-              {activeTab === 'details' && (
-                <>
-                  <SubjectInfo 
-                    subject={subject} 
-                    formatDate={formatDate}
-                    progress={progress}
-                  />
-                  
-                  {/* 進捗記録ボタン */}
-                  <Box sx={{ mt: 2, mb: 2, display: 'flex', justifyContent: 'center' }}>
-                    <Button 
-                      variant="outlined" 
-                      color="primary" 
-                      size="small" 
-                      onClick={handleToggleProgressForm}
-                      startIcon={<TimelineIcon />}
-                    >
-                      進捗を記録
-                    </Button>
-                  </Box>
-                </>
-              )}
-              
-              {/* 「進捗履歴」タブの内容 */}
-              {activeTab === 'history' && (
-                <>
-                  {/* 進捗記録ボタン */}
-                  <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
-                    <Button 
-                      variant="outlined" 
-                      color="primary" 
-                      size="small" 
-                      onClick={handleToggleProgressForm}
-                      startIcon={<TimelineIcon />}
-                    >
-                      進捗を記録
-                    </Button>
-                  </Box>
-                  
-                  {/* 進捗履歴表示 */}
-                  <ProgressHistory
-                    progressRecords={progressRecords}
-                    loading={loadingProgressRecords}
-                    error={progressRecordsError}
-                    onEdit={handleEditProgress}
-                    onDelete={handleDeleteProgress}
-                    formatDate={formatDate}
-                  />
-                </>
-              )}
-              
-              {/* 「グラフ」タブの内容 */}
-              {activeTab === 'charts' && (
-                <>
-                  {/* 進捗記録ボタン */}
-                  <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
-                    <Button 
-                      variant="outlined" 
-                      color="primary" 
-                      size="small" 
-                      onClick={handleToggleProgressForm}
-                      startIcon={<TimelineIcon />}
-                    >
-                      進捗を記録
-                    </Button>
-                  </Box>
-                  
-                  {/* グラフ表示 */}
-                  <ProgressCharts
-                    progressRecords={progressRecords}
-                    subject={subject}
-                    loading={loadingProgressRecords}
-                    error={progressRecordsError}
-                  />
-                </>
-              )}
-            </>
+          {activeTab === 'charts' && (
+            <ProgressCharts 
+              subjectId={subject.id} 
+              totalPages={subject.totalPages} 
+            />
           )}
         </CardContent>
       </Collapse>
       
-      {/* 削除確認ダイアログ */}
-      <Dialog
-        open={showDeleteConfirm}
-        onClose={cancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          科目の削除の確認
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body1" id="delete-dialog-description">
-            「{subject.name}」を削除してもよろしいですか？この操作は元に戻せません。
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={cancelDelete} color="primary">
-            キャンセル
-          </Button>
-          <Button onClick={confirmDelete} color="error">
-            削除する
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* 進捗フォーム */}
+      {isAdding && (
+        <Dialog 
+          open={isAdding} 
+          onClose={handleToggleProgressForm}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            elevation: 1,
+            sx: { borderRadius: 2 }
+          }}
+        >
+          <DialogTitle>進捗を記録</DialogTitle>
+          <DialogContent dividers>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+            <ProgressForm
+              subject={subject}
+              onSuccess={() => {
+                handleToggleProgressForm();
+                if (onProgressAdded) onProgressAdded();
+              }}
+              onCancel={handleToggleProgressForm}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
       
       {/* 進捗削除確認ダイアログ */}
       <ProgressDeleteDialog
         open={isDeleteDialogOpen}
         onClose={closeDeleteDialog}
         onConfirm={deleteProgress}
-        isDeleting={false}
+        progressId={progressToDelete}
       />
     </Card>
   );

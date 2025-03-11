@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Alert, Collapse, SelectChangeEvent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Typography, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Switch, Tooltip, CircularProgress, Grid, Snackbar } from '@mui/material';
+import { Box, Alert, Collapse, SelectChangeEvent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Typography, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Switch, Tooltip, CircularProgress, Grid, Snackbar, Paper } from '@mui/material';
 import { 
   ViewModule as ViewModuleIcon, 
   ViewList as ViewListIcon, 
   CalendarViewMonth as CalendarViewMonthIcon,
-  AssignmentTurnedIn as AssignmentTurnedInIcon
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
+  Add,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import { Subject, SubjectCreateInput, SubjectUpdateInput } from '../../../../domain/models/SubjectModel';
 import { SubjectForm } from './SubjectForm';
@@ -49,10 +51,12 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
   const [viewType, setViewType] = useState<ViewType>('card');
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // スナックバー用の状態
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   
   // 進捗記録モーダル用の状態
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
@@ -221,17 +225,34 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
   const handleConfirmDelete = async () => {
     if (!subjectToDelete) return;
     
-    setIsDeleteConfirming(true);
+    setIsDeleting(true);
     
     try {
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+        throw new Error('認証されていません');
+      }
+      
       await subjectRepository.deleteSubject(subjectToDelete.id);
+      
+      // 成功したら状態を更新
       setSubjects(prev => prev.filter(subject => subject.id !== subjectToDelete.id));
+      
+      // スナックバーで成功通知
+      setSnackbarMessage(`科目「${subjectToDelete.name}」を削除しました`);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      
+      // 状態をリセット
       setSubjectToDelete(null);
     } catch (error) {
       console.error('科目の削除に失敗しました:', error);
-      setLoadError('科目の削除に失敗しました');
+      setSnackbarMessage('科目の削除に失敗しました');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
     } finally {
       setIsDeleteConfirming(false);
+      setIsDeleting(false);
     }
   };
 
@@ -393,42 +414,203 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
   };
 
   return (
-    <Box sx={{ width: '100%', p: 2 }}>
-      {/* ヘッダー部分: SubjectListHeaderコンポーネントを使用 */}
-      <SubjectListHeader 
-        onAddClick={handleAddSubject}
-        onUpdatePriority={handleManualPriorityUpdate}
-        onRecordProgress={subjects.length > 0 ? () => handleOpenProgressModal(subjects[0]) : undefined}
-        isSubmitting={isSubmitting}
-        isPriorityUpdating={priorityUpdating}
-        autoPriorityEnabled={autoPriority}
-      />
+    <Box sx={{ 
+      maxWidth: '1200px', 
+      mx: 'auto', 
+      p: 2,
+      bgcolor: '#FAFAFA',
+      minHeight: '100vh'
+    }}>
+      {/* ヘッダー */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 2, 
+          mb: 2, 
+          borderRadius: 2,
+          bgcolor: 'white',
+          border: '1px solid',
+          borderColor: 'divider',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+        }}
+      >
+        <SubjectListHeader
+          onAddSubject={handleAddSubject}
+          totalSubjects={subjects.length}
+        />
+        
+        {/* ツールバー */}
+        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          {/* 表示切り替え */}
+          <ToggleButtonGroup
+            value={viewType}
+            exclusive
+            onChange={handleViewTypeChange}
+            aria-label="view type"
+            size="small"
+            sx={{ mr: 2 }}
+          >
+            <ToggleButton value="card" aria-label="card view">
+              <ViewModuleIcon fontSize="small" />
+            </ToggleButton>
+            <ToggleButton value="list" aria-label="list view">
+              <ViewListIcon fontSize="small" />
+            </ToggleButton>
+          </ToggleButtonGroup>
+          
+          {/* ソート */}
+          <FormControl variant="outlined" size="small" sx={{ minWidth: 120, mr: 2 }}>
+            <InputLabel id="sort-select-label">並び替え</InputLabel>
+            <Select
+              labelId="sort-select-label"
+              id="sort-select"
+              value={sortBy}
+              onChange={handleSortChange}
+              label="並び替え"
+              size="small"
+            >
+              <MenuItem value="priority-high">優先度（高→低）</MenuItem>
+              <MenuItem value="priority-low">優先度（低→高）</MenuItem>
+              <MenuItem value="name">科目名</MenuItem>
+              <MenuItem value="exam-date-asc">試験日（近い順）</MenuItem>
+              <MenuItem value="exam-date-desc">試験日（遠い順）</MenuItem>
+              <MenuItem value="progress-high">進捗（高→低）</MenuItem>
+              <MenuItem value="progress-low">進捗（低→高）</MenuItem>
+            </Select>
+          </FormControl>
+          
+          {/* 自動優先度 */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={autoPriority}
+                onChange={handleAutoPriorityToggle}
+                color="primary"
+                size="small"
+              />
+            }
+            label={
+              <Typography variant="body2">
+                自動優先度
+              </Typography>
+            }
+            sx={{ mr: 2 }}
+          />
+          
+          {/* 更新ボタン */}
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleManualPriorityUpdate}
+            disabled={priorityUpdating}
+            startIcon={priorityUpdating ? <CircularProgress size={20} /> : null}
+          >
+            優先度更新
+          </Button>
+        </Box>
+      </Paper>
       
-      {/* エラーメッセージの表示 */}
+      {/* エラー表示 */}
       <Collapse in={!!loadError}>
         <Alert severity="error" sx={{ mb: 2 }}>
           {loadError}
         </Alert>
       </Collapse>
       
-      {/* 科目の追加と編集用のモーダル */}
+      {/* コンテンツ */}
+      <Box sx={{ mb: 4 }}>
+        {isLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            {viewType === 'card' ? (
+              <Grid container spacing={2}>
+                {sortedSubjects.map(subject => (
+                  <Grid item xs={12} sm={6} md={4} key={subject.id}>
+                    <SubjectCard
+                      subject={subject}
+                      onProgressAdded={loadSubjects}
+                      onSubjectUpdated={handleUpdateSubject}
+                      onEdit={handleEditSubject}
+                      onDelete={handleDeleteConfirm}
+                      formatDate={formatDate}
+                    />
+                  </Grid>
+                ))}
+                
+                {sortedSubjects.length === 0 && (
+                  <Grid item xs={12}>
+                    <Paper 
+                      elevation={0} 
+                      sx={{ 
+                        p: 4, 
+                        textAlign: 'center',
+                        border: '1px dashed',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                        bgcolor: 'white' 
+                      }}
+                    >
+                      <Typography variant="h6" gutterBottom>
+                        科目がまだ登録されていません
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary" paragraph>
+                        「新しい科目」ボタンから科目を追加してください
+                      </Typography>
+                      <Button 
+                        variant="contained" 
+                        color="primary" 
+                        onClick={handleAddSubject}
+                        startIcon={<Add />}
+                      >
+                        新しい科目
+                      </Button>
+                    </Paper>
+                  </Grid>
+                )}
+              </Grid>
+            ) : (
+              <Paper 
+                elevation={0} 
+                sx={{ 
+                  borderRadius: 2, 
+                  overflow: 'hidden',
+                  border: '1px solid',
+                  borderColor: 'divider' 
+                }}
+              >
+                <SubjectListView
+                  subjects={sortedSubjects}
+                  loading={isLoading}
+                  formatDate={formatDate}
+                  onSubjectUpdated={handleUpdateSubject}
+                  onSubjectEdit={handleEditSubject}
+                  onSubjectDelete={handleDeleteConfirm}
+                />
+              </Paper>
+            )}
+          </>
+        )}
+      </Box>
+      
+      {/* 科目フォームダイアログ */}
       <Dialog 
         open={isFormOpen} 
-        onClose={() => setIsFormOpen(false)}
-        fullWidth
-        maxWidth="sm"
+        onClose={() => setIsFormOpen(false)} 
+        fullWidth 
+        maxWidth="md"
+        PaperProps={{
+          elevation: 1,
+          sx: { borderRadius: 2 }
+        }}
       >
         <DialogTitle>
           {editingSubject ? '科目を編集' : '新しい科目を追加'}
         </DialogTitle>
-        <DialogContent>
-          {submitError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {submitError}
-            </Alert>
-          )}
-          
-          <SubjectForm 
+        <DialogContent dividers>
+          <SubjectForm
             subject={editingSubject}
             onSubmit={handleFormSubmit}
             onCancel={() => setIsFormOpen(false)}
@@ -438,80 +620,91 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
         </DialogContent>
       </Dialog>
       
-      {/* 科目の削除確認用のダイアログ */}
-      <Dialog
-        open={isDeleteConfirming}
+      {/* 科目削除確認ダイアログ */}
+      <Dialog 
+        open={isDeleteConfirming} 
         onClose={handleCancelDelete}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
+        PaperProps={{
+          elevation: 1,
+          sx: { borderRadius: 2 }
+        }}
       >
-        <DialogTitle id="alert-dialog-title">
-          本当に削除しますか？
-        </DialogTitle>
+        <DialogTitle>科目の削除</DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            「{subjectToDelete?.name}」を削除します。この操作は取り消せません。
+          <DialogContentText>
+            {subjectToDelete ? (
+              <>
+                科目「<strong>{subjectToDelete.name}</strong>」を削除します。<br />
+                この操作は取り消せません。よろしいですか？
+              </>
+            ) : '科目を削除します。この操作は取り消せません。'}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
+          <Button onClick={handleCancelDelete} disabled={isDeleting}>
             キャンセル
           </Button>
-          <Button onClick={handleConfirmDelete} color="error" autoFocus>
-            削除する
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained"
+            disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={20} /> : <DeleteIcon />}
+          >
+            削除
           </Button>
         </DialogActions>
       </Dialog>
       
-      {/* カードビューまたはリストビューの表示 */}
-      {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : viewType === 'card' ? (
-        <Grid container spacing={2} sx={{ mt: 1 }}>
-          {sortedSubjects.map(subject => (
-            <Grid item xs={12} sm={6} md={4} key={subject.id}>
-              <SubjectCard 
-                subject={subject} 
-                formatDate={formatDate}
-                onEdit={() => handleEditSubject(subject)}
-                onDelete={() => handleDeleteConfirm(subject)}
-                onProgressAdded={() => handleOpenProgressModal(subject)}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      ) : (
-        <SubjectListView
-          subjects={sortedSubjects}
-          formatDate={formatDate}
-          onSubjectUpdated={handleUpdateSubject}
-          onSubjectEdit={handleEditSubject}
-          onSubjectDelete={(subjectId) => handleDeleteConfirm({ id: subjectId } as Subject)}
-          loading={isLoading || priorityUpdating}
-        />
-      )}
+      {/* 進捗記録モーダル */}
+      <Dialog 
+        open={isProgressModalOpen} 
+        onClose={handleCloseProgressModal}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          elevation: 1,
+          sx: { borderRadius: 2 }
+        }}
+      >
+        <DialogTitle>
+          進捗を記録 {selectedSubjectForProgress && `- ${selectedSubjectForProgress.name}`}
+        </DialogTitle>
+        <DialogContent dividers>
+          {progressSubmitError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {progressSubmitError}
+            </Alert>
+          )}
+          
+          {selectedSubjectForProgress && (
+            <ProgressForm
+              subject={selectedSubjectForProgress}
+              onSuccess={handleProgressSuccess}
+              onCancel={handleCloseProgressModal}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
       
       {/* スナックバー通知 */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
-        message={snackbarMessage}
-      />
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity={snackbarSeverity}
+          elevation={6}
+          variant="filled"
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
       
-      {/* 進捗記録フォーム */}
-      {selectedSubjectForProgress && (
-        <ProgressForm
-          subject={selectedSubjectForProgress}
-          open={isProgressModalOpen}
-          onClose={handleCloseProgressModal}
-          onSuccess={handleProgressSuccess}
-        />
-      )}
-      
-      {/* メンテナンスメッセージコンポーネント */}
+      {/* メンテナンスメッセージ */}
       <MaintenanceMessageComponent />
     </Box>
   );

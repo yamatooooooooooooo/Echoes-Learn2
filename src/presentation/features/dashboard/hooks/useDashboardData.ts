@@ -377,5 +377,10 @@ export const useDashboardData = () => {
     return () => unsubscribe();
   }, [auth, loadDashboardData]);
 
-  return { dashboardData, isLoading, error, formatDate };
+  // データ更新関数
+  const refreshData = useCallback(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  return { dashboardData, isLoading, error, formatDate, refreshData };
 }; 
