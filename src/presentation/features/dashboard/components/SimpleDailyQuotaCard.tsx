@@ -24,6 +24,7 @@ import { Subject } from '../../../../domain/models/SubjectModel';
 import { DailyQuota } from '../../../../domain/models/QuotaModel';
 import { calculateDailyQuota } from '../../../../domain/utils/quotaCalculator';
 import { useMaintenanceMessage } from '../../../../hooks/useMaintenanceMessage';
+import { useUserSettings } from '../../../../hooks/useUserSettings';
 
 interface SimpleDailyQuotaCardProps {
   subjects: Subject[];
@@ -39,16 +40,19 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
 }) => {
   const [dailyQuota, setDailyQuota] = useState<DailyQuota | null>(null);
   
+  // ユーザー設定をコンテキストから取得
+  const { userSettings } = useUserSettings();
+  
   // メンテナンスメッセージフックを使用
   const { wrapWithMaintenanceMessage, MaintenanceMessageComponent } = useMaintenanceMessage({
     message: '日次ノルマの再計算機能は現在メンテナンス中です。近日中に実装予定です。'
   });
   
-  // 科目リストが変更されたらノルマを再計算
+  // 科目リストかユーザー設定が変更されたらノルマを再計算
   useEffect(() => {
     // 関数をuseEffect内部で定義して依存関係の問題を解決
     const calculateQuota = () => {
-      const quota = calculateDailyQuota(subjects);
+      const quota = calculateDailyQuota(subjects, userSettings);
       setDailyQuota(quota);
     };
     
@@ -57,11 +61,11 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
     } else {
       setDailyQuota(null);
     }
-  }, [subjects]);
+  }, [subjects, userSettings]);
   
   // 手動更新用関数
   const handleRefresh = () => {
-    const quota = calculateDailyQuota(subjects);
+    const quota = calculateDailyQuota(subjects, userSettings);
     setDailyQuota(quota);
   };
   
@@ -158,6 +162,7 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
         <Box sx={{ mb: 2 }}>
           <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
             同時進行科目: {dailyQuota.activeSubjectsCount || dailyQuota.quotaItems.length} 科目
+            (最大: {userSettings?.maxConcurrentSubjects || 3}科目)
           </Typography>
         </Box>
         
