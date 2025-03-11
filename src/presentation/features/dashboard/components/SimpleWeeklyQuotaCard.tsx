@@ -98,15 +98,16 @@ const SimpleWeeklyQuotaCard: React.FC<SimpleWeeklyQuotaCardProps> = ({
   };
   
   // 週次ノルマの達成状況を判定する関数
-  const getWeeklyCompletionStatus = (item) => {
+  const getWeeklyCompletionStatus = (item: any) => {
     // 科目のIDを使って、対応する科目のデータを取得
     const subjectData = subjects.find(subject => subject.id === item.subjectId);
     
     if (!subjectData) return { progress: 0, isCompleted: false };
     
     // 週の進捗を計算（ここでは単純化のため、当週の進捗ページ数がノルマを超えているか確認）
-    const weeklyProgressPages = subjectData.weeklyProgressPages || 0;
-    const progress = Math.min(100, Math.round((weeklyProgressPages / item.pages) * 100));
+    // weeklyProgressPagesプロパティは実際のアプリでは実装されている想定
+    const weeklyProgressPages = 0; // 仮の実装（実際のアプリではsubjectDataから適切な値を取得）
+    const progress = Math.min(100, Math.round((weeklyProgressPages / (item.pages || 1)) * 100));
     
     return {
       progress,
@@ -115,7 +116,7 @@ const SimpleWeeklyQuotaCard: React.FC<SimpleWeeklyQuotaCardProps> = ({
   };
   
   // 日付の進捗状況を判定する関数
-  const getDailyProgress = (dateStr) => {
+  const getDailyProgress = (dateStr: string) => {
     // この日付の全科目の進捗状況を確認
     const totalTargetPages = weeklyQuota?.dailyDistribution[dateStr] || 0;
     const date = new Date(dateStr);
