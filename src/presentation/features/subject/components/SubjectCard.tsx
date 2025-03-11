@@ -359,7 +359,11 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           {/* タブコンテンツ */}
           {activeTab === 'details' && (
             <>
-              <SubjectInfo subject={subject} formatDate={formatDate} />
+              <SubjectInfo 
+                subject={subject} 
+                formatDate={formatDate}
+                progress={progress}
+              />
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
                 <Button 
                   variant="contained" 
@@ -377,59 +381,43 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           
           {activeTab === 'history' && (
             <ProgressHistory 
-              subjectId={subject.id} 
-              formatDate={formatDate} 
+              progressRecords={progressRecords}
+              loading={loadingProgressRecords}
+              error={progressRecordsError}
               onEdit={startEditing}
               onDelete={openDeleteDialog}
+              formatDate={formatDate}
             />
           )}
           
           {activeTab === 'charts' && (
             <ProgressCharts 
-              subjectId={subject.id} 
-              totalPages={subject.totalPages} 
+              progressRecords={progressRecords}
+              subject={subject}
+              loading={loadingProgressRecords}
+              error={progressRecordsError}
             />
           )}
         </CardContent>
       </Collapse>
       
       {/* 進捗フォーム */}
-      {isAdding && (
-        <Dialog 
-          open={isAdding} 
-          onClose={handleToggleProgressForm}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{
-            elevation: 1,
-            sx: { borderRadius: 2 }
-          }}
-        >
-          <DialogTitle>進捗を記録</DialogTitle>
-          <DialogContent dividers>
-            {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            )}
-            <ProgressForm
-              subject={subject}
-              onSuccess={() => {
-                handleToggleProgressForm();
-                if (onProgressAdded) onProgressAdded();
-              }}
-              onCancel={handleToggleProgressForm}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+      <ProgressForm
+        subject={subject}
+        open={isAdding}
+        onClose={handleToggleProgressForm}
+        onSuccess={(progressId) => {
+          handleToggleProgressForm();
+          if (onProgressAdded) onProgressAdded();
+        }}
+      />
       
       {/* 進捗削除確認ダイアログ */}
       <ProgressDeleteDialog
         open={isDeleteDialogOpen}
         onClose={closeDeleteDialog}
         onConfirm={deleteProgress}
-        progressId={progressToDelete}
+        isDeleting={false}
       />
     </Card>
   );
