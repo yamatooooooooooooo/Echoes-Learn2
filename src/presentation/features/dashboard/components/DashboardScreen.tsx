@@ -76,17 +76,16 @@ const DashboardScreen: React.FC = () => {
         bgcolor: 'background.default',
         display: 'flex',
         flexDirection: 'column',
-        flexGrow: 1,
-        minHeight: 0
+        height: '100%'
       }}
     >
-      <Box sx={{ flexShrink: 0 }}>
+      {/* ヘッダー部分 - 固定表示 */}
+      <Box sx={{ flexShrink: 0, mb: { xs: 2, sm: 3 } }}>
         {/* ダッシュボードヘッダー */}
         <Paper 
           elevation={0} 
           sx={{ 
             p: { xs: 1.5, sm: 2 }, 
-            mb: { xs: 2, sm: 3 }, 
             borderRadius: 2,
             bgcolor: 'white',
             border: '1px solid',
@@ -134,7 +133,14 @@ const DashboardScreen: React.FC = () => {
         </Paper>
       </Box>
       
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', minHeight: 0 }}>
+      {/* スクロール可能なコンテンツエリア */}
+      <Box 
+        sx={{ 
+          flexGrow: 1, 
+          overflow: 'auto', 
+          pb: 2 
+        }}
+      >
         {/* 試験スケジュールカード */}
         <Box sx={{ mb: { xs: 2, sm: 3 } }}>
           <Paper 

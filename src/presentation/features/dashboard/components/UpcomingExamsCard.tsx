@@ -116,7 +116,7 @@ export const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }
         avatar={<EventIcon />}
       />
       <CardContent sx={{ 
-        maxHeight: { xs: '200px', sm: '250px', md: '300px' }, 
+        maxHeight: { xs: '300px', sm: '350px', md: '400px' }, 
         overflow: 'auto',
         p: { xs: 1, sm: 2 }
       }}>

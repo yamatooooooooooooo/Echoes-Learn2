@@ -143,193 +143,210 @@ export const RecentProgressCard: React.FC<RecentProgressCardProps> = ({
   }
   
   return (
-    <NotionStyleCard title="">
-      <List
-        sx={{ 
-          maxHeight: { xs: '200px', sm: '250px', md: '300px' },
-          overflowY: 'auto',
-          '& .MuiListItem-root': { 
-            py: 1.5,
-            px: 0.5,
-            borderBottom: '1px solid #F5F5F5',
-            cursor: 'pointer'
-          },
-          '& .MuiListItem-root:last-child': { 
-            borderBottom: 'none'
-          }
-        }}
-      >
-        {recentProgress.map((progress) => (
-          <React.Fragment key={progress.id}>
-            <ListItem 
-              disablePadding 
-              sx={{ 
-                mb: 1,
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.01)',
-                  borderLeft: `2px solid ${getTimeColor(progress.createdAt)}`,
-                  pl: 1
-                }
-              }}
-              onClick={() => progress.id && handleToggleProgress(progress.id)}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                <Tooltip
-                  title={`${formatDateTime(progress.createdAt || new Date())}に記録`}
-                  TransitionComponent={Zoom}
-                  arrow
-                >
-                  <MenuBookIcon 
-                    fontSize="small" 
-                    color="primary" 
-                    sx={{ 
-                      opacity: 0.8,
-                      transition: 'all 0.2s ease',
-                      transform: expandedProgressId === progress.id ? 'scale(1.2)' : 'scale(1)'
-                    }}
-                  />
-                </Tooltip>
-              </ListItemIcon>
-              <ListItemText
-                primary={
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontWeight: 500,
-                      transition: 'all 0.15s ease',
-                      color: expandedProgressId === progress.id ? 'primary.main' : 'text.primary'
-                    }}
+    <NotionStyleCard
+      title="最近の進捗"
+      icon={<TimelineIcon />}
+      headerAction={
+        <Box>
+          <Typography variant="caption" color="text.secondary">
+            {recentProgress.length}件の記録
+          </Typography>
+        </Box>
+      }
+    >
+      {isLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+          <CircularProgress size={24} />
+        </Box>
+      ) : (
+        <List 
+          sx={{ 
+            p: 0,
+            maxHeight: { xs: '300px', sm: '350px', md: '400px' },
+            overflowY: 'auto',
+            '& .MuiListItem-root': { 
+              py: 1.5,
+              px: 0.5,
+              borderBottom: '1px solid #F5F5F5',
+              cursor: 'pointer'
+            },
+            '& .MuiListItem-root:last-child': { 
+              borderBottom: 'none'
+            }
+          }}
+        >
+          {recentProgress.map((progress) => (
+            <React.Fragment key={progress.id}>
+              <ListItem 
+                disablePadding 
+                sx={{ 
+                  mb: 1,
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+                    borderLeft: `2px solid ${getTimeColor(progress.createdAt)}`,
+                    pl: 1
+                  }
+                }}
+                onClick={() => progress.id && handleToggleProgress(progress.id)}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  <Tooltip
+                    title={`${formatDateTime(progress.createdAt || new Date())}に記録`}
+                    TransitionComponent={Zoom}
+                    arrow
                   >
-                    {progress.subjectName}
-                  </Typography>
-                }
-                secondary={
-                  <Box sx={{ mt: 0.5 }}>
-                    <Typography 
-                      variant="caption" 
+                    <MenuBookIcon 
+                      fontSize="small" 
+                      color="primary" 
                       sx={{ 
-                        display: 'block', 
-                        color: getTimeColor(progress.createdAt),
-                        transition: 'all 0.15s ease'
+                        opacity: 0.8,
+                        transition: 'all 0.2s ease',
+                        transform: expandedProgressId === progress.id ? 'scale(1.2)' : 'scale(1)'
+                      }}
+                    />
+                  </Tooltip>
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontWeight: 500,
+                        transition: 'all 0.15s ease',
+                        color: expandedProgressId === progress.id ? 'primary.main' : 'text.primary'
                       }}
                     >
-                      {formatDateTime(progress.createdAt)}
+                      {progress.subjectName}
                     </Typography>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ display: 'block', color: 'text.secondary' }}
-                    >
-                      {progress.startPage}ページ → {progress.endPage}ページ 
-                      （{getPageCount(progress.startPage, progress.endPage)}ページ）
-                    </Typography>
-                  </Box>
-                }
-              />
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center',
-                  minWidth: '42px'
-                }}
-              >
-                <Tooltip title="学習したページ数" arrow>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontWeight: 500, 
-                      color: 'primary.main',
-                      fontSize: '1.1rem',
-                      transition: 'all 0.2s ease',
-                      transform: expandedProgressId === progress.id ? 'scale(1.1)' : 'scale(1)'
-                    }}
-                  >
-                    {getPageCount(progress.startPage, progress.endPage)}
-                  </Typography>
-                </Tooltip>
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                  ページ
-                </Typography>
-              </Box>
-              <IconButton 
-                size="small" 
-                sx={{ ml: 1, opacity: 0.6 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  progress.id && handleToggleProgress(progress.id);
-                }}
-              >
-                {expandedProgressId === progress.id ? 
-                  <KeyboardArrowUpIcon fontSize="small" /> : 
-                  <KeyboardArrowDownIcon fontSize="small" />
-                }
-              </IconButton>
-            </ListItem>
-            
-            <Collapse in={expandedProgressId === progress.id} timeout="auto" unmountOnExit>
-              <Box 
-                sx={{ 
-                  mx: 2, 
-                  mb: 2, 
-                  p: 2, 
-                  borderRadius: 1, 
-                  bgcolor: 'background.paper',
-                  border: '1px solid #F0F0F0'
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <TrendingUpIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="subtitle2">
-                    学習詳細
-                  </Typography>
-                </Box>
-                
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', minWidth: '160px' }}>
-                    <BookIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
-                    <Typography variant="body2">
-                      <strong>科目名:</strong> {progress.subjectName}
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', minWidth: '160px' }}>
-                    <CalendarTodayIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
-                    <Typography variant="body2">
-                      <strong>記録日:</strong> {formatDate(progress.recordDate || progress.createdAt || new Date())}
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', minWidth: '160px' }}>
-                    <AccessTimeIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
-                    <Typography variant="body2">
-                      <strong>記録時間:</strong> {formatTime(progress.createdAt || new Date())}
-                    </Typography>
-                  </Box>
-                </Box>
-                
+                  }
+                  secondary={
+                    <Box sx={{ mt: 0.5 }}>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          display: 'block', 
+                          color: getTimeColor(progress.createdAt),
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {formatDateTime(progress.createdAt)}
+                      </Typography>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ display: 'block', color: 'text.secondary' }}
+                      >
+                        {progress.startPage}ページ → {progress.endPage}ページ 
+                        （{getPageCount(progress.startPage, progress.endPage)}ページ）
+                      </Typography>
+                    </Box>
+                  }
+                />
                 <Box 
                   sx={{ 
                     display: 'flex', 
-                    alignItems: 'center', 
-                    mt: 2, 
-                    p: 1,
-                    borderRadius: 1,
-                    bgcolor: 'primary.light',
-                    color: 'primary.dark'
+                    flexDirection: 'column', 
+                    alignItems: 'center',
+                    minWidth: '42px'
                   }}
                 >
-                  <MenuBookIcon fontSize="small" sx={{ mr: 1 }} />
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {progress.startPage}ページから{progress.endPage}ページまで
-                    （合計: {getPageCount(progress.startPage, progress.endPage)}ページ）を学習しました
+                  <Tooltip title="学習したページ数" arrow>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontWeight: 500, 
+                        color: 'primary.main',
+                        fontSize: '1.1rem',
+                        transition: 'all 0.2s ease',
+                        transform: expandedProgressId === progress.id ? 'scale(1.1)' : 'scale(1)'
+                      }}
+                    >
+                      {getPageCount(progress.startPage, progress.endPage)}
+                    </Typography>
+                  </Tooltip>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    ページ
                   </Typography>
                 </Box>
-              </Box>
-            </Collapse>
-          </React.Fragment>
-        ))}
-      </List>
+                <IconButton 
+                  size="small" 
+                  sx={{ ml: 1, opacity: 0.6 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    progress.id && handleToggleProgress(progress.id);
+                  }}
+                >
+                  {expandedProgressId === progress.id ? 
+                    <KeyboardArrowUpIcon fontSize="small" /> : 
+                    <KeyboardArrowDownIcon fontSize="small" />
+                  }
+                </IconButton>
+              </ListItem>
+              
+              <Collapse in={expandedProgressId === progress.id} timeout="auto" unmountOnExit>
+                <Box 
+                  sx={{ 
+                    mx: 2, 
+                    mb: 2, 
+                    p: 2, 
+                    borderRadius: 1, 
+                    bgcolor: 'background.paper',
+                    border: '1px solid #F0F0F0'
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <TrendingUpIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
+                    <Typography variant="subtitle2">
+                      学習詳細
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', minWidth: '160px' }}>
+                      <BookIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
+                      <Typography variant="body2">
+                        <strong>科目名:</strong> {progress.subjectName}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', minWidth: '160px' }}>
+                      <CalendarTodayIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
+                      <Typography variant="body2">
+                        <strong>記録日:</strong> {formatDate(progress.recordDate || progress.createdAt || new Date())}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', minWidth: '160px' }}>
+                      <AccessTimeIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
+                      <Typography variant="body2">
+                        <strong>記録時間:</strong> {formatTime(progress.createdAt || new Date())}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      mt: 2, 
+                      p: 1,
+                      borderRadius: 1,
+                      bgcolor: 'primary.light',
+                      color: 'primary.dark'
+                    }}
+                  >
+                    <MenuBookIcon fontSize="small" sx={{ mr: 1 }} />
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {progress.startPage}ページから{progress.endPage}ページまで
+                      （合計: {getPageCount(progress.startPage, progress.endPage)}ページ）を学習しました
+                    </Typography>
+                  </Box>
+                </Box>
+              </Collapse>
+            </React.Fragment>
+          ))}
+        </List>
+      )}
     </NotionStyleCard>
   );
 }; 
