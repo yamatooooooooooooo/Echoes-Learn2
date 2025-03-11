@@ -64,7 +64,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   const [expanded, setExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('details');
-  const [selectedProgress, setSelectedProgress] = useState<Progress | null>(null);
+  const [selectedProgress, setSelectedProgress] = useState<Progress | undefined>(undefined);
   const cardRef = useRef<HTMLDivElement>(null);
   
   // 計算値
@@ -163,6 +163,14 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     setShowDeleteConfirm(false);
   };
 
+  // 進捗フォーム開閉時にselectedProgressをリセット
+  const handleToggleProgressForm = () => {
+    if (!isAdding) {
+      setSelectedProgress(undefined);
+    }
+    toggleProgressForm();
+  };
+
   // 進捗編集ハンドラー
   const handleEditProgress = (progress: Progress) => {
     setSelectedProgress(progress);
@@ -181,6 +189,9 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       onProgressAdded();
     }
   };
+
+  // ProgressHistoryコンポーネントに渡すデータ
+  const progressRecords: Progress[] = [];
 
   return (
     <Card 
@@ -240,7 +251,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
               subject={subject}
               progress={selectedProgress}
               open={isAdding}
-              onClose={toggleProgressForm}
+              onClose={handleToggleProgressForm}
               onSuccess={handleProgressSuccess}
               isEditMode={isEditing}
             />
@@ -264,7 +275,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                       variant="outlined" 
                       color="primary" 
                       size="small" 
-                      onClick={toggleProgressForm}
+                      onClick={handleToggleProgressForm}
                       startIcon={<TimelineIcon />}
                     >
                       進捗を記録
@@ -282,7 +293,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                       variant="outlined" 
                       color="primary" 
                       size="small" 
-                      onClick={toggleProgressForm}
+                      onClick={handleToggleProgressForm}
                       startIcon={<TimelineIcon />}
                     >
                       進捗を記録
@@ -291,7 +302,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                   
                   {/* 進捗履歴表示 */}
                   <ProgressHistory
-                    progressRecords={subject.progressRecords || []}
+                    progressRecords={progressRecords}
                     loading={false}
                     error={null}
                     onEdit={handleEditProgress}
