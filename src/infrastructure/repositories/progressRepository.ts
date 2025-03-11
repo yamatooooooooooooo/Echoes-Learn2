@@ -28,6 +28,38 @@ export class ProgressRepository implements IProgressRepository {
   ) {}
 
   /**
+   * Firestoreのタイムスタンプまたは日付文字列からJavaScriptのDateオブジェクトに変換する
+   * @param dateField Firestoreのタイムスタンプか日付文字列
+   * @returns JavaScriptのDateオブジェクト
+   */
+  private convertToDate(dateField: any): Date {
+    if (!dateField) return new Date();
+    
+    // FirestoreのTimestamp型の場合
+    if (dateField && typeof dateField.toDate === 'function') {
+      return dateField.toDate();
+    }
+    
+    // 文字列の場合
+    if (typeof dateField === 'string') {
+      return new Date(dateField);
+    }
+    
+    // Dateオブジェクトの場合
+    if (dateField instanceof Date) {
+      return dateField;
+    }
+    
+    // 数値（タイムスタンプ）の場合
+    if (typeof dateField === 'number') {
+      return new Date(dateField);
+    }
+    
+    console.warn('不明な日付形式:', dateField);
+    return new Date(); // デフォルトは現在時刻
+  }
+
+  /**
    * 特定の科目の進捗記録を取得
    */
   async getSubjectProgress(userId: string, subjectId: string): Promise<Progress[]> {
@@ -47,9 +79,9 @@ export class ProgressRepository implements IProgressRepository {
         progress.push({
           id: doc.id,
           ...data,
-          recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
-          updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date(),
-          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date()
+          recordDate: this.convertToDate(data.recordDate),
+          updatedAt: this.convertToDate(data.updatedAt),
+          createdAt: this.convertToDate(data.createdAt)
         } as Progress);
       });
       
@@ -81,9 +113,9 @@ export class ProgressRepository implements IProgressRepository {
       const progress: Progress = {
         id: progressSnap.id,
         ...data,
-        recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
-        updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date(),
-        createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date()
+        recordDate: this.convertToDate(data.recordDate),
+        updatedAt: this.convertToDate(data.updatedAt),
+        createdAt: this.convertToDate(data.createdAt)
       } as Progress;
       
       return progress;
@@ -189,9 +221,9 @@ export class ProgressRepository implements IProgressRepository {
         progressList.push({
           id: doc.id,
           ...data,
-          recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
-          updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date(),
-          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date()
+          recordDate: this.convertToDate(data.recordDate),
+          updatedAt: this.convertToDate(data.updatedAt),
+          createdAt: this.convertToDate(data.createdAt)
         } as Progress);
       });
       
@@ -218,9 +250,9 @@ export class ProgressRepository implements IProgressRepository {
         progressList.push({
           id: doc.id,
           ...data,
-          recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
-          updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date(),
-          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date()
+          recordDate: this.convertToDate(data.recordDate),
+          updatedAt: this.convertToDate(data.updatedAt),
+          createdAt: this.convertToDate(data.createdAt)
         } as Progress);
       });
       
@@ -252,9 +284,9 @@ export class ProgressRepository implements IProgressRepository {
         progressList.push({
           id: doc.id,
           ...data,
-          recordDate: data.recordDate ? new Date(data.recordDate.toDate()) : new Date(),
-          updatedAt: data.updatedAt ? new Date(data.updatedAt.toDate()) : new Date(),
-          createdAt: data.createdAt ? new Date(data.createdAt.toDate()) : new Date()
+          recordDate: this.convertToDate(data.recordDate),
+          updatedAt: this.convertToDate(data.updatedAt),
+          createdAt: this.convertToDate(data.createdAt)
         } as Progress);
       });
       

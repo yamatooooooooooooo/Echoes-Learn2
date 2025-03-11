@@ -7,6 +7,7 @@ import { RecentProgressCard } from './RecentProgressCard';
 import { UpcomingExamsCard } from './UpcomingExamsCard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../../../../contexts/AuthContext';
+import DataCleanupButton from '../../../components/common/DataCleanupButton';
 
 /**
  * ダッシュボード画面
@@ -91,6 +92,20 @@ const DashboardScreen: React.FC = () => {
           />
         </Box>
       )}
+      
+      {/* データクリーンアップボタン */}
+      <Grid item xs={12}>
+        <DashboardFooter />
+      </Grid>
+    </Box>
+  );
+};
+
+// ダッシュボードフッター
+const DashboardFooter = () => {
+  return (
+    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+      <DataCleanupButton size="small" />
     </Box>
   );
 };
