@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Drawer,
   List,
@@ -14,16 +14,34 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
-  SwipeableDrawer
+  SwipeableDrawer,
+  Collapse,
+  InputBase,
+  Avatar,
+  Tooltip,
+  Button,
+  alpha
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
 import { 
+  Menu as MenuIcon,
   Dashboard as DashboardIcon,
   MenuBook as MenuBookIcon,
   ShowChart as ShowChartIcon,
   Settings as SettingsIcon,
   EmojiEvents as EmojiEventsIcon,
-  History as HistoryIcon
+  History as HistoryIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon,
+  KeyboardArrowRight as KeyboardArrowRightIcon,
+  Search as SearchIcon,
+  Add as AddIcon,
+  Star as StarIcon,
+  StarBorder as StarBorderIcon,
+  NoteAdd as NoteAddIcon,
+  Folder as FolderIcon,
+  MoreHoriz as MoreHorizIcon,
+  DragIndicator as DragIndicatorIcon,
+  ExpandMore,
+  ExpandLess
 } from '@mui/icons-material';
 
 // サイドバーのプロパティ型
@@ -34,19 +52,57 @@ interface SidebarProps {
   selectedMenu: string;
 }
 
-// メニュー項目の定義
-const menuItems = [
-  { id: 'dashboard', text: 'ダッシュボード', icon: <DashboardIcon /> },
-  { id: 'subjects', text: '科目管理', icon: <MenuBookIcon /> },
-  // 以下の項目は一時的に非表示
-  // { id: 'progress', text: '学習進捗', icon: <ShowChartIcon /> },
-  // { id: 'study', text: '学習記録', icon: <HistoryIcon /> },
-  // { id: 'gamification', text: '学習成果', icon: <EmojiEventsIcon /> },
-  // { id: 'settings', text: '設定', icon: <SettingsIcon /> }
+// サイドバー項目の型定義
+interface SidebarItem {
+  id: string;
+  text: string;
+  icon: React.ReactNode;
+  type: 'page' | 'folder' | 'section';
+  children?: SidebarItem[];
+  starred?: boolean;
+}
+
+// サイドバー項目の定義
+const sidebarItems: SidebarItem[] = [
+  {
+    id: 'favorites',
+    text: 'お気に入り',
+    icon: <StarIcon />,
+    type: 'section',
+    children: [
+      { id: 'dashboard', text: 'ダッシュボード', icon: <DashboardIcon />, type: 'page', starred: true },
+    ]
+  },
+  {
+    id: 'workspace',
+    text: 'ワークスペース',
+    icon: <FolderIcon />,
+    type: 'section',
+    children: [
+      { id: 'subjects', text: '科目管理', icon: <MenuBookIcon />, type: 'page' },
+      { 
+        id: 'studyTracking', 
+        text: '学習状況', 
+        icon: <ShowChartIcon />, 
+        type: 'folder',
+        children: [
+          { id: 'progress', text: '学習進捗', icon: <ShowChartIcon />, type: 'page' },
+          { id: 'study', text: '学習記録', icon: <HistoryIcon />, type: 'page' },
+        ]
+      },
+      { id: 'gamification', text: '学習成果', icon: <EmojiEventsIcon />, type: 'page' },
+    ]
+  },
+  {
+    id: 'settings',
+    text: '設定',
+    icon: <SettingsIcon />,
+    type: 'page'
+  }
 ];
 
 /**
- * サイドバーコンポーネント
+ * Notion風サイドバーコンポーネント
  * アプリケーションのナビゲーションメニューを提供する
  */
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -59,88 +115,378 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const drawerRef = useRef<HTMLDivElement>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(isMobile ? 280 : 260);
+  const [resizing, setResizing] = useState(false);
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
+    favorites: true,
+    workspace: true,
+    studyTracking: false
+  });
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // フォーカス管理
-  useEffect(() => {
-    // ドロワーが閉じられたときにフォーカス可能な要素からフォーカスを外す
-    if (!open && drawerRef.current) {
-      const focusableElements = drawerRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      
-      focusableElements.forEach((el) => {
-        (el as HTMLElement).setAttribute('tabindex', '-1');
-      });
-    } else if (open && drawerRef.current) {
-      // ドロワーが開いたときにフォーカス可能な要素のtabindexを復元
-      const focusableElements = drawerRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex="-1"]'
-      );
-      
-      focusableElements.forEach((el) => {
-        (el as HTMLElement).removeAttribute('tabindex');
-      });
-    }
-  }, [open]);
+  // フォルダの開閉状態を切り替える
+  const toggleFolder = (folderId: string) => {
+    setExpandedFolders(prev => ({
+      ...prev,
+      [folderId]: !prev[folderId]
+    }));
+  };
 
-  const drawerContent = (
-    <Box sx={{ width: isMobile ? '85%' : 240, maxWidth: isMobile ? 280 : 'none' }} role="navigation">
-      <Box sx={{ 
-        p: { xs: 1.5, sm: 2 }, 
-        display: 'flex', 
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <Typography variant="h6" component="div">
-          Echoes Learn
-        </Typography>
-      </Box>
-      <Divider />
-      <List sx={{ pt: { xs: 1, sm: 1.5 } }}>
-        {menuItems.map((item) => (
-          <ListItem 
-            key={item.id} 
-            disablePadding
-            sx={{ 
-              mb: { xs: 0.5, sm: 0.5 },
-              px: { xs: 1, sm: 1 }
-            }}
-          >
-            <ListItemButton
-              selected={selectedMenu === item.id}
-              onClick={() => onMenuSelect(item.id)}
-              sx={{
-                py: { xs: 1, sm: 1.2 },
-                px: { xs: 1.5, sm: 2 },
-                borderRadius: '8px',
-                borderLeft: selectedMenu === item.id ? `4px solid ${theme.palette.primary.main}` : '4px solid transparent',
-                backgroundColor: selectedMenu === item.id ? 
-                  (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)') : 
-                  'transparent',
-                '&:hover': {
-                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.06)',
-                }
+  // お気に入り状態を切り替える
+  const toggleStar = (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation();
+    // 実際のアプリケーションではここでお気に入り状態を更新するロジックを実装
+    console.log(`Toggled star for ${itemId}`);
+  };
+
+  // サイドバーのリサイズを開始
+  const startResize = (e: React.MouseEvent) => {
+    if (isMobile) return;
+    
+    e.preventDefault();
+    setResizing(true);
+    
+    const onMouseMove = (e: MouseEvent) => {
+      // 最小幅と最大幅を設定
+      const newWidth = Math.max(240, Math.min(400, e.clientX));
+      setSidebarWidth(newWidth);
+    };
+    
+    const onMouseUp = () => {
+      setResizing(false);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
+  // 再帰的にメニュー項目をレンダリング
+  const renderMenuItems = (items: SidebarItem[], level = 0) => {
+    return items.map((item) => {
+      const isSelected = selectedMenu === item.id;
+      const isExpanded = expandedFolders[item.id] || false;
+      const hasChildren = item.children && item.children.length > 0;
+      const paddingLeft = level * 16 + 8;
+      
+      // セクションヘッダー
+      if (item.type === 'section') {
+        return (
+          <React.Fragment key={item.id}>
+            <ListItem 
+              disablePadding
+              sx={{ 
+                mt: level === 0 ? 2 : 1, 
+                mb: 0.5
               }}
             >
-              <ListItemIcon
+              <ListItemButton
+                onClick={() => toggleFolder(item.id)}
                 sx={{
-                  color: selectedMenu === item.id ? theme.palette.primary.main : 'inherit',
-                  minWidth: { xs: '40px', sm: '40px' }
+                  py: 0.5,
+                  px: 2,
+                  borderRadius: '4px',
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                  }
                 }}
               >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                primaryTypographyProps={{
-                  fontWeight: selectedMenu === item.id ? 600 : 400,
-                  fontSize: { xs: '0.9rem', sm: '1rem' }
+                {hasChildren && (
+                  <ExpandMore
+                    sx={{
+                      mr: 1,
+                      transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+                      transition: '0.2s',
+                      fontSize: '1.2rem',
+                      color: theme.palette.text.secondary,
+                    }}
+                  />
+                )}
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    variant: 'overline',
+                    fontSize: '0.75rem',
+                    color: theme.palette.text.secondary,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+            
+            {hasChildren && item.children && (
+              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                {renderMenuItems(item.children, level + 1)}
+              </Collapse>
+            )}
+          </React.Fragment>
+        );
+      }
+      
+      // フォルダ
+      if (item.type === 'folder') {
+        return (
+          <React.Fragment key={item.id}>
+            <ListItem 
+              disablePadding
+              sx={{ 
+                mb: 0.5,
+                pl: `${paddingLeft}px`
+              }}
+            >
+              <ListItemButton
+                onClick={() => toggleFolder(item.id)}
+                sx={{
+                  py: 0.8,
+                  px: 2,
+                  borderRadius: '4px',
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                  }
                 }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 32,
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontSize: '0.9rem',
+                  }}
+                />
+                {hasChildren && (
+                  isExpanded ? (
+                    <ExpandLess sx={{ color: theme.palette.text.secondary }} />
+                  ) : (
+                    <ExpandMore sx={{ color: theme.palette.text.secondary }} />
+                  )
+                )}
+              </ListItemButton>
+            </ListItem>
+            
+            {hasChildren && item.children && (
+              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                {renderMenuItems(item.children, level + 1)}
+              </Collapse>
+            )}
+          </React.Fragment>
+        );
+      }
+      
+      // 通常のページ
+      return (
+        <ListItem 
+          key={item.id}
+          disablePadding
+          sx={{ 
+            mb: 0.5,
+            pl: `${paddingLeft}px`
+          }}
+        >
+          <ListItemButton
+            selected={isSelected}
+            onClick={() => onMenuSelect(item.id)}
+            sx={{
+              py: 0.8,
+              px: 2,
+              borderRadius: '4px',
+              backgroundColor: isSelected ? 
+                alpha(theme.palette.primary.main, 0.12) : 'transparent',
+              '&:hover': {
+                backgroundColor: isSelected ? 
+                  alpha(theme.palette.primary.main, 0.16) : 
+                  alpha(theme.palette.primary.main, 0.08),
+              },
+              '&.Mui-selected': {
+                backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.16),
+                }
+              }
+            }}
+          >
+            <ListItemIcon
+              sx={{
+                minWidth: 32,
+                color: isSelected ? theme.palette.primary.main : theme.palette.text.secondary,
+              }}
+            >
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText
+              primary={item.text}
+              primaryTypographyProps={{
+                fontWeight: isSelected ? 500 : 400,
+                fontSize: '0.9rem',
+                color: isSelected ? theme.palette.primary.main : theme.palette.text.primary,
+              }}
+            />
+            <IconButton
+              onClick={(e) => toggleStar(e, item.id)}
+              size="small"
+              sx={{ 
+                opacity: item.starred || isSelected ? 1 : 0,
+                '&:hover': { opacity: 1 },
+                ml: 1
+              }}
+            >
+              {item.starred ? (
+                <StarIcon fontSize="small" color="warning" />
+              ) : (
+                <StarBorderIcon fontSize="small" sx={{ color: theme.palette.text.secondary }} />
+              )}
+            </IconButton>
+          </ListItemButton>
+        </ListItem>
+      );
+    });
+  };
+
+  const drawerContent = (
+    <Box 
+      sx={{ 
+        width: isMobile ? '85%' : sidebarWidth, 
+        maxWidth: isMobile ? 280 : '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative'
+      }} 
+      role="navigation"
+      ref={drawerRef}
+    >
+      {/* サイドバーヘッダー */}
+      <Box sx={{ 
+        p: 2,
+        display: 'flex', 
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Avatar 
+            sx={{ 
+              width: 32, 
+              height: 32, 
+              mr: 1,
+              bgcolor: theme.palette.primary.main,
+              fontSize: '1rem'
+            }}
+          >
+            E
+          </Avatar>
+          <Typography variant="subtitle1" fontWeight={600}>
+            Echoes Learn
+          </Typography>
+        </Box>
+        <IconButton size="small" onClick={onToggle}>
+          <MoreHorizIcon />
+        </IconButton>
+      </Box>
+      
+      {/* 検索ボックス */}
+      <Box sx={{ px: 2, pb: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.08) : alpha(theme.palette.common.black, 0.04),
+            borderRadius: '6px',
+            p: '4px 8px',
+            '&:hover': {
+              backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.12) : alpha(theme.palette.common.black, 0.06),
+            }
+          }}
+        >
+          <SearchIcon sx={{ color: theme.palette.text.secondary, mr: 1, fontSize: '1.2rem' }} />
+          <InputBase
+            placeholder="検索..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{
+              fontSize: '0.9rem',
+              flex: 1,
+              '& .MuiInputBase-input': {
+                p: '4px 0',
+              }
+            }}
+          />
+          <Typography 
+            variant="caption" 
+            color="text.secondary" 
+            sx={{ 
+              backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.1) : alpha(theme.palette.common.black, 0.08),
+              p: '1px 4px',
+              borderRadius: '4px',
+              fontSize: '0.7rem',
+            }}
+          >
+            ⌘K
+          </Typography>
+        </Box>
+      </Box>
+      
+      <Divider sx={{ mx: 2, my: 0.5 }} />
+      
+      {/* メニューリスト */}
+      <Box sx={{ flex: 1, overflowY: 'auto', px: 1 }}>
+        <List disablePadding>
+          {renderMenuItems(sidebarItems)}
+        </List>
+      </Box>
+      
+      <Divider sx={{ mx: 2, my: 0.5 }} />
+      
+      {/* ページ作成ボタン */}
+      <Box sx={{ p: 2 }}>
+        <Button 
+          variant="outlined" 
+          startIcon={<AddIcon />}
+          fullWidth
+          size="small"
+          sx={{ 
+            justifyContent: 'flex-start',
+            textTransform: 'none',
+            borderRadius: '6px',
+            py: 0.8,
+            borderColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.1) : alpha(theme.palette.common.black, 0.1),
+            color: theme.palette.text.primary,
+            '&:hover': {
+              borderColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.2) : alpha(theme.palette.common.black, 0.2),
+              backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.05) : alpha(theme.palette.common.black, 0.03),
+            }
+          }}
+        >
+          新しいページ
+        </Button>
+      </Box>
+      
+      {/* リサイズハンドル */}
+      {!isMobile && (
+        <Box
+          sx={{
+            position: 'absolute',
+            height: '100%',
+            width: '5px',
+            top: 0,
+            right: 0,
+            cursor: 'ew-resize',
+            '&:hover': {
+              backgroundColor: theme.palette.primary.main,
+            },
+            ...(resizing && {
+              backgroundColor: theme.palette.primary.main,
+            })
+          }}
+          onMouseDown={startResize}
+        />
+      )}
     </Box>
   );
 
@@ -205,18 +551,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
           open={open}
           onClose={onToggle}
           sx={{
-            width: isTablet ? 260 : 240,
+            width: sidebarWidth,
             flexShrink: 0,
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': { 
-              width: isTablet ? 260 : 240, 
+              width: sidebarWidth, 
               boxSizing: 'border-box',
               backgroundColor: theme.palette.background.paper,
               borderRight: '1px solid',
               borderColor: theme.palette.divider,
               marginTop: '64px',
               height: 'calc(100% - 64px)',
-              boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)'
+              boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
+              transition: resizing ? 'none' : theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
             },
             zIndex: theme.zIndex.drawer,
           }}
