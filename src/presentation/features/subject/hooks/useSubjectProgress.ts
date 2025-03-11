@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useServices } from '../../../../hooks/useServices';
 import { Subject } from '../../../../domain/models/SubjectModel';
-import { Progress, ProgressCreateInput } from '../../../../domain/models/ProgressModel';
+import { Progress, ProgressCreateInput, ProgressUpdateInput } from '../../../../domain/models/ProgressModel';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
+import { ProgressService } from '../../../../domain/services/ProgressService';
 
 // 進捗フォームのデータ型
 interface ProgressFormData {
@@ -23,11 +24,17 @@ const initialProgressForm: ProgressFormData = {
 export const useSubjectProgress = (
   subject: Subject,
   onProgressAdded?: () => void,
-  onSubjectUpdated?: (subject: Subject) => void
+  onSubjectUpdated?: (subject: Subject) => void,
+  onProgressUpdated?: () => void,
+  onProgressDeleted?: () => void
 ) => {
   const [progressForm, setProgressForm] = useState<ProgressFormData>(initialProgressForm);
   const [isAdding, setIsAdding] = useState(false);
-  const { progressRepository } = useServices();
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentProgressId, setCurrentProgressId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [progressToDelete, setProgressToDelete] = useState<string | null>(null);
+  const { progressRepository, subjectRepository } = useServices();
   const { auth } = useFirebase();
   const [message, setMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
@@ -35,11 +42,67 @@ export const useSubjectProgress = (
 
   const toggleProgressForm = () => {
     setIsAdding(!isAdding);
+    setIsEditing(false);
+    setCurrentProgressId(null);
     if (!isAdding) {
       setProgressForm({
         ...progressForm,
         startPage: subject.currentPage || 0
       });
+    }
+  };
+
+  // 編集モードを開始
+  const startEditing = (progress: Progress) => {
+    setIsEditing(true);
+    setIsAdding(true);
+    setCurrentProgressId(progress.id || null);
+    setProgressForm({
+      startPage: progress.startPage,
+      endPage: progress.endPage,
+      pagesRead: progress.pagesRead,
+      recordDate: typeof progress.recordDate === 'string' 
+        ? progress.recordDate 
+        : progress.recordDate.toISOString().split('T')[0]
+    });
+  };
+
+  // 削除ダイアログを開く
+  const openDeleteDialog = (progressId: string) => {
+    setProgressToDelete(progressId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // 削除ダイアログを閉じる
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setProgressToDelete(null);
+  };
+
+  // 進捗記録を削除
+  const deleteProgress = async () => {
+    if (!progressToDelete) return;
+    
+    try {
+      const progressService = new ProgressService(progressRepository, subjectRepository);
+      await progressService.deleteProgress(progressToDelete);
+      
+      closeDeleteDialog();
+      setMessage('進捗記録を削除しました');
+      setShowMessage(true);
+      
+      // 削除完了後のコールバック実行
+      if (onProgressDeleted) {
+        onProgressDeleted();
+      }
+      
+      // メッセージを3秒後に消す
+      setTimeout(() => {
+        setShowMessage(false);
+      }, 3000);
+    } catch (error) {
+      console.error('進捗の削除に失敗しました:', error);
+      setError('進捗の削除に失敗しました');
     }
   };
 
@@ -107,7 +170,7 @@ export const useSubjectProgress = (
     
     try {
       // 進捗データを作成
-      const progressData: ProgressCreateInput = {
+      const progressData: ProgressCreateInput | ProgressUpdateInput = {
         subjectId: subject.id,
         recordDate: progressForm.recordDate,
         startPage: Number(progressForm.startPage),
@@ -115,20 +178,56 @@ export const useSubjectProgress = (
         pagesRead: Number(progressForm.pagesRead)
       };
       
-      await progressRepository.addProgress(auth.currentUser?.uid || '', progressData);
+      const progressService = new ProgressService(progressRepository, subjectRepository);
       
-      // 科目のcurrentPageも更新
-      if (onSubjectUpdated && Number(progressForm.endPage) > (subject.currentPage || 0)) {
-        const updatedSubject = {
-          ...subject,
-          currentPage: Number(progressForm.endPage)
-        };
-        onSubjectUpdated(updatedSubject);
+      if (isEditing && currentProgressId) {
+        // 進捗を更新
+        await progressService.updateProgress(currentProgressId, progressData);
+        
+        // 科目のcurrentPageを更新（必要な場合）
+        if (Number(progressForm.endPage) > (subject.currentPage || 0)) {
+          const updatedSubject = {
+            ...subject,
+            currentPage: Number(progressForm.endPage)
+          };
+          if (onSubjectUpdated) {
+            onSubjectUpdated(updatedSubject);
+          }
+        }
+        
+        setMessage('進捗を更新しました');
+        
+        // 更新完了後のコールバック実行
+        if (onProgressUpdated) {
+          onProgressUpdated();
+        }
+      } else {
+        // 新規進捗を追加
+        await progressRepository.addProgress(auth.currentUser?.uid || '', progressData as ProgressCreateInput);
+        
+        // 科目のcurrentPageも更新
+        if (Number(progressForm.endPage) > (subject.currentPage || 0)) {
+          const updatedSubject = {
+            ...subject,
+            currentPage: Number(progressForm.endPage)
+          };
+          if (onSubjectUpdated) {
+            onSubjectUpdated(updatedSubject);
+          }
+        }
+        
+        setMessage('進捗を記録しました');
+        
+        // 追加完了後のコールバック実行
+        if (onProgressAdded) {
+          onProgressAdded();
+        }
       }
       
       setProgressForm(initialProgressForm);
       setIsAdding(false);
-      setMessage('進捗を記録しました');
+      setIsEditing(false);
+      setCurrentProgressId(null);
       setShowMessage(true);
       
       // メッセージを3秒後に消す
@@ -136,15 +235,22 @@ export const useSubjectProgress = (
         setShowMessage(false);
       }, 3000);
     } catch (error) {
-      console.error('進捗の追加に失敗しました:', error);
-      setError('進捗の追加に失敗しました');
+      console.error('進捗の保存に失敗しました:', error);
+      setError('進捗の保存に失敗しました');
     }
   };
 
   return {
     progressForm,
     isAdding,
+    isEditing,
     toggleProgressForm,
+    startEditing,
+    openDeleteDialog,
+    closeDeleteDialog,
+    deleteProgress,
+    isDeleteDialogOpen,
+    progressToDelete,
     handleProgressChange,
     handleQuickProgress,
     handleSaveProgress,

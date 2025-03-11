@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ProgressCreateInput } from '../../../../domain/models/ProgressModel';
+import { useState, useCallback } from 'react';
+import { ProgressCreateInput, Progress } from '../../../../domain/models/ProgressModel';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { useServices } from '../../../../hooks/useServices';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
@@ -8,14 +8,16 @@ import { ProgressService } from '../../../../domain/services/ProgressService';
 import { format } from 'date-fns';
 
 interface UseProgressFormParams {
-  subject: Subject;
+  subject?: Subject;
+  progress?: Progress;
+  isEditMode?: boolean;
   onSuccess?: (progressId: string) => void;
 }
 
 /**
  * 進捗記録フォームのカスタムフック
  */
-export const useProgressForm = ({ subject, onSuccess }: UseProgressFormParams) => {
+export const useProgressForm = ({ subject, progress, isEditMode = false, onSuccess }: UseProgressFormParams) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -29,16 +31,33 @@ export const useProgressForm = ({ subject, onSuccess }: UseProgressFormParams) =
   
   // 初期値を設定
   const initialValues: ProgressCreateInput = {
-    subjectId: subject.id,
-    startPage: subject.currentPage || 0,
-    endPage: subject.currentPage || 0,
-    pagesRead: 0,
-    recordDate: today,
-    studyDuration: 0,
-    memo: ''
+    subjectId: subject?.id || progress?.subjectId || '',
+    startPage: subject?.currentPage || progress?.startPage || 0,
+    endPage: progress?.endPage || subject?.currentPage || 0,
+    pagesRead: progress?.pagesRead || 0,
+    recordDate: progress?.recordDate ? 
+      (typeof progress.recordDate === 'string' ? progress.recordDate : format(progress.recordDate, 'yyyy-MM-dd')) : 
+      today,
+    studyDuration: progress?.studyDuration || 0,
+    memo: progress?.memo || ''
   };
   
   const [formData, setFormData] = useState<ProgressCreateInput>(initialValues);
+  
+  // 進捗データからフォームデータを設定
+  const setFormDataFromProgress = useCallback((progress: Progress) => {
+    setFormData({
+      subjectId: progress.subjectId,
+      startPage: progress.startPage,
+      endPage: progress.endPage,
+      pagesRead: progress.pagesRead,
+      recordDate: typeof progress.recordDate === 'string' 
+        ? progress.recordDate 
+        : format(progress.recordDate, 'yyyy-MM-dd'),
+      studyDuration: progress.studyDuration || 0,
+      memo: progress.memo || ''
+    });
+  }, []);
   
   // フォーム入力の処理
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -99,7 +118,13 @@ export const useProgressForm = ({ subject, onSuccess }: UseProgressFormParams) =
     
     try {
       // バリデーション
-      const validationErrors = validateProgress(formData, subject);
+      const subjectToValidate = subject || (isEditMode && progress ? { totalPages: Infinity } as Subject : undefined);
+      
+      if (!subjectToValidate) {
+        throw new Error('科目情報が必要です');
+      }
+      
+      const validationErrors = validateProgress(formData, subjectToValidate);
       if (Object.keys(validationErrors).length > 0) {
         setFieldErrors(validationErrors);
         setIsSubmitting(false);
@@ -117,8 +142,23 @@ export const useProgressForm = ({ subject, onSuccess }: UseProgressFormParams) =
       // ProgressServiceのインスタンス作成
       const progressService = new ProgressService(progressRepository, subjectRepository);
       
-      // 進捗を記録
-      const progressId = await progressService.recordProgress(currentUser.uid, formData);
+      let progressId = '';
+      
+      if (isEditMode && progress?.id) {
+        // 既存の進捗を更新
+        await progressService.updateProgress(progress.id, {
+          startPage: formData.startPage,
+          endPage: formData.endPage,
+          pagesRead: formData.pagesRead,
+          recordDate: formData.recordDate,
+          studyDuration: formData.studyDuration,
+          memo: formData.memo
+        });
+        progressId = progress.id;
+      } else {
+        // 新規進捗記録を作成
+        progressId = await progressService.recordProgress(currentUser.uid, formData);
+      }
       
       // 成功コールバック
       if (onSuccess) {
@@ -154,6 +194,10 @@ export const useProgressForm = ({ subject, onSuccess }: UseProgressFormParams) =
   const validateProgress = (data: ProgressCreateInput, subject: Subject): Record<string, string> => {
     const errors: Record<string, string> = {};
     
+    if (!data.subjectId) {
+      errors.subjectId = '科目IDは必須です';
+    }
+    
     if (data.startPage < 0) {
       errors.startPage = '開始ページは0以上である必要があります';
     }
@@ -162,12 +206,22 @@ export const useProgressForm = ({ subject, onSuccess }: UseProgressFormParams) =
       errors.endPage = '終了ページは開始ページ以上である必要があります';
     }
     
-    if (data.endPage > subject.totalPages) {
+    if (data.endPage > subject.totalPages && subject.totalPages !== Infinity) {
       errors.endPage = `終了ページは科目の総ページ数（${subject.totalPages}）以下である必要があります`;
     }
     
     if (!data.recordDate) {
       errors.recordDate = '記録日を選択してください';
+    }
+    
+    // 日付が有効かチェック
+    try {
+      const date = new Date(data.recordDate);
+      if (isNaN(date.getTime())) {
+        throw new ProgressError('有効な日付を入力してください', 'INVALID_DATE_FORMAT', 'recordDate');
+      }
+    } catch (error) {
+      throw new ProgressError('有効な日付を入力してください', 'INVALID_DATE_FORMAT', 'recordDate');
     }
     
     return errors;
@@ -181,6 +235,7 @@ export const useProgressForm = ({ subject, onSuccess }: UseProgressFormParams) =
     handleChange,
     handleDateChange,
     handleSubmit,
-    resetForm
+    resetForm,
+    setFormDataFromProgress
   };
 }; 

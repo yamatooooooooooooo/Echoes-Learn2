@@ -28,14 +28,15 @@ import {
   History as HistoryIcon
 } from '@mui/icons-material';
 import { Subject } from '../../../../domain/models/SubjectModel';
+import { Progress } from '../../../../domain/models/ProgressModel';
 import { calculateDaysRemaining, calculateProgress } from '../utils/subjectUtils';
 import { SubjectHeader } from './SubjectHeader';
 import { SubjectInfo } from './SubjectInfo';
 import { ProgressForm } from './ProgressForm';
-import { ProgressFormData } from '../../../../domain/models/ProgressModel';
 import { ProgressList } from './ProgressList';
 import { ProgressHistory } from './ProgressHistory';
-import { useSubjectProgress } from '../../../../application/usecases/useSubjectProgress';
+import { ProgressDeleteDialog } from './ProgressDeleteDialog';
+import { useSubjectProgress } from '../hooks/useSubjectProgress';
 
 // タブの種類
 type TabType = 'details' | 'history';
@@ -62,8 +63,8 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isAddingProgress, setIsAddingProgress] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('details');
+  const [selectedProgress, setSelectedProgress] = useState<Progress | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   
   // 計算値
@@ -72,17 +73,41 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   
   // 進捗操作のためのカスタムフックを使用
   const { 
-    loading, 
-    error, 
-    progressRecords,
-    isEditingProgress,
-    currentEditingProgress,
-    addProgress, 
-    startEditingProgress,
-    cancelEditingProgress,
-    updateProgress,
-    deleteProgress
-  } = useSubjectProgress(subject, onProgressAdded, onSubjectUpdated);
+    progressForm,
+    isAdding,
+    isEditing,
+    toggleProgressForm,
+    startEditing,
+    openDeleteDialog,
+    closeDeleteDialog,
+    deleteProgress,
+    isDeleteDialogOpen,
+    progressToDelete,
+    handleProgressChange,
+    handleQuickProgress,
+    handleSaveProgress,
+    message,
+    showMessage,
+    error
+  } = useSubjectProgress(
+    subject, 
+    onProgressAdded, 
+    onSubjectUpdated,
+    // 進捗更新後のコールバック
+    () => {
+      // 進捗履歴を更新するためのコールバック
+      if (onProgressAdded) {
+        onProgressAdded();
+      }
+    },
+    // 進捗削除後のコールバック
+    () => {
+      // 進捗履歴を更新するためのコールバック
+      if (onProgressAdded) {
+        onProgressAdded();
+      }
+    }
+  );
 
   // タッチイベントの調整
   useEffect(() => {
@@ -138,6 +163,25 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     setShowDeleteConfirm(false);
   };
 
+  // 進捗編集ハンドラー
+  const handleEditProgress = (progress: Progress) => {
+    setSelectedProgress(progress);
+    startEditing(progress);
+  };
+
+  // 進捗削除ハンドラー
+  const handleDeleteProgress = (progressId: string) => {
+    openDeleteDialog(progressId);
+  };
+
+  // 進捗フォーム成功ハンドラー
+  const handleProgressSuccess = (progressId: string) => {
+    // 進捗履歴を更新するためのコールバック
+    if (onProgressAdded) {
+      onProgressAdded();
+    }
+  };
+
   return (
     <Card 
       ref={cardRef}
@@ -167,7 +211,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <CardContent sx={{ pt: 0, pb: 2, px: 2, '&:last-child': { pb: 2 } }}>
           {/* 進捗更新中、または追加中以外の場合にタブを表示 */}
-          {!isEditingProgress && !isAddingProgress && (
+          {!isEditing && !isAdding && (
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
               <Tabs 
                 value={activeTab} 
@@ -190,39 +234,20 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
             </Box>
           )}
           
-          {/* 編集モード時のフォーム */}
-          {isEditingProgress ? (
+          {/* 進捗フォーム */}
+          {isAdding && (
             <ProgressForm 
-              subject={subject} 
-              open={isEditingProgress}
-              onClose={cancelEditingProgress}
-              onSuccess={(progressId) => {
-                // 進捗が更新されたら、編集モードを終了し、必要に応じてコールバックを実行
-                cancelEditingProgress();
-                if (onSubjectUpdated) {
-                  // 科目データを更新（実際の実装では、更新された科目データを取得する必要があります）
-                  onSubjectUpdated(subject);
-                }
-              }}
+              subject={subject}
+              progress={selectedProgress}
+              open={isAdding}
+              onClose={toggleProgressForm}
+              onSuccess={handleProgressSuccess}
+              isEditMode={isEditing}
             />
-          ) : isAddingProgress ? (
-            <ProgressForm 
-              subject={subject} 
-              open={isAddingProgress}
-              onClose={() => setIsAddingProgress(false)}
-              onSuccess={(progressId) => {
-                // 進捗が追加されたら、追加モードを終了し、必要に応じてコールバックを実行
-                setIsAddingProgress(false);
-                if (onProgressAdded) {
-                  onProgressAdded();
-                }
-                if (onSubjectUpdated) {
-                  // 科目データを更新（実際の実装では、更新された科目データを取得する必要があります）
-                  onSubjectUpdated(subject);
-                }
-              }}
-            />
-          ) : (
+          )}
+          
+          {/* 通常表示モード */}
+          {!isAdding && (
             <>
               {/* 「詳細」タブの内容 */}
               {activeTab === 'details' && (
@@ -239,7 +264,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                       variant="outlined" 
                       color="primary" 
                       size="small" 
-                      onClick={() => setIsAddingProgress(true)}
+                      onClick={toggleProgressForm}
                       startIcon={<TimelineIcon />}
                     >
                       進捗を記録
@@ -257,7 +282,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                       variant="outlined" 
                       color="primary" 
                       size="small" 
-                      onClick={() => setIsAddingProgress(true)}
+                      onClick={toggleProgressForm}
                       startIcon={<TimelineIcon />}
                     >
                       進捗を記録
@@ -266,11 +291,11 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
                   
                   {/* 進捗履歴表示 */}
                   <ProgressHistory
-                    progressRecords={progressRecords}
-                    loading={loading}
-                    error={error}
-                    onEdit={startEditingProgress}
-                    onDelete={deleteProgress}
+                    progressRecords={subject.progressRecords || []}
+                    loading={false}
+                    error={null}
+                    onEdit={handleEditProgress}
+                    onDelete={handleDeleteProgress}
                     formatDate={formatDate}
                   />
                 </>
@@ -304,6 +329,14 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* 進捗削除確認ダイアログ */}
+      <ProgressDeleteDialog
+        open={isDeleteDialogOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={deleteProgress}
+        isDeleting={false}
+      />
     </Card>
   );
 }; 

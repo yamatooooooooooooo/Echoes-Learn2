@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Subject } from '../../../../domain/models/SubjectModel';
+import { Progress } from '../../../../domain/models/ProgressModel';
 import { useProgressForm } from '../hooks/useProgressForm';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -24,10 +25,12 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { ja } from 'date-fns/locale';
 
 interface ProgressFormProps {
-  subject: Subject;
+  subject?: Subject;
+  progress?: Progress;
   open: boolean;
   onClose: () => void;
   onSuccess: (progressId: string) => void;
+  isEditMode?: boolean;
 }
 
 /**
@@ -35,9 +38,11 @@ interface ProgressFormProps {
  */
 export const ProgressForm: React.FC<ProgressFormProps> = ({
   subject,
+  progress,
   open,
   onClose,
-  onSuccess
+  onSuccess,
+  isEditMode = false
 }) => {
   const {
     formData,
@@ -47,14 +52,24 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
     handleChange,
     handleDateChange,
     handleSubmit,
-    resetForm
+    resetForm,
+    setFormDataFromProgress
   } = useProgressForm({
     subject,
+    progress,
+    isEditMode,
     onSuccess: (progressId) => {
       onSuccess(progressId);
       onClose();
     }
   });
+
+  // 編集モードの場合、フォームデータを設定
+  useEffect(() => {
+    if (progress && open) {
+      setFormDataFromProgress(progress);
+    }
+  }, [progress, open, setFormDataFromProgress]);
 
   // ダイアログを閉じるときにフォームをリセット
   const handleClose = () => {
@@ -73,7 +88,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
       aria-labelledby="progress-form-dialog-title"
     >
       <DialogTitle id="progress-form-dialog-title" sx={{ m: 0, p: 2 }}>
-        進捗記録
+        {isEditMode ? '進捗記録の編集' : '進捗記録'}
         <IconButton
           aria-label="close"
           onClick={handleClose}
@@ -91,14 +106,16 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
       
       <DialogContent dividers>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-          <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper', mb: 2 }}>
-            <Typography variant="body2">
-              科目名: {subject.name}
-            </Typography>
-            <Typography variant="body2">
-              現在のページ: {subject.currentPage || 0} / {subject.totalPages} ページ
-            </Typography>
-          </Paper>
+          {subject && (
+            <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper', mb: 2 }}>
+              <Typography variant="body2">
+                科目名: {subject.name}
+              </Typography>
+              <Typography variant="body2">
+                現在のページ: {subject.currentPage || 0} / {subject.totalPages} ページ
+              </Typography>
+            </Paper>
+          )}
           
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -209,7 +226,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
           disabled={isSubmitting}
           startIcon={isSubmitting && <CircularProgress size={20} color="inherit" />}
         >
-          記録する
+          {isEditMode ? '更新する' : '記録する'}
         </Button>
       </DialogActions>
     </Dialog>
