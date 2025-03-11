@@ -139,16 +139,18 @@ const App: React.FC = () => {
             sx={{
               flexGrow: 1,
               p: { xs: 1, sm: 2, md: 3 },
-              width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` },
-              ml: { xs: 0, sm: drawerOpen ? `${drawerWidth}px` : 0 },
-              mt: { xs: '64px', sm: '64px' }, // AppBarの高さ分マージンを追加
-              pt: { xs: 2, sm: 3 }, // 上部のパディングを追加してカードがAppBarと重ならないようにする
+              width: { sm: `calc(100% - ${drawerWidth}px)` },
+              ml: { sm: drawerOpen ? `${drawerWidth}px` : 0 },
+              mt: { xs: '64px', sm: '64px' },
+              pt: { xs: 2, sm: 3 },
               overflow: 'auto',
               transition: theme.transitions.create(['margin', 'width'], {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.leavingScreen,
               }),
               ...(drawerOpen && {
+                width: { sm: `calc(100% - ${drawerWidth}px)` },
+                ml: { sm: `${drawerWidth}px` },
                 transition: theme.transitions.create(['margin', 'width'], {
                   easing: theme.transitions.easing.easeOut,
                   duration: theme.transitions.duration.enteringScreen,

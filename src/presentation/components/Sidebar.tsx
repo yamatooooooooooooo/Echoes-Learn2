@@ -203,8 +203,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ) : (
         // タブレット・デスクトップ用ドロワー
         <Drawer
-          variant={!isMobile ? "permanent" : "temporary"}
+          variant="persistent"
           open={open}
+          onClose={onToggle}
           sx={{
             width: isTablet ? 260 : 240,
             flexShrink: 0,

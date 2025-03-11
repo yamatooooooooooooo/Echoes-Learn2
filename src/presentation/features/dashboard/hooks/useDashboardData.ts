@@ -6,6 +6,7 @@ import { StudyAnalyticsRepository } from '../../../../infrastructure/repositorie
 import { StudySession, SubjectPerformance } from '../../../../domain/models/StudyAnalyticsModel';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
 import { onAuthStateChanged } from 'firebase/auth';
+import { Subject } from '../../../../domain/models/SubjectModel';
 
 // インターフェースの定義
 interface RecentProgress extends Progress {
@@ -40,6 +41,7 @@ export interface DashboardData {
   weeklyProgressData: DailyProgressData[];
   studySessions: StudySession[];
   subjectPerformances: SubjectPerformance[];
+  subjects: Subject[];
 }
 
 export const useDashboardData = () => {
@@ -133,7 +135,8 @@ export const useDashboardData = () => {
           notStartedSubjects: 0,
           weeklyProgressData: [],
           studySessions: [],
-          subjectPerformances: []
+          subjectPerformances: [],
+          subjects: []
         });
         setIsLoading(false);
         return;
@@ -347,7 +350,8 @@ export const useDashboardData = () => {
         notStartedSubjects,
         weeklyProgressData,
         studySessions,
-        subjectPerformances
+        subjectPerformances,
+        subjects
       });
       
     } catch (error) {
