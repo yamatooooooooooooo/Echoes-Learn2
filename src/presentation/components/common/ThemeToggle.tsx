@@ -8,11 +8,11 @@ import { useTheme } from '../../../contexts/ThemeContext';
  * テーマ切り替えボタンコンポーネント
  */
 export const ThemeToggle: React.FC = () => {
-  const { mode, toggleTheme } = useTheme();
+  const { mode, currentTheme, toggleTheme } = useTheme();
   const muiTheme = useMuiTheme();
 
   return (
-    <Tooltip title={mode === 'light' ? 'ダークモードに切り替え' : 'ライトモードに切り替え'}>
+    <Tooltip title={currentTheme === 'light' ? 'ダークモードに切り替え' : 'ライトモードに切り替え'}>
       <IconButton
         onClick={toggleTheme}
         color="inherit"
@@ -22,11 +22,11 @@ export const ThemeToggle: React.FC = () => {
           transition: 'all 0.3s',
           '&:hover': {
             transform: 'rotate(12deg)',
-            bgcolor: mode === 'light' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+            bgcolor: currentTheme === 'light' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
           },
         }}
       >
-        {mode === 'light' ? (
+        {currentTheme === 'light' ? (
           <Brightness4Icon sx={{ color: muiTheme.palette.text.primary }} />
         ) : (
           <Brightness7Icon sx={{ color: muiTheme.palette.text.primary }} />

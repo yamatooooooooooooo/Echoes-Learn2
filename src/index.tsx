@@ -5,6 +5,7 @@ import App from './App';
 import { BrowserRouter } from 'react-router-dom';
 import { ServicesProvider } from './hooks/useServices';
 import { FirebaseProvider } from './contexts/FirebaseContext';
+import { AppThemeProvider } from './contexts/ThemeContext';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
 
@@ -37,9 +38,11 @@ root.render(
       functions={functions}
     >
       <ServicesProvider services={services}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <AppThemeProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </AppThemeProvider>
       </ServicesProvider>
     </FirebaseProvider>
   </React.StrictMode>

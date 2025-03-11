@@ -1,12 +1,10 @@
 import React, { useState, createContext, useContext } from 'react';
-import { Box, CssBaseline, ThemeProvider, IconButton, useMediaQuery, useTheme, Typography, Alert, Button } from '@mui/material';
+import { Box, CssBaseline, IconButton, Typography, Button } from '@mui/material';
 import { SubjectList } from './presentation/features/subject/components/SubjectList';
-import { ProgressStats } from './presentation/features/progress/components/ProgressStats';
 import DashboardScreen from './presentation/features/dashboard/components/DashboardScreen';
 import { Sidebar } from './presentation/components/Sidebar';
 import { Routes, Route } from 'react-router-dom';
 import GamificationPage from './presentation/features/gamification/pages/GamificationPage';
-import { theme } from './theme/theme';
 import LoginPage from './presentation/features/auth/pages/LoginPage';
 import SignupPage from './presentation/features/auth/pages/SignupPage';
 import PrivateRoute from './presentation/components/PrivateRoute';
@@ -16,6 +14,7 @@ import StudySessionPage from './presentation/features/study/pages/StudySessionPa
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import MenuIcon from '@mui/icons-material/Menu';
 import ProgressStatsPage from './presentation/features/progress/pages/ProgressStatsPage';
+import { ThemeToggle } from './presentation/components/common/ThemeToggle';
 
 // ナビゲーションコンテキスト
 interface NavigationContextType {
@@ -51,13 +50,7 @@ const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
 const App: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
-  const theme = useTheme();
-  // モバイルとタブレットの状態を使用するロジックをコメント
-  /* 
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md')); 
-  */
-
+  
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
   };
@@ -105,112 +98,84 @@ const App: React.FC = () => {
   };
 
   return (
-    <ErrorBoundary onError={handleError}>
-      <ThemeProvider theme={theme}>
+    <ErrorBoundary
+      fallback={
+        <Box sx={{ p: 3, textAlign: 'center' }}>
+          <Typography variant="h5" color="error" gutterBottom>
+            エラーが発生しました
+          </Typography>
+          <Button variant="contained" color="primary" onClick={() => window.location.reload()}>
+            ページを再読み込み
+          </Button>
+        </Box>
+      }
+      onError={handleError}
+    >
+      <AuthProvider>
         <CssBaseline />
-        <AuthProvider>
-          <NavigationContext.Provider value={{ navigateTo }}>
-            <Routes>
-              {/* 認証が不要なルート */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
+        <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+          {/* サイドバー */}
+          <Sidebar
+            open={drawerOpen}
+            onClose={handleDrawerToggle}
+            onMenuSelect={handleMenuSelect}
+            selectedMenu={selectedMenu}
+          />
+
+          {/* メインコンテンツ */}
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              p: { xs: 1, sm: 2, md: 3 },
+              width: { sm: `calc(100% - ${drawerWidth}px)` },
+              ml: { sm: `${drawerWidth}px` },
+              overflow: 'auto',
+              bgcolor: 'background.default',
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100vh',
+            }}
+          >
+            {/* モバイル表示時のヘッダー */}
+            <Box
+              sx={{
+                display: { sm: 'none' },
+                p: 1,
+                mb: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <IconButton color="inherit" onClick={handleDrawerToggle} edge="start">
+                <MenuIcon />
+              </IconButton>
               
-              {/* 認証が必要なルート */}
-              <Route element={<PrivateRoute />}>
-                <Route path="/" element={
-                  <Box sx={{ display: 'flex', flexDirection: 'column', bgcolor: '#FFFFFF', minHeight: '100vh' }}>
-                    {/* オーバーレイ */}
-                    {drawerOpen && (
-                      <Box
-                        onClick={handleDrawerToggle}
-                        sx={{
-                          position: 'fixed',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
-                          height: '100%',
-                          bgcolor: 'rgba(0, 0, 0, 0.4)',
-                          zIndex: theme.zIndex.drawer - 1,
-                          transition: 'background-color 0.3s ease',
-                        }}
-                      />
-                    )}
-                    
-                    {/* サイドバー */}
-                    <Sidebar
-                      open={drawerOpen}
-                      onToggle={handleDrawerToggle}
-                      onMenuSelect={handleMenuSelect}
-                      selectedMenu={selectedMenu}
-                    />
-                    
-                    {/* メインコンテンツ */}
-                    <Box
-                      component="main"
-                      sx={{
-                        flexGrow: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        p: { xs: 2, sm: 2, md: 3 }, // レスポンシブパディング
-                        width: '100%',
-                        maxWidth: '1200px',
-                        mx: 'auto', // 左右のマージンを自動で、中央に配置
-                        transition: theme.transitions.create(['filter'], {
-                          easing: theme.transitions.easing.sharp,
-                          duration: theme.transitions.duration.leavingScreen,
-                        }),
-                        filter: drawerOpen ? 'brightness(0.95)' : 'none',
-                        bgcolor: '#FFFFFF', // 背景色を白に設定
-                      }}
-                    >
-                      {/* メニュー開閉ボタン */}
-                      <IconButton
-                        color="inherit"
-                        aria-label={drawerOpen ? 'メニューを閉じる' : 'メニューを開く'}
-                        edge="start"
-                        onClick={handleDrawerToggle}
-                        sx={{ 
-                          mr: 2, 
-                          position: 'fixed', 
-                          top: '10px', 
-                          left: '10px',
-                          zIndex: theme.zIndex.drawer + 2,
-                          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-                          transition: theme.transitions.create(['left', 'box-shadow'], {
-                            easing: theme.transitions.easing.sharp,
-                            duration: theme.transitions.duration.leavingScreen,
-                          }),
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                            boxShadow: '0px 3px 5px rgba(0, 0, 0, 0.15)',
-                          },
-                          // モバイルでボタンを大きくして押しやすくする
-                          padding: { xs: '8px', sm: '8px' },
-                          width: { xs: '40px', sm: '40px' },
-                          height: { xs: '40px', sm: '40px' },
-                        }}
-                      >
-                        <MenuIcon />
-                      </IconButton>
-                      
-                      {/* コンテンツの上部にスペースを追加してボタンと重ならないようにする */}
-                      <Box sx={{ 
-                        mt: { xs: 5, sm: 5, md: 5 },
-                        width: '100%',
-                      }}>
+              {/* テーマ切り替えボタン */}
+              <ThemeToggle />
+            </Box>
+
+            {/* コンテンツエリア */}
+            <Box sx={{ flex: 1, overflow: 'auto' }}>
+              <NavigationContext.Provider value={{ navigateTo }}>
+                <Routes>
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
+                  <Route
+                    path="/"
+                    element={
+                      <PrivateRoute>
                         {renderContent()}
-                      </Box>
-                    </Box>
-                  </Box>
-                } />
-                <Route path="/gamification" element={<GamificationPage />} />
-              </Route>
-            </Routes>
-          </NavigationContext.Provider>
-        </AuthProvider>
-      </ThemeProvider>
+                      </PrivateRoute>
+                    }
+                  />
+                </Routes>
+              </NavigationContext.Provider>
+            </Box>
+          </Box>
+        </Box>
+      </AuthProvider>
     </ErrorBoundary>
   );
 };

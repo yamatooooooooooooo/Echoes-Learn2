@@ -6,12 +6,21 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 // テーマモードの定義
 export type ThemeMode = 'light' | 'dark' | 'system' | 'auto';
 
+// 科目別テーマ設定の型
+export interface SubjectTheme {
+  subjectId: string;
+  mode: 'light' | 'dark' | 'inherit'; // inheritはグローバル設定を継承
+}
+
 // テーマコンテキストの型定義
 interface ThemeContextType {
   mode: ThemeMode;
   currentTheme: 'light' | 'dark'; // 実際に適用されているテーマ
   setMode: (mode: ThemeMode) => void;
   toggleTheme: () => void; // テーマを切り替える関数
+  subjectThemes: SubjectTheme[]; // 科目別テーマ設定
+  setSubjectTheme: (subjectId: string, mode: 'light' | 'dark' | 'inherit') => void; // 科目別テーマを設定
+  getSubjectTheme: (subjectId: string) => 'light' | 'dark'; // 科目のテーマを取得
 }
 
 // コンテキストの作成
@@ -29,6 +38,7 @@ interface ThemeProviderProps {
 export function AppThemeProvider({ children }: ThemeProviderProps) {
   // ローカルストレージにテーマ設定を保存
   const [mode, setMode] = useLocalStorage<ThemeMode>('themeMode', 'system');
+  const [subjectThemes, setSubjectThemes] = useLocalStorage<SubjectTheme[]>('subjectThemes', []);
   
   // 実際に適用するテーマ（light または dark）
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('light');
@@ -101,6 +111,41 @@ export function AppThemeProvider({ children }: ThemeProviderProps) {
     }
   }, [mode]); // modeが変更されたら再実行
 
+  // 科目別テーマを設定する関数
+  const setSubjectTheme = (subjectId: string, themeMode: 'light' | 'dark' | 'inherit') => {
+    const updatedThemes = [...subjectThemes];
+    const existingIndex = updatedThemes.findIndex(theme => theme.subjectId === subjectId);
+    
+    if (existingIndex >= 0) {
+      if (themeMode === 'inherit') {
+        // 'inherit'の場合は設定を削除
+        updatedThemes.splice(existingIndex, 1);
+      } else {
+        updatedThemes[existingIndex].mode = themeMode;
+      }
+    } else if (themeMode !== 'inherit') {
+      // 新しい設定を追加
+      updatedThemes.push({ subjectId, mode: themeMode });
+    }
+    
+    setSubjectThemes(updatedThemes);
+  };
+
+  // 科目のテーマを取得する関数
+  const getSubjectTheme = (subjectId: string): 'light' | 'dark' => {
+    const subjectTheme = subjectThemes.find(theme => theme.subjectId === subjectId);
+    
+    if (subjectTheme) {
+      if (subjectTheme.mode === 'inherit') {
+        return currentTheme;
+      }
+      return subjectTheme.mode;
+    }
+    
+    // 設定がない場合は現在のグローバルテーマを返す
+    return currentTheme;
+  };
+
   // コンテキスト値
   const contextValue: ThemeContextType = {
     mode,
@@ -116,7 +161,10 @@ export function AppThemeProvider({ children }: ThemeProviderProps) {
         // systemまたはautoの場合は、現在適用されているテーマの反対を設定
         setMode(currentTheme === 'light' ? 'dark' : 'light');
       }
-    }
+    },
+    subjectThemes,
+    setSubjectTheme,
+    getSubjectTheme
   };
 
   // 現在のテーマに基づいてMUIテーマを生成
