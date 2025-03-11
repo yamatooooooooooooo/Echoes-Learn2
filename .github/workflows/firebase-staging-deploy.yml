@@ -43,5 +43,14 @@ jobs:
         env:
           FIREBASE_CLI_PREVIEWS: hostingchannels
 
+      - name: Install Functions Dependencies
+        run: |
+          cd functions && npm install
+          cd ../
+          cd "echoes functions" && npm install || echo "echoes functions directory missing or has no package.json"
+          cd ../
+          cd learnfunctions1 && npm install || echo "learnfunctions1 directory missing or has no package.json"
+          cd ../
+
       - name: Deploy to Firebase Staging Firestore and Functions
         run: npx firebase-tools deploy --only firestore,functions --token "${{ secrets.FIREBASE_TOKEN }}" --project echoes-learn2-staging 
