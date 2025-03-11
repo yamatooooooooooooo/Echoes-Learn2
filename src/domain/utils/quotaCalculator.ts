@@ -16,6 +16,9 @@ export const calculateDailyQuota = (subjects: Subject[]): DailyQuota => {
   
   // 有効な科目のみを対象にする
   const validSubjects = subjects.filter(subject => {
+    // 試験日が設定されていない場合は除外
+    if (!subject.examDate) return false;
+    
     // 試験日が今日以降
     const examDate = new Date(subject.examDate);
     examDate.setHours(0, 0, 0, 0);
@@ -29,6 +32,9 @@ export const calculateDailyQuota = (subjects: Subject[]): DailyQuota => {
   
   // 各科目のノルマを計算
   validSubjects.forEach(subject => {
+    // 試験日が設定されていない場合はスキップ（念のため）
+    if (!subject.examDate) return;
+    
     // 試験日
     const examDate = new Date(subject.examDate);
     examDate.setHours(0, 0, 0, 0);
@@ -103,6 +109,9 @@ export const calculateWeeklyQuota = (subjects: Subject[]): WeeklyQuota => {
   
   // 有効な科目のみを対象にする
   const validSubjects = subjects.filter(subject => {
+    // 試験日が設定されていない場合は除外
+    if (!subject.examDate) return false;
+    
     // 試験日が今日以降
     const examDate = new Date(subject.examDate);
     examDate.setHours(0, 0, 0, 0);
@@ -116,6 +125,9 @@ export const calculateWeeklyQuota = (subjects: Subject[]): WeeklyQuota => {
   
   // 各科目のノルマを計算
   validSubjects.forEach(subject => {
+    // 試験日が設定されていない場合はスキップ（念のため）
+    if (!subject.examDate) return;
+    
     // 試験日
     const examDate = new Date(subject.examDate);
     examDate.setHours(0, 0, 0, 0);

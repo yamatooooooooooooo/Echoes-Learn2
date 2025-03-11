@@ -144,7 +144,10 @@ export const StatsOverviewCard: React.FC<StatsOverviewCardProps> = ({
     // 今日のノルマの合計ページ数を計算（データがあれば）
     if (Array.isArray(dailyQuotas) && dailyQuotas.length > 0) {
       // 各科目のノルマページ数を合計
-      return dailyQuotas.reduce((sum, quota) => sum + (quota.pages || 0), 0);
+      return dailyQuotas.reduce((sum, quota) => {
+        if (!quota) return sum;
+        return sum + (quota.pages || 0);
+      }, 0);
     }
     
     // ノルマデータがない場合は残りページの1/7を目安とする（1週間で完了と仮定）
@@ -156,7 +159,7 @@ export const StatsOverviewCard: React.FC<StatsOverviewCardProps> = ({
     if (!Array.isArray(dailyQuotas) || dailyQuotas.length === 0) return { total: 0, completed: 0, rate: 0 };
     
     const total = dailyQuotas.length;
-    const completed = dailyQuotas.filter(quota => quota.isCompleted).length;
+    const completed = dailyQuotas.filter(quota => quota && quota.isCompleted).length;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
     
     return { total, completed, rate };
@@ -167,7 +170,7 @@ export const StatsOverviewCard: React.FC<StatsOverviewCardProps> = ({
     if (!Array.isArray(weeklyQuotas) || weeklyQuotas.length === 0) return { total: 0, completed: 0, rate: 0 };
     
     const total = weeklyQuotas.length;
-    const completed = weeklyQuotas.filter(quota => quota.isCompleted).length;
+    const completed = weeklyQuotas.filter(quota => quota && quota.isCompleted).length;
     const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
     
     return { total, completed, rate };

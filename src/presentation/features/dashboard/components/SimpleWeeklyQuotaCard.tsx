@@ -234,7 +234,7 @@ const SimpleWeeklyQuotaCard: React.FC<SimpleWeeklyQuotaCardProps> = ({
                   secondary={
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
                       <Typography variant="caption" color="text.secondary">
-                        試験日: {new Date(item.examDate as Date).toLocaleDateString('ja-JP')}
+                        試験日: {item.examDate ? new Date(item.examDate).toLocaleDateString('ja-JP') : '未設定'}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {item.estimatedMinutes} 分
