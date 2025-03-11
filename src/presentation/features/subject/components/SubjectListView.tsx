@@ -130,7 +130,17 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
   };
 
   return (
-    <Paper elevation={0} variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
+    <Paper 
+      elevation={0} 
+      variant="outlined" 
+      sx={{ 
+        borderRadius: 2, 
+        overflow: 'hidden',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       {/* リストヘッダー */}
       <Box sx={{ 
         display: 'flex', 
@@ -147,7 +157,13 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
         <Box sx={{ width: '10%', textAlign: 'center' }}>操作</Box>
       </Box>
 
-      <List disablePadding>
+      <List 
+        disablePadding
+        sx={{ 
+          overflow: 'auto',
+          flexGrow: 1
+        }}
+      >
         {subjects.map((subject, index) => {
           const progress = calculateProgress(subject.currentPage || 0, subject.totalPages);
           const daysRemaining = calculateDaysRemaining(subject.examDate);

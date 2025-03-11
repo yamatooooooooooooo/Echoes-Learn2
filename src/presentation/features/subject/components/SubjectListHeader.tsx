@@ -22,7 +22,15 @@ export const SubjectListHeader: React.FC<SubjectListHeaderProps> = ({
     <Box sx={{ 
       display: 'flex', 
       justifyContent: 'space-between', 
-      alignItems: 'center'
+      alignItems: 'center',
+      mb: 2,
+      px: { xs: 1, sm: 2 },
+      py: 2,
+      backgroundColor: 'background.paper',
+      borderRadius: 2,
+      border: '1px solid',
+      borderColor: 'divider',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
     }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <LibraryBooksIcon 

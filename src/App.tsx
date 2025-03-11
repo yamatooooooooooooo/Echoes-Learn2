@@ -166,16 +166,14 @@ const App: React.FC = () => {
               flexDirection: 'column'
             }}
           >
-            {/* スクロール可能なコンテンツエリア */}
+            {/* スクロール可能なコンテンツエリア - シンプルに変更 */}
             <Box 
               sx={{ 
                 padding: { xs: 1, sm: 2, md: 3 },
                 paddingTop: { xs: 5, sm: 6 },
                 flexGrow: 1,
                 display: 'flex',
-                flexDirection: 'column',
-                overflowX: 'hidden',
-                overflowY: 'auto'
+                flexDirection: 'column'
               }}
             >
               <NavigationContext.Provider value={{ navigateTo }}>

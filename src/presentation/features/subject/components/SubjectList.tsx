@@ -416,112 +416,122 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
     setSnackbarOpen(true);
   };
 
+  // レンダリング
   return (
-    <Box sx={{ 
-      maxWidth: '1200px', 
-      mx: 'auto', 
-      p: 2,
-      bgcolor: '#FAFAFA',
-      minHeight: '100vh'
-    }}>
-      {/* ヘッダー */}
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 2, 
-          mb: 2, 
-          borderRadius: 2,
-          bgcolor: 'white',
-          border: '1px solid',
-          borderColor: 'divider',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-        }}
-      >
-        <SubjectListHeader
-          onAddSubject={handleAddSubject}
-          totalSubjects={subjects.length}
-        />
-        
-        {/* ツールバー */}
-        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-          {/* 表示切り替え */}
-          <ToggleButtonGroup
-            value={viewType}
-            exclusive
-            onChange={handleViewTypeChange}
-            aria-label="view type"
-            size="small"
-            sx={{ mr: 2 }}
-          >
-            <ToggleButton value="card" aria-label="card view">
-              <ViewModuleIcon fontSize="small" />
-            </ToggleButton>
-            <ToggleButton value="list" aria-label="list view">
-              <ViewListIcon fontSize="small" />
-            </ToggleButton>
-          </ToggleButtonGroup>
-          
-          {/* ソート */}
-          <FormControl variant="outlined" size="small" sx={{ minWidth: 120, mr: 2 }}>
-            <InputLabel id="sort-select-label">並び替え</InputLabel>
-            <Select
-              labelId="sort-select-label"
-              id="sort-select"
-              value={sortBy}
-              onChange={handleSortChange}
-              label="並び替え"
-              size="small"
-            >
-              <MenuItem value="priority-high">優先度（高→低）</MenuItem>
-              <MenuItem value="priority-low">優先度（低→高）</MenuItem>
-              <MenuItem value="name">科目名</MenuItem>
-              <MenuItem value="exam-date-asc">試験日（近い順）</MenuItem>
-              <MenuItem value="exam-date-desc">試験日（遠い順）</MenuItem>
-              <MenuItem value="progress-high">進捗（高→低）</MenuItem>
-              <MenuItem value="progress-low">進捗（低→高）</MenuItem>
-            </Select>
-          </FormControl>
-          
-          {/* 自動優先度 */}
-          <FormControlLabel
-            control={
-              <Switch
-                checked={autoPriority}
-                onChange={handleAutoPriorityToggle}
-                color="primary"
-                size="small"
-              />
-            }
-            label={
-              <Typography variant="body2">
-                自動優先度
-              </Typography>
-            }
-            sx={{ mr: 2 }}
-          />
-          
-          {/* 更新ボタン */}
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={handleManualPriorityUpdate}
-            disabled={priorityUpdating}
-            startIcon={priorityUpdating ? <CircularProgress size={20} /> : null}
-          >
-            優先度更新
-          </Button>
-        </Box>
-      </Paper>
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        flexGrow: 1
+      }}
+    >
+      {/* メンテナンスメッセージ（開発中に表示） */}
+      <MaintenanceMessageComponent />
       
-      {/* エラー表示 */}
+      {/* 科目リストヘッダー */}
+      <SubjectListHeader
+        onAddSubject={handleAddSubject}
+        totalSubjects={subjects.length}
+      />
+      
+      {/* 科目リストツールバー */}
+      <Box sx={{ mb: 2 }}>
+        <Paper sx={{ p: 2, borderRadius: 2 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              {/* 自動優先度設定 */}
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={autoPriority}
+                    onChange={handleAutoPriorityToggle}
+                    size="small"
+                    disabled={priorityUpdating}
+                  />
+                }
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography variant="body2" sx={{ mr: 0.5 }}>自動優先度更新</Typography>
+                    {priorityUpdating && <CircularProgress size={16} sx={{ ml: 1 }} />}
+                  </Box>
+                }
+              />
+              
+              {/* 手動更新ボタン */}
+              <Tooltip title="優先度を手動で更新">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={handleManualPriorityUpdate}
+                  disabled={priorityUpdating || subjects.length === 0}
+                  sx={{ height: 32 }}
+                >
+                  優先度更新
+                </Button>
+              </Tooltip>
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              {/* 表示切替 */}
+              <ToggleButtonGroup
+                value={viewType}
+                exclusive
+                onChange={handleViewTypeChange}
+                aria-label="表示形式"
+                size="small"
+              >
+                <ToggleButton value="card" aria-label="カード表示">
+                  <Tooltip title="カード表示">
+                    <ViewModuleIcon fontSize="small" />
+                  </Tooltip>
+                </ToggleButton>
+                <ToggleButton value="list" aria-label="リスト表示">
+                  <Tooltip title="リスト表示">
+                    <ViewListIcon fontSize="small" />
+                  </Tooltip>
+                </ToggleButton>
+                {/* <ToggleButton value="calendar" aria-label="カレンダー表示">
+                  <Tooltip title="カレンダー表示">
+                    <CalendarViewMonthIcon fontSize="small" />
+                  </Tooltip>
+                </ToggleButton> */}
+              </ToggleButtonGroup>
+              
+              {/* ソート */}
+              <FormControl variant="outlined" size="small" sx={{ minWidth: 180 }}>
+                <InputLabel id="sort-select-label">並び替え</InputLabel>
+                <Select
+                  labelId="sort-select-label"
+                  value={sortBy}
+                  onChange={handleSortChange}
+                  label="並び替え"
+                >
+                  <MenuItem value="priority-high">優先度（高→低）</MenuItem>
+                  <MenuItem value="priority-low">優先度（低→高）</MenuItem>
+                  <MenuItem value="exam-date-asc">試験日（近い順）</MenuItem>
+                  <MenuItem value="exam-date-desc">試験日（遠い順）</MenuItem>
+                  <MenuItem value="name-asc">科目名（A→Z）</MenuItem>
+                  <MenuItem value="name-desc">科目名（Z→A）</MenuItem>
+                  <MenuItem value="progress-asc">進捗（低→高）</MenuItem>
+                  <MenuItem value="progress-desc">進捗（高→低）</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          </Box>
+        </Paper>
+      </Box>
+      
+      {/* エラーメッセージ */}
       <Collapse in={!!loadError}>
         <Alert severity="error" sx={{ mb: 2 }}>
           {loadError}
         </Alert>
       </Collapse>
       
-      {/* コンテンツ */}
-      <Box sx={{ mb: 4 }}>
+      {/* 科目リストコンテンツ */}
+      <Box sx={{ flexGrow: 1, overflow: 'auto', minHeight: 0 }}>
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
@@ -631,8 +641,8 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
           </>
         )}
       </Box>
-      
-      {/* 科目フォームダイアログ */}
+
+      {/* 科目追加/編集フォーム */}
       <Dialog 
         open={isFormOpen} 
         onClose={() => setIsFormOpen(false)} 
@@ -741,9 +751,6 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-      
-      {/* メンテナンスメッセージ */}
-      <MaintenanceMessageComponent />
     </Box>
   );
 }; 

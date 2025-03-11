@@ -42,7 +42,7 @@ export const SubjectListContent: React.FC<SubjectListContentProps> = ({
   }
 
   return (
-    <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} sx={{ overflowX: 'hidden' }}>
+    <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} sx={{ width: '100%', margin: 0 }}>
       {subjects.map((subject) => (
         <Grid 
           item 
