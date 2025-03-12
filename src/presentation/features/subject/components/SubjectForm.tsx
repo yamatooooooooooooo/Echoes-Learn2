@@ -42,6 +42,8 @@ export const SubjectForm = ({
     examDate: new Date(),
     textbookName: '',
     reportDeadline: undefined,
+    deadlineType: 'report',
+    reportDetails: '',
     priority: 'medium',
     bufferDays: 7
   });
@@ -95,6 +97,8 @@ export const SubjectForm = ({
         examDate: examDate || new Date(),
         textbookName: subject.textbookName || '',
         reportDeadline: reportDeadline,
+        deadlineType: subject.deadlineType || 'report',
+        reportDetails: subject.reportDetails || '',
         priority: subject.priority || 'medium',
         bufferDays: subject.bufferDays || 7
       });
@@ -108,6 +112,8 @@ export const SubjectForm = ({
         examDate: new Date(),
         textbookName: '',
         reportDeadline: undefined,
+        deadlineType: 'report',
+        reportDetails: '',
         priority: 'medium',
         bufferDays: 7
       });
@@ -383,189 +389,319 @@ export const SubjectForm = ({
   const priorityInfo = getPriorityLabel(formData.priority || 'medium');
 
   return (
-    <Paper elevation={0} sx={{ p: 3, borderRadius: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        {isEditMode ? '科目を編集' : '新しい科目を登録'}
-      </Typography>
-      
-      <Box component="form" onSubmit={handleSubmit}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="科目名"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              error={!!errors.name}
-              helperText={errors.name}
-              disabled={isLoading}
-              required
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="教科書名"
-              name="textbookName"
-              value={formData.textbookName || ''}
-              onChange={handleChange}
-              error={!!errors.textbookName}
-              helperText={errors.textbookName}
-              disabled={isLoading}
-              placeholder="教科書名を入力（任意）"
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              id="totalPages"
-              name="totalPages"
-              label="教科書の総ページ数"
-              type="number"
-              value={formData.totalPages}
-              onChange={handleChange}
-              error={!!errors.totalPages}
-              helperText={errors.totalPages}
-              disabled={isLoading}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">ページ</InputAdornment>,
-              }}
-            />
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              id="bufferDays"
-              name="bufferDays"
-              label="バッファ日数"
-              type="number"
-              value={formData.bufferDays || 7}
-              onChange={handleChange}
-              error={!!errors.bufferDays}
-              helperText={errors.bufferDays || "試験日の何日前までに学習を終わらせるか"}
-              disabled={isLoading}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">日</InputAdornment>,
-              }}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              type="date"
-              label="試験日"
-              name="examDate"
-              value={formatDateForInput(formData.examDate)}
-              onChange={handleChange}
-              error={!!errors.examDate}
-              helperText={errors.examDate}
-              disabled={isLoading}
-              required
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              type="date"
-              label="リポート締め切り日"
-              name="reportDeadline"
-              value={formatDateForInput(formData.reportDeadline)}
-              onChange={handleChange}
-              error={!!errors.reportDeadline}
-              helperText={errors.reportDeadline || '任意項目です'}
-              disabled={isLoading}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Typography variant="body2" sx={{ mr: 2 }}>
-                優先順位:
-              </Typography>
-              <Chip
-                icon={priorityInfo.icon}
-                label={priorityInfo.label}
-                size="small"
-                sx={{
-                  bgcolor: getPriorityColor(formData.priority || ''),
-                  color: 'white',
-                  '& .MuiChip-icon': { color: 'white' }
+    <Box sx={{ p: { xs: 1, sm: 2 } }}>
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          borderRadius: '12px',
+          overflow: 'hidden',
+          p: { xs: 2, sm: 3 },
+          mb: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+          background: (theme) => theme.palette.mode === 'dark' 
+            ? 'linear-gradient(to bottom right, rgba(50, 50, 50, 0.9), rgba(30, 30, 30, 0.9))' 
+            : 'linear-gradient(to bottom right, rgba(255, 255, 255, 0.9), rgba(240, 240, 240, 0.9))'
+        }}
+      >
+        <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+          {subject ? '科目を編集' : '新しい科目'}
+        </Typography>
+
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={3}>
+            {/* 科目名 */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="科目名"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                error={Boolean(errors.name)}
+                helperText={errors.name || ''}
+                disabled={isLoading}
+                variant="outlined"
+                sx={{ mb: 2 }}
+                InputProps={{
+                  sx: { borderRadius: '8px' }
                 }}
               />
-            </Box>
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={manualPriority}
-                  onChange={handlePriorityToggle}
-                  disabled={isLoading}
-                />
-              }
-              label="優先順位を手動で設定する"
-            />
-            
-            {manualPriority ? (
-              <FormControl fullWidth>
-                <InputLabel id="priority-label">優先順位</InputLabel>
+            </Grid>
+
+            {/* 教科書名 */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="教科書/参考書"
+                name="textbookName"
+                value={formData.textbookName}
+                onChange={handleChange}
+                variant="outlined"
+                disabled={isLoading}
+                placeholder="使用する教科書や参考書の名前"
+                InputProps={{
+                  sx: { borderRadius: '8px' }
+                }}
+              />
+            </Grid>
+
+            {/* ページ数 */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="全ページ数"
+                name="totalPages"
+                type="number"
+                value={formData.totalPages}
+                onChange={handleChange}
+                required
+                error={Boolean(errors.totalPages)}
+                helperText={errors.totalPages || ''}
+                disabled={isLoading}
+                variant="outlined"
+                InputProps={{
+                  sx: { borderRadius: '8px' },
+                  endAdornment: <InputAdornment position="end">ページ</InputAdornment>
+                }}
+              />
+            </Grid>
+
+            {/* 現在のページ数 (編集時のみ) */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="現在のページ"
+                name="currentPage"
+                type="number"
+                value={formData.currentPage || 0}
+                onChange={handleChange}
+                disabled={isLoading}
+                variant="outlined"
+                InputProps={{
+                  sx: { borderRadius: '8px' },
+                  endAdornment: <InputAdornment position="end">ページ</InputAdornment>
+                }}
+              />
+            </Grid>
+
+            {/* 試験日 */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="試験日"
+                name="examDate"
+                type="date"
+                value={formatDateForInput(formData.examDate)}
+                onChange={handleChange}
+                required
+                error={Boolean(errors.examDate)}
+                helperText={errors.examDate || ''}
+                disabled={isLoading}
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{
+                  sx: { borderRadius: '8px' }
+                }}
+              />
+            </Grid>
+
+            {/* 余裕日数 */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="目標達成の余裕日数"
+                name="bufferDays"
+                type="number"
+                value={formData.bufferDays}
+                onChange={handleChange}
+                disabled={isLoading}
+                variant="outlined"
+                InputProps={{
+                  sx: { borderRadius: '8px' },
+                  endAdornment: <InputAdornment position="end">日前</InputAdornment>
+                }}
+              />
+            </Grid>
+
+            {/* レポート締切日 */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="レポート締切日"
+                name="reportDeadline"
+                type="date"
+                value={formatDateForInput(formData.reportDeadline)}
+                onChange={handleChange}
+                error={Boolean(errors.reportDeadline)}
+                helperText={errors.reportDeadline || ''}
+                disabled={isLoading}
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                InputProps={{
+                  sx: { borderRadius: '8px' }
+                }}
+              />
+            </Grid>
+
+            {/* 締切タイプ */}
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth variant="outlined" disabled={isLoading}>
+                <InputLabel id="deadline-type-label">締切タイプ</InputLabel>
                 <Select
-                  labelId="priority-label"
-                  id="priority"
-                  name="priority"
-                  value={formData.priority}
+                  labelId="deadline-type-label"
+                  name="deadlineType"
+                  value={formData.deadlineType || 'report'}
                   onChange={handleSelectChange}
-                  disabled={!manualPriority || isLoading}
-                  label="優先順位"
+                  label="締切タイプ"
+                  sx={{ borderRadius: '8px' }}
                 >
-                  <MenuItem value="high" sx={{ color: getPriorityColor('high') }}>
-                    {getPriorityLabel('high').label}
-                  </MenuItem>
-                  <MenuItem value="medium" sx={{ color: getPriorityColor('medium') }}>
-                    {getPriorityLabel('medium').label}
-                  </MenuItem>
-                  <MenuItem value="low" sx={{ color: getPriorityColor('low') }}>
-                    {getPriorityLabel('low').label}
-                  </MenuItem>
+                  <MenuItem value="report">レポート</MenuItem>
+                  <MenuItem value="assignment">課題</MenuItem>
+                  <MenuItem value="other">その他</MenuItem>
                 </Select>
               </FormControl>
-            ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                優先順位は試験日までの日数と総ページ数から自動計算されます。
-              </Typography>
-            )}
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-              <Button
-                type="submit"
-                variant="contained"
+            </Grid>
+
+            {/* レポート詳細 */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="レポート/課題の詳細"
+                name="reportDetails"
+                value={formData.reportDetails || ''}
+                onChange={handleChange}
+                multiline
+                rows={2}
+                variant="outlined"
                 disabled={isLoading}
+                placeholder="提出物の詳細情報（文字数制限、提出方法など）"
+                InputProps={{
+                  sx: { borderRadius: '8px' }
+                }}
+              />
+            </Grid>
+
+            {/* 優先度設定 */}
+            <Grid item xs={12}>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 2, 
+                  borderRadius: '8px',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: 'background.paper'
+                }}
               >
-                {isEditMode ? '更新する' : '登録する'}
-              </Button>
-              
-              {onCancel && (
-                <Button
-                  variant="outlined"
-                  onClick={onCancel}
-                  disabled={isLoading}
-                >
-                  キャンセル
-                </Button>
-              )}
-            </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="subtitle1">優先度設定</Typography>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={manualPriority}
+                        onChange={handlePriorityToggle}
+                        disabled={isLoading}
+                        color="primary"
+                      />
+                    }
+                    label="手動設定"
+                  />
+                </Box>
+
+                {manualPriority ? (
+                  <FormControl fullWidth variant="outlined" disabled={isLoading}>
+                    <InputLabel id="priority-label">優先度</InputLabel>
+                    <Select
+                      labelId="priority-label"
+                      name="priority"
+                      value={formData.priority || 'medium'}
+                      onChange={handleSelectChange}
+                      label="優先度"
+                      sx={{ borderRadius: '8px' }}
+                    >
+                      <MenuItem value="high">
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <FlagIcon sx={{ color: getPriorityColor('high'), mr: 1 }} />
+                          <Typography>高</Typography>
+                        </Box>
+                      </MenuItem>
+                      <MenuItem value="medium">
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <FlagIcon sx={{ color: getPriorityColor('medium'), mr: 1 }} />
+                          <Typography>中</Typography>
+                        </Box>
+                      </MenuItem>
+                      <MenuItem value="low">
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <FlagIcon sx={{ color: getPriorityColor('low'), mr: 1 }} />
+                          <Typography>低</Typography>
+                        </Box>
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+                ) : (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      試験日と進捗状況に基づいて自動的に優先度が設定されます。
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                      <Typography variant="body2" sx={{ mr: 1 }}>現在の優先度:</Typography>
+                      <Chip
+                        icon={getPriorityLabel(formData.priority || 'medium').icon}
+                        label={getPriorityLabel(formData.priority || 'medium').label}
+                        size="small"
+                        sx={{ 
+                          bgcolor: `${getPriorityColor(formData.priority || 'medium')}20`,
+                          color: getPriorityColor(formData.priority || 'medium'),
+                          fontWeight: 'bold',
+                          borderRadius: '6px'
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                )}
+              </Paper>
+            </Grid>
           </Grid>
-        </Grid>
-      </Box>
-    </Paper>
+
+          {error && (
+            <Typography color="error" variant="body2" sx={{ mt: 2 }}>
+              {error}
+            </Typography>
+          )}
+
+          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            {onCancel && (
+              <Button
+                variant="outlined"
+                onClick={onCancel}
+                disabled={isLoading}
+                sx={{ 
+                  borderRadius: '8px',
+                  px: 3
+                }}
+              >
+                キャンセル
+              </Button>
+            )}
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={isLoading}
+              sx={{ 
+                borderRadius: '8px',
+                px: 4,
+                boxShadow: (theme) => `0 4px 10px ${theme.palette.primary.main}40`
+              }}
+            >
+              {isLoading ? '保存中...' : subject ? '更新' : '作成'}
+            </Button>
+          </Box>
+        </form>
+      </Paper>
+    </Box>
   );
 }; 

@@ -7,7 +7,8 @@ import {
   Grid, 
   Paper,
   IconButton,
-  Tooltip
+  Tooltip,
+  useTheme
 } from '@mui/material';
 import { 
   Dashboard as DashboardIcon,
@@ -18,17 +19,19 @@ import SimpleWeeklyQuotaCard from './SimpleWeeklyQuotaCard';
 import SimpleProgressBarCard from './SimpleProgressBarCard';
 import { RecentProgressCard } from './RecentProgressCard';
 import { UpcomingExamsCard } from './UpcomingExamsCard';
+import { DeadlinesCard } from './DeadlinesCard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../../../../contexts/AuthContext';
 import DataCleanupButton from '../../../components/common/DataCleanupButton';
 
 /**
- * ダッシュボード画面 - Notion風デザイン
- * Firebaseから実際のデータを取得して表示
+ * ダッシュボード画面 - モダンデザイン
+ * 学習進捗と予定を視覚的に表示
  */
 const DashboardScreen: React.FC = () => {
   const { dashboardData, isLoading, error, formatDate, refreshData } = useDashboardData();
   const { currentUser } = useAuth();
+  const theme = useTheme();
   
   // 手動更新
   const handleRefresh = () => {
@@ -39,8 +42,18 @@ const DashboardScreen: React.FC = () => {
   
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <CircularProgress />
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '50vh',
+        flexDirection: 'column',
+        gap: 2
+      }}>
+        <CircularProgress size={40} thickness={4} />
+        <Typography variant="body2" color="text.secondary">
+          学習データを読み込み中...
+        </Typography>
       </Box>
     );
   }
@@ -69,7 +82,7 @@ const DashboardScreen: React.FC = () => {
     <Box 
       sx={{ 
         width: '100%', 
-        maxWidth: { xs: '100%', sm: '92%', md: '1400px' },
+        maxWidth: { xs: '100%', sm: '95%', md: '1400px' },
         mx: 'auto', 
         p: { xs: 1, sm: 2, md: 3 },
         pt: { xs: 2, sm: 3, md: 4 },
@@ -85,12 +98,15 @@ const DashboardScreen: React.FC = () => {
         <Paper 
           elevation={0} 
           sx={{ 
-            p: { xs: 1.5, sm: 2 }, 
-            borderRadius: 2,
-            bgcolor: 'white',
+            p: { xs: 2, sm: 2.5 }, 
+            borderRadius: 3,
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
             border: '1px solid',
-            borderColor: 'divider',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+            borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: theme.palette.mode === 'dark' 
+              ? '0 4px 20px rgba(0, 0, 0, 0.25)' 
+              : '0 4px 20px rgba(0, 0, 0, 0.05)'
           }}
         >
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -99,7 +115,7 @@ const DashboardScreen: React.FC = () => {
                 sx={{ 
                   mr: 1.5, 
                   color: 'primary.main',
-                  fontSize: '2rem'
+                  fontSize: { xs: '1.8rem', sm: '2rem' }
                 }} 
               />
               <Box>
@@ -107,7 +123,14 @@ const DashboardScreen: React.FC = () => {
                   variant="h5" 
                   sx={{ 
                     fontWeight: 600,
-                    fontSize: { xs: '1.5rem', sm: '1.8rem' }
+                    fontSize: { xs: '1.5rem', sm: '1.8rem' },
+                    background: theme.palette.mode === 'dark' 
+                      ? 'linear-gradient(to right, #9c27b0, #3f51b5)'
+                      : 'linear-gradient(to right, #2E77EE, #1a237e)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textFillColor: 'transparent'
                   }}
                 >
                   ダッシュボード
@@ -125,7 +148,16 @@ const DashboardScreen: React.FC = () => {
             </Box>
             
             <Tooltip title="データを更新">
-              <IconButton onClick={handleRefresh} size="small">
+              <IconButton 
+                onClick={handleRefresh} 
+                size="small"
+                sx={{
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                  '&:hover': {
+                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+                  }
+                }}
+              >
                 <RefreshIcon />
               </IconButton>
             </Tooltip>
@@ -141,24 +173,59 @@ const DashboardScreen: React.FC = () => {
           pb: 2 
         }}
       >
-        {/* 試験スケジュールカード */}
-        <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              borderRadius: 2,
-              overflow: 'hidden',
-              border: '1px solid',
-              borderColor: 'divider' 
-            }}
-          >
-            <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
-          </Paper>
-        </Box>
+        {/* カードコンテナ */}
+        <Grid container spacing={3}>
+          {/* 試験スケジュールカード */}
+          <Grid item xs={12} md={6}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                borderRadius: 3,
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                height: '100%',
+                backdropFilter: 'blur(10px)',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: theme.palette.mode === 'dark' 
+                    ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
+                    : '0 8px 24px rgba(0, 0, 0, 0.08)'
+                }
+              }}
+            >
+              <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
+            </Paper>
+          </Grid>
+          
+          {/* レポート締切カード */}
+          <Grid item xs={12} md={6}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                borderRadius: 3,
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                height: '100%',
+                backdropFilter: 'blur(10px)',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: theme.palette.mode === 'dark' 
+                    ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
+                    : '0 8px 24px rgba(0, 0, 0, 0.08)'
+                }
+              }}
+            >
+              <DeadlinesCard subjects={dashboardData?.subjects || []} />
+            </Paper>
+          </Grid>
         
-        {/* ノルマカード */}
-        <Grid container spacing={2}>
-          {/* 今日のノルマ */}
+          {/* ノルマカード */}
           <Grid item xs={12} md={6}>
             <SimpleDailyQuotaCard 
               subjects={dashboardData?.subjects || []} 
@@ -173,57 +240,75 @@ const DashboardScreen: React.FC = () => {
               isLoading={isLoading} 
             />
           </Grid>
-        </Grid>
         
-        {/* 進捗バー */}
-        <Box sx={{ mb: { xs: 2, sm: 3 } }}>
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              borderRadius: 2,
-              overflow: 'hidden',
-              border: '1px solid',
-              borderColor: 'divider' 
-            }}
-          >
-            <SimpleProgressBarCard 
-              subjects={dashboardData?.subjects || []} 
-              isLoading={isLoading} 
-            />
-          </Paper>
-        </Box>
-        
-        {/* 最近の進捗 */}
-        {dashboardData && dashboardData.recentProgress && dashboardData.recentProgress.length > 0 && (
-          <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+          {/* 進捗バー */}
+          <Grid item xs={12}>
             <Paper 
               elevation={0} 
               sx={{ 
-                borderRadius: 2,
+                borderRadius: 3,
                 overflow: 'hidden',
                 border: '1px solid',
-                borderColor: 'divider' 
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                backdropFilter: 'blur(10px)',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: theme.palette.mode === 'dark' 
+                    ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
+                    : '0 8px 24px rgba(0, 0, 0, 0.08)'
+                }
               }}
             >
-              <RecentProgressCard 
-                recentProgress={dashboardData.recentProgress} 
-                formatDate={formatDate}
+              <SimpleProgressBarCard 
+                subjects={dashboardData?.subjects || []} 
                 isLoading={isLoading} 
               />
             </Paper>
-          </Box>
-        )}
-        
-        {/* データクリーンアップボタン */}
-        <Grid item xs={12}>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'flex-end', 
-            mt: 3,
-            mb: 2
-          }}>
-            <DataCleanupButton size="small" />
-          </Box>
+          </Grid>
+          
+          {/* 最近の進捗 */}
+          {dashboardData && dashboardData.recentProgress && dashboardData.recentProgress.length > 0 && (
+            <Grid item xs={12}>
+              <Paper 
+                elevation={0} 
+                sx={{ 
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  border: '1px solid',
+                  borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                  backdropFilter: 'blur(10px)',
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.palette.mode === 'dark' 
+                      ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
+                      : '0 8px 24px rgba(0, 0, 0, 0.08)'
+                  }
+                }}
+              >
+                <RecentProgressCard 
+                  recentProgress={dashboardData.recentProgress} 
+                  formatDate={formatDate}
+                  isLoading={isLoading} 
+                />
+              </Paper>
+            </Grid>
+          )}
+          
+          {/* データクリーンアップボタン */}
+          <Grid item xs={12}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              mt: 3,
+              mb: 2
+            }}>
+              <DataCleanupButton size="small" />
+            </Box>
+          </Grid>
         </Grid>
       </Box>
     </Box>

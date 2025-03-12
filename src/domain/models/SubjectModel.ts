@@ -6,6 +6,8 @@ export interface Subject {
   examDate: Date;
   textbookName?: string;
   reportDeadline?: Date;
+  deadlineType?: 'report' | 'assignment' | 'other';
+  reportDetails?: string;
   priority?: 'high' | 'medium' | 'low';
   importance?: 'high' | 'medium' | 'low';
   bufferDays?: number;
@@ -19,6 +21,8 @@ export interface SubjectCreateInput {
   examDate: Date;
   textbookName?: string;
   reportDeadline?: Date;
+  deadlineType?: 'report' | 'assignment' | 'other';
+  reportDetails?: string;
   currentPage?: number;
   priority?: 'high' | 'medium' | 'low';
   importance?: 'high' | 'medium' | 'low';
@@ -31,6 +35,8 @@ export interface SubjectUpdateInput {
   examDate?: Date;
   textbookName?: string;
   reportDeadline?: Date;
+  deadlineType?: 'report' | 'assignment' | 'other';
+  reportDetails?: string;
   currentPage?: number;
   priority?: 'high' | 'medium' | 'low';
   importance?: 'high' | 'medium' | 'low';
