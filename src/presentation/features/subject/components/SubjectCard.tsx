@@ -18,7 +18,8 @@ import {
   Tab,
   Paper,
   Chip,
-  LinearProgress
+  LinearProgress,
+  Tooltip
 } from '@mui/material';
 import { 
   ExpandMore as ExpandMoreIcon,
@@ -31,7 +32,9 @@ import {
   History as HistoryIcon,
   BarChart as BarChartIcon,
   MenuBook as MenuBookIcon,
-  Event as EventIcon
+  Event as EventIcon,
+  AccessTime as AccessTimeIcon,
+  AssignmentTurnedIn as AssignmentTurnedInIcon
 } from '@mui/icons-material';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { Progress } from '../../../../domain/models/ProgressModel';
@@ -44,18 +47,78 @@ import { ProgressHistory } from './ProgressHistory';
 import { ProgressDeleteDialog } from './ProgressDeleteDialog';
 import { ProgressCharts } from './ProgressCharts';
 import { useSubjectProgress } from '../hooks/useSubjectProgress';
+import { useFirebase } from '../../../../contexts/FirebaseContext';
+import { useServices } from '../../../../hooks/useServices';
 
 // タブの種類
 type TabType = 'details' | 'history' | 'charts';
 
 interface SubjectCardProps {
   subject: Subject;
-  onProgressAdded?: () => void;
-  onSubjectUpdated?: (updatedSubject: Subject) => void;
-  onEdit?: (subject: Subject) => void;
-  onDelete?: (subject: Subject) => void;
+  onProgressAdded: () => void;
+  onSubjectUpdated: (subject: Subject) => void;
+  onEdit: (subject: Subject) => void;
+  onDelete: (subject: Subject) => void;
   formatDate: (date: Date | string | undefined) => string;
 }
+
+// カードのスタイリング
+const cardStyles = {
+  root: {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      transform: 'translateY(-3px)',
+      boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+    },
+    overflow: 'hidden',
+    borderRadius: 2,
+    border: '1px solid',
+    borderColor: 'divider',
+  },
+  contentArea: {
+    p: { xs: 2, sm: 2.5 },
+    pt: { xs: 3, sm: 3.5 },
+    flexGrow: 1,
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  title: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    mb: 2
+  },
+  priorityBadge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: 8,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8
+  },
+  progressSection: {
+    mt: 'auto',
+    pt: { xs: 2, sm: 2.5 }
+  },
+  actionArea: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    p: { xs: 2, sm: 2 },
+    borderTop: '1px solid',
+    borderColor: 'divider',
+    bgcolor: 'background.paper'
+  },
+  mobileActionButton: {
+    minWidth: '44px',
+    minHeight: '44px',
+    borderRadius: '50%'
+  }
+};
 
 /**
  * Notion風の科目カードコンポーネント
@@ -69,10 +132,20 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   onDelete,
   formatDate
 }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('details');
-  const cardRef = useRef<HTMLDivElement>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [progressToDelete, setProgressToDelete] = useState<string | null>(null);
+  const [progressRecords, setProgressRecords] = useState<Progress[]>([]);
+  const [loadingProgressRecords, setLoadingProgressRecords] = useState(false);
+  const [progressRecordsError, setProgressRecordsError] = useState<string | null>(null);
+  const [editingProgress, setEditingProgress] = useState<Progress | null>(null);
   
+  const { firestore, auth } = useFirebase();
+  const { progressRepository } = useServices();
+
   // 計算値
   const daysRemaining = calculateDaysRemaining(subject?.examDate);
   const progress = calculateProgress(subject?.currentPage || 0, subject?.totalPages || 0);
@@ -80,24 +153,24 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   // 進捗操作のためのカスタムフックを使用
   const { 
     progressForm,
-    isAdding,
+    isAdding: isAddingFromHook,
     isEditing,
     toggleProgressForm,
     startEditing,
     openDeleteDialog,
     closeDeleteDialog,
     deleteProgress,
-    isDeleteDialogOpen,
-    progressToDelete,
+    isDeleteDialogOpen: isDeleteDialogOpenFromHook,
+    progressToDelete: progressToDeleteFromHook,
     handleProgressChange,
     handleQuickProgress,
     handleSaveProgress,
     message,
     showMessage,
     error,
-    progressRecords,
-    loadingProgressRecords,
-    progressRecordsError
+    progressRecords: recordsFromHook,
+    loadingProgressRecords: loadingRecordsFromHook,
+    progressRecordsError: errorRecordsFromHook
   } = useSubjectProgress(
     subject, 
     onProgressAdded, 
@@ -149,16 +222,16 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
 
   // 進捗フォーム開閉
   const handleToggleProgressForm = () => {
-    toggleProgressForm();
+    setIsAdding(!isAddingFromHook);
   };
 
   // 優先度に応じた色を取得
   const getPriorityColor = (): string => {
     switch (subject.priority) {
-      case 'high': return '#f44336';
-      case 'medium': return '#ff9800';
-      case 'low': return '#4caf50';
-      default: return '#9e9e9e';
+      case 'high': return 'error.main';
+      case 'medium': return 'warning.main';
+      case 'low': return 'success.main';
+      default: return 'text.disabled';
     }
   };
 
@@ -172,235 +245,239 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     }
   };
 
+  // 残り日数やボーダーカラーの計算に使用
+  const getDaysRemainingColor = (days: number | null): string => {
+    if (days === null) return 'text.disabled';
+    if (days <= 7) return 'error.main';
+    if (days <= 14) return 'warning.main';
+    if (days <= 30) return 'primary.main';
+    return 'success.main';
+  };
+
+  // 進捗状況の色を取得する関数
+  const getProgressColor = (progressValue: number): string => {
+    if (progressValue >= 100) return 'success.main';
+    if (progressValue >= 70) return 'primary.main';
+    if (progressValue >= 40) return 'info.main';
+    if (progressValue >= 20) return 'warning.main';
+    return 'error.main';
+  };
+
   return (
-    <Card 
-      ref={cardRef}
-      sx={{ 
-        mb: 0,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-        boxShadow: 'none',
-        transition: 'all 0.2s ease-in-out',
-        '&:hover': {
-          boxShadow: '0 4px 8px rgba(0,0,0,0.05)',
-          borderColor: 'primary.light'
-        }
-      }}
+    <Paper
+      elevation={0}
+      sx={cardStyles.root}
     >
-      {/* カードヘッダー */}
-      <CardContent sx={{ 
-        p: 2, 
-        pb: 2, 
-        '&:last-child': { pb: 2 },
-        borderBottom: expanded ? '1px solid' : 'none',
-        borderColor: 'divider'
-      }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'flex-start', 
-            width: 'calc(100% - 90px)'
-          }}>
-            <MenuBookIcon sx={{ 
-              mt: 0.5, 
-              mr: 1, 
-              color: getPriorityColor(),
-              fontSize: '1.5rem'
-            }} />
-            <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  fontWeight: 600,
-                  fontSize: '1.1rem',
-                  mb: 0.5,
-                  lineHeight: 1.3
-                }}
-              >
-                {subject.name}
-              </Typography>
-              
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                flexWrap: 'wrap',
-                gap: 1,
-                mb: 1
-              }}>
-                <Chip 
-                  label={getPriorityLabel()} 
-                  size="small" 
-                  sx={{ 
-                    bgcolor: `${getPriorityColor()}20`,
-                    color: getPriorityColor(),
-                    fontWeight: 500,
-                    height: 20,
-                    fontSize: '0.7rem'
-                  }} 
-                />
-                
-                {subject.examDate && (
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center',
-                    fontSize: '0.75rem',
-                    color: daysRemaining && daysRemaining <= 7 ? 'error.main' : 'text.secondary'
-                  }}>
-                    <EventIcon sx={{ fontSize: '0.9rem', mr: 0.5 }} />
-                    {daysRemaining !== null ? `あと${daysRemaining}日` : formatDate(subject.examDate)}
-                  </Box>
-                )}
-              </Box>
-              
-              <Box sx={{ width: '100%', mt: 1 }}>
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  mb: 0.5
-                }}>
-                  <Typography variant="body2" color="text.secondary">
-                    進捗: {subject.currentPage || 0}/{subject.totalPages} ページ
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontWeight: 600,
-                      color: progress >= 70 ? 'success.main' : progress >= 30 ? 'primary.main' : 'warning.main'
-                    }}
-                  >
-                    {progress}%
-                  </Typography>
-                </Box>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={progress} 
-                  sx={{ 
-                    height: 6, 
-                    borderRadius: 3,
-                    bgcolor: 'rgba(0,0,0,0.05)',
-                    '.MuiLinearProgress-bar': {
-                      bgcolor: progress >= 70 ? 'success.main' : progress >= 30 ? 'primary.main' : 'warning.main'
-                    }
-                  }} 
-                />
-              </Box>
-            </Box>
-          </Box>
-          
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <Box sx={{ display: 'flex' }}>
-              <IconButton 
-                size="small" 
-                onClick={handleEditClick}
-                sx={{ p: 0.5 }}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-              <IconButton 
-                size="small" 
-                onClick={handleDeleteClick}
-                sx={{ p: 0.5 }}
-              >
-                <DeleteIcon fontSize="small" color="error" />
-              </IconButton>
-            </Box>
-            <IconButton 
-              onClick={toggleExpanded} 
-              size="small"
-              sx={{ mt: 'auto', p: 0.5 }}
-            >
-              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
-          </Box>
-        </Box>
-      </CardContent>
-      
-      {/* 展開時のコンテンツ */}
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <CardContent sx={{ pt: 2, pb: 2, px: 2, '&:last-child': { pb: 2 } }}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-            <Tabs 
-              value={activeTab} 
-              onChange={handleTabChange}
-              variant="fullWidth"
-              sx={{
-                '& .MuiTab-root': {
-                  minHeight: 40,
-                  fontSize: '0.8rem'
-                }
+      {/* 優先度を示すトップバー */}
+      <Box
+        sx={{
+          ...cardStyles.priorityBadge,
+          bgcolor: getPriorityColor()
+        }}
+      />
+
+      <Box sx={cardStyles.contentArea}>
+        {/* タイトル部分 */}
+        <Box sx={cardStyles.title}>
+          <Box sx={{ width: '100%' }}>
+            <Typography
+              variant="h6"
+              sx={{ 
+                fontWeight: 600, 
+                fontSize: { xs: '1.2rem', sm: '1.3rem' },
+                lineHeight: 1.4,
+                mb: 1,
+                pr: { xs: 5, sm: 4 } // 右側のボタンのスペースを確保
               }}
             >
-              <Tab 
-                label="詳細" 
-                value="details" 
-                icon={<InfoIcon fontSize="small" />} 
-                iconPosition="start"
+              {subject.name}
+            </Typography>
+            
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              flexWrap: 'wrap',
+              gap: 1.5 
+            }}>
+              <Chip
+                label={getPriorityLabel()}
+                size="small"
+                color={getPriorityColor() as any}
+                icon={<MenuBookIcon fontSize="small" />}
+                variant="outlined"
+                sx={{ 
+                  height: { xs: 28, sm: 24 },
+                  fontSize: { xs: '0.8rem', sm: '0.75rem' },
+                  px: 0.5
+                }}
               />
-              <Tab 
-                label="進捗履歴" 
-                value="history"
-                icon={<HistoryIcon fontSize="small" />}
-                iconPosition="start"
+              
+              {subject.examDate && (
+                <Chip
+                  icon={<EventIcon fontSize="small" />}
+                  label={`試験日: ${formatDate(subject.examDate)}`}
+                  size="small"
+                  variant="outlined"
+                  sx={{ 
+                    height: { xs: 28, sm: 24 }, 
+                    fontSize: { xs: '0.8rem', sm: '0.75rem' },
+                    borderColor: getDaysRemainingColor(daysRemaining),
+                    px: 0.5
+                  }}
+                />
+              )}
+            </Box>
+          </Box>
+        </Box>
+
+        {/* 残り日数表示 */}
+        {subject.examDate && daysRemaining !== null && (
+          <Box sx={{ 
+            mb: 2.5, 
+            display: 'flex', 
+            alignItems: 'center',
+            mt: 1.5,
+            py: 1,
+            px: 1.5,
+            borderRadius: 1.5,
+            bgcolor: 'background.default'
+          }}>
+            <Tooltip title="試験までの残り日数">
+              <AccessTimeIcon 
+                fontSize="small" 
+                sx={{ 
+                  mr: 1, 
+                  color: getDaysRemainingColor(daysRemaining)
+                }} 
               />
-              <Tab 
-                label="グラフ" 
-                value="charts"
-                icon={<BarChartIcon fontSize="small" />}
-                iconPosition="start"
-              />
-            </Tabs>
+            </Tooltip>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: daysRemaining <= 14 ? 'bold' : 'medium',
+                color: getDaysRemainingColor(daysRemaining),
+                fontSize: { xs: '0.9rem', sm: '0.875rem' }
+              }}
+            >
+              {daysRemaining <= 0
+                ? '試験日を過ぎています'
+                : daysRemaining === 1
+                ? '明日が試験日です！'
+                : `試験まであと ${daysRemaining} 日`}
+            </Typography>
+          </Box>
+        )}
+
+        {/* 進捗状況 */}
+        <Box sx={cardStyles.progressSection}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            mb: 1,
+            flexWrap: 'wrap'
+          }}>
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              sx={{ 
+                fontSize: { xs: '0.9rem', sm: '0.875rem' }
+              }}
+            >
+              進捗状況
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 'medium',
+                color: subject.currentPage >= subject.totalPages ? 'success.main' : 'text.primary',
+                fontSize: { xs: '0.9rem', sm: '0.875rem' }
+              }}
+            >
+              {subject.currentPage} / {subject.totalPages} ページ
+            </Typography>
           </Box>
           
-          {/* タブコンテンツ */}
-          {activeTab === 'details' && (
-            <>
-              <SubjectInfo 
-                subject={subject} 
-                formatDate={formatDate}
-                progress={progress}
-              />
-              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  size="small" 
-                  startIcon={<AddIcon />}
-                  onClick={handleToggleProgressForm}
-                  sx={{ borderRadius: 2 }}
-                >
-                  進捗を記録
-                </Button>
-              </Box>
-            </>
-          )}
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            sx={{
+              height: { xs: 10, sm: 8 },
+              borderRadius: 2,
+              backgroundColor: 'rgba(0,0,0,0.05)',
+              my: 1,
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 2,
+                backgroundColor: getProgressColor(progress)
+              }
+            }}
+          />
           
-          {activeTab === 'history' && (
-            <ProgressHistory 
-              progressRecords={progressRecords}
-              loading={loadingProgressRecords}
-              error={progressRecordsError}
-              onEdit={startEditing}
-              onDelete={openDeleteDialog}
-              formatDate={formatDate}
-            />
-          )}
-          
-          {activeTab === 'charts' && (
-            <ProgressCharts 
-              progressRecords={progressRecords}
-              subject={subject}
-              loading={loadingProgressRecords}
-              error={progressRecordsError}
-            />
-          )}
-        </CardContent>
-      </Collapse>
-      
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              textAlign: 'right',
+              mt: 0.5,
+              fontWeight: 'medium',
+              color: getProgressColor(progress),
+              fontSize: { xs: '0.85rem', sm: '0.75rem' }
+            }}
+          >
+            {progress}% 完了
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* 操作ボタン */}
+      <Box sx={cardStyles.actionArea}>
+        {/* モバイル向け大きな進捗記録ボタン */}
+        <Button
+          size="medium"
+          startIcon={<AssignmentTurnedInIcon />}
+          onClick={handleToggleProgressForm}
+          variant="contained"
+          color="primary"
+          sx={{ 
+            borderRadius: 4,
+            px: { xs: 2.5, sm: 2 },
+            py: { xs: 1, sm: 0.75 },
+            fontSize: { xs: '0.9rem', sm: '0.875rem' }
+          }}
+        >
+          進捗記録
+        </Button>
+        
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Tooltip title="編集">
+            <IconButton
+              size="small"
+              onClick={handleEditClick}
+              color="default"
+              sx={{ 
+                width: { xs: 40, sm: 36 }, 
+                height: { xs: 40, sm: 36 } 
+              }}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="削除">
+            <IconButton
+              size="small"
+              onClick={handleDeleteClick}
+              color="default"
+              sx={{ 
+                width: { xs: 40, sm: 36 }, 
+                height: { xs: 40, sm: 36 } 
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
+
       {/* 進捗フォーム */}
       <ProgressForm
         subject={subject}
@@ -419,6 +496,6 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
         onConfirm={deleteProgress}
         isDeleting={false}
       />
-    </Card>
+    </Paper>
   );
 }; 

@@ -7,7 +7,9 @@ import {
   AssignmentTurnedIn as AssignmentTurnedInIcon,
   Add,
   Delete as DeleteIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  Close as CloseIcon,
+  MenuBook as MenuBookIcon
 } from '@mui/icons-material';
 import { Subject, SubjectCreateInput, SubjectUpdateInput } from '../../../../domain/models/SubjectModel';
 import { SubjectForm } from './SubjectForm';
@@ -443,7 +445,15 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
       
       {/* 科目リストツールバー */}
       <Box sx={{ mb: 2, flexShrink: 0 }}>
-        <Paper sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: { xs: 1.5, sm: 2 }, 
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
           <Box 
             sx={{ 
               display: 'flex', 
@@ -482,15 +492,17 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
               
               {/* 手動更新ボタン */}
               <Tooltip title="優先度を手動で更新">
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={handleManualPriorityUpdate}
-                  disabled={priorityUpdating || subjects.length === 0}
-                  sx={{ height: 32 }}
-                >
-                  優先度更新
-                </Button>
+                <span>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={handleManualPriorityUpdate}
+                    disabled={priorityUpdating || subjects.length === 0}
+                    sx={{ height: 32 }}
+                  >
+                    優先度更新
+                  </Button>
+                </span>
               </Tooltip>
             </Box>
             
@@ -565,91 +577,160 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
         }}
       >
         {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress />
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            justifyContent: 'center', 
+            alignItems: 'center',
+            py: 8,
+            height: '100%'
+          }}>
+            <CircularProgress size={48} thickness={4} />
+            <Typography variant="body1" sx={{ mt: 3, color: 'text.secondary' }}>
+              科目データを読み込み中...
+            </Typography>
           </Box>
         ) : (
           <>
             {viewType === 'card' ? (
-              <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} sx={{ width: '100%', mx: 0 }}>
-                {sortedSubjects.map(subject => (
-                  <Grid item xs={12} sm={6} md={4} lg={4} key={subject.id}>
-                    <Box sx={{ 
-                      position: 'relative',
-                      height: '100%',
-                    }}>
-                      {/* 進捗記録ボタンを目立つ位置に配置 */}
+              <>
+                {/* スマホ向け操作ボタンを追加 - 画面下部に固定表示する浮動ボタン */}
+                <Box 
+                  sx={{ 
+                    position: 'sticky',
+                    bottom: 16,
+                    right: 16,
+                    zIndex: 10,
+                    display: { xs: 'block', sm: 'none' }, // モバイルのみ表示
+                    textAlign: 'right',
+                    pointerEvents: 'none'
+                  }}
+                >
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<Add />}
+                    onClick={handleAddSubject}
+                    sx={{ 
+                      borderRadius: 28,
+                      px: 3,
+                      py: 1.5,
+                      boxShadow: 4,
+                      pointerEvents: 'auto',
+                      mb: 2
+                    }}
+                  >
+                    新しい科目
+                  </Button>
+                </Box>
+              
+                <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} sx={{ width: '100%', mx: 0 }}>
+                  {sortedSubjects.map(subject => (
+                    <Grid item xs={12} sm={6} md={4} lg={4} key={subject.id}>
                       <Box sx={{ 
-                        position: 'absolute', 
-                        top: 8, 
-                        right: 8, 
-                        zIndex: 10 
+                        position: 'relative',
+                        height: '100%',
                       }}>
-                        <Tooltip title="進捗を記録">
-                          <IconButton 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenProgressModal(subject);
-                            }}
-                            color="primary"
-                            size="small"
-                            sx={{
-                              backgroundColor: 'primary.main',
-                              color: 'white',
-                              '&:hover': {
-                                backgroundColor: 'primary.dark',
-                              },
-                              boxShadow: 2
-                            }}
-                          >
-                            <AssignmentTurnedInIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        {/* 進捗記録ボタンを目立つ位置に配置 */}
+                        <Box sx={{ 
+                          position: 'absolute', 
+                          top: 12, 
+                          right: 12, 
+                          zIndex: 10,
+                          display: { sm: 'block', xs: 'none' } // モバイルでは非表示
+                        }}>
+                          <Tooltip title="進捗を記録">
+                            <IconButton 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenProgressModal(subject);
+                              }}
+                              color="primary"
+                              size="small"
+                              sx={{
+                                backgroundColor: 'primary.main',
+                                color: 'white',
+                                '&:hover': {
+                                  backgroundColor: 'primary.dark',
+                                },
+                                boxShadow: 2,
+                                width: 40,
+                                height: 40
+                              }}
+                            >
+                              <AssignmentTurnedInIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                        
+                        <SubjectCard
+                          subject={subject}
+                          onProgressAdded={loadSubjects}
+                          onSubjectUpdated={handleUpdateSubject}
+                          onEdit={handleEditSubject}
+                          onDelete={handleDeleteConfirm}
+                          formatDate={formatDate}
+                        />
                       </Box>
-                      
-                      <SubjectCard
-                        subject={subject}
-                        onProgressAdded={loadSubjects}
-                        onSubjectUpdated={handleUpdateSubject}
-                        onEdit={handleEditSubject}
-                        onDelete={handleDeleteConfirm}
-                        formatDate={formatDate}
-                      />
-                    </Box>
-                  </Grid>
-                ))}
-                
-                {sortedSubjects.length === 0 && (
-                  <Grid item xs={12}>
-                    <Paper 
-                      elevation={0} 
-                      sx={{ 
-                        p: 4, 
-                        textAlign: 'center',
-                        border: '1px dashed',
-                        borderColor: 'divider',
-                        borderRadius: 2,
-                        bgcolor: 'white' 
-                      }}
-                    >
-                      <Typography variant="h6" gutterBottom>
-                        科目がまだ登録されていません
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary" paragraph>
-                        「新しい科目」ボタンから科目を追加してください
-                      </Typography>
-                      <Button 
-                        variant="contained" 
-                        color="primary" 
-                        onClick={handleAddSubject}
-                        startIcon={<Add />}
+                    </Grid>
+                  ))}
+                  
+                  {sortedSubjects.length === 0 && (
+                    <Grid item xs={12}>
+                      <Paper 
+                        elevation={0} 
+                        sx={{ 
+                          p: { xs: 4, sm: 6 }, 
+                          textAlign: 'center',
+                          border: '1px dashed',
+                          borderColor: 'divider',
+                          borderRadius: 2,
+                          bgcolor: 'white',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minHeight: 250
+                        }}
                       >
-                        新しい科目
-                      </Button>
-                    </Paper>
-                  </Grid>
-                )}
-              </Grid>
+                        <Box 
+                          sx={{ 
+                            bgcolor: 'background.default',
+                            borderRadius: '50%',
+                            p: 2,
+                            mb: 3,
+                            display: 'inline-flex'
+                          }}
+                        >
+                          <MenuBookIcon color="primary" sx={{ fontSize: 48, opacity: 0.8 }} />
+                        </Box>
+                        
+                        <Typography variant="h6" gutterBottom>
+                          科目がまだ登録されていません
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary" paragraph>
+                          「新しい科目」ボタンから科目を追加してください
+                        </Typography>
+                        <Button 
+                          variant="contained" 
+                          color="primary" 
+                          onClick={handleAddSubject}
+                          startIcon={<Add />}
+                          size="large"
+                          sx={{
+                            borderRadius: 28,
+                            px: 3,
+                            py: 1.5,
+                            mt: 2
+                          }}
+                        >
+                          新しい科目を追加
+                        </Button>
+                      </Paper>
+                    </Grid>
+                  )}
+                </Grid>
+              </>
             ) : (
               <Paper 
                 elevation={0} 
@@ -680,13 +761,25 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
         onClose={() => setIsFormOpen(false)} 
         fullWidth 
         maxWidth="md"
+        fullScreen={window.innerWidth < 600} // モバイルではフルスクリーン表示
         PaperProps={{
           elevation: 1,
-          sx: { borderRadius: 2 }
+          sx: { borderRadius: { xs: 0, sm: 2 } }
         }}
       >
         <DialogTitle>
-          {editingSubject ? '科目を編集' : '新しい科目を追加'}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h6">{editingSubject ? '科目を編集' : '新しい科目を追加'}</Typography>
+            <IconButton 
+              edge="end" 
+              color="inherit" 
+              onClick={() => setIsFormOpen(false)} 
+              aria-label="close"
+              sx={{ display: { xs: 'flex', sm: 'none' } }} // モバイルのみ表示
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </DialogTitle>
         <DialogContent dividers>
           <SubjectForm
@@ -719,8 +812,12 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
             ) : '科目を削除します。この操作は取り消せません。'}
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} disabled={isDeleting}>
+        <DialogActions sx={{ p: 2 }}>
+          <Button 
+            onClick={handleCancelDelete} 
+            disabled={isDeleting}
+            sx={{ borderRadius: 2 }}
+          >
             キャンセル
           </Button>
           <Button 
@@ -729,6 +826,7 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
             variant="contained"
             disabled={isDeleting}
             startIcon={isDeleting ? <CircularProgress size={20} /> : <DeleteIcon />}
+            sx={{ borderRadius: 2 }}
           >
             削除
           </Button>
@@ -741,13 +839,27 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
         onClose={handleCloseProgressModal}
         fullWidth
         maxWidth="sm"
+        fullScreen={window.innerWidth < 600} // モバイルではフルスクリーン表示
         PaperProps={{
           elevation: 1,
-          sx: { borderRadius: 2 }
+          sx: { borderRadius: { xs: 0, sm: 2 } }
         }}
       >
         <DialogTitle>
-          進捗を記録 {selectedSubjectForProgress && `- ${selectedSubjectForProgress.name}`}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h6">
+              進捗を記録 {selectedSubjectForProgress && `- ${selectedSubjectForProgress.name}`}
+            </Typography>
+            <IconButton 
+              edge="end" 
+              color="inherit" 
+              onClick={handleCloseProgressModal} 
+              aria-label="close"
+              sx={{ display: { xs: 'flex', sm: 'none' } }} // モバイルのみ表示
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </DialogTitle>
         <DialogContent dividers>
           {progressSubmitError && (
@@ -773,12 +885,17 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
         autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ 
+          mb: { xs: 7, sm: 2 }, // モバイルではフローティングボタンの上に表示
+          mx: 2 
+        }}
       >
         <Alert 
           onClose={() => setSnackbarOpen(false)} 
           severity={snackbarSeverity}
           elevation={6}
           variant="filled"
+          sx={{ width: '100%', maxWidth: '100%' }}
         >
           {snackbarMessage}
         </Alert>
