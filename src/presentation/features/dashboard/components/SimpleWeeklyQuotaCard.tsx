@@ -29,6 +29,7 @@ import { Subject } from '../../../../domain/models/SubjectModel';
 import { WeeklyQuota } from '../../../../domain/models/QuotaModel';
 import { calculateWeeklyQuota } from '../../../../domain/utils/quotaCalculator';
 import { useMaintenanceMessage } from '../../../../hooks/useMaintenanceMessage';
+import { useUserSettings } from '../../../../hooks/useUserSettings';
 
 interface SimpleWeeklyQuotaCardProps {
   subjects: Subject[];
@@ -36,37 +37,42 @@ interface SimpleWeeklyQuotaCardProps {
 }
 
 /**
- * シンプルな週次ノルマ表示カード
+ * シンプルな週間ノルマ表示カード
  */
 const SimpleWeeklyQuotaCard: React.FC<SimpleWeeklyQuotaCardProps> = ({ 
-  subjects,
+  subjects, 
   isLoading = false
 }) => {
   const [weeklyQuota, setWeeklyQuota] = useState<WeeklyQuota | null>(null);
   
+  // ユーザー設定を取得
+  const { userSettings, isLoading: isSettingsLoading } = useUserSettings();
+
   // メンテナンスメッセージフックを使用
   const { wrapWithMaintenanceMessage, MaintenanceMessageComponent } = useMaintenanceMessage({
-    message: '週次ノルマの再計算機能は現在メンテナンス中です。近日中に実装予定です。'
+    message: '週間ノルマの再計算機能は現在メンテナンス中です。近日中に実装予定です。'
   });
   
   // 科目リストが変更されたらノルマを再計算
   useEffect(() => {
     // 関数をuseEffect内部で定義して依存関係の問題を解決
     const calculateQuota = () => {
-      const quota = calculateWeeklyQuota(subjects);
+      // 現在のuserSettingsを使用してノルマを計算
+      const quota = calculateWeeklyQuota(subjects, userSettings);
       setWeeklyQuota(quota);
     };
     
-    if (subjects.length > 0) {
+    if (subjects.length > 0 && !isSettingsLoading) {
       calculateQuota();
     } else {
       setWeeklyQuota(null);
     }
-  }, [subjects]);
+  }, [subjects, userSettings, isSettingsLoading]);
   
   // 手動更新用関数
   const handleRefresh = () => {
-    const quota = calculateWeeklyQuota(subjects);
+    // 現在のuserSettingsを使用してノルマを再計算
+    const quota = calculateWeeklyQuota(subjects, userSettings);
     setWeeklyQuota(quota);
   };
   
@@ -87,14 +93,23 @@ const SimpleWeeklyQuotaCard: React.FC<SimpleWeeklyQuotaCardProps> = ({
     }
   };
   
-  // 日付を「月/日」形式に変換
-  const formatDate = (date: Date): string => {
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+  // 日付をフォーマット
+  const formatDate = (date: Date | string): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('ja-JP', {
+      month: 'short',
+      day: 'numeric',
+      weekday: 'short'
+    });
   };
   
-  // 週の期間を表示用にフォーマット
-  const formatWeekPeriod = (startDate: Date, endDate: Date): string => {
-    return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+  // 曜日に応じた色を返す
+  const getDayColor = (dateString: string): string => {
+    const date = new Date(dateString);
+    const day = date.getDay();
+    if (day === 0) return '#f44336';  // 日曜日 - 赤
+    if (day === 6) return '#3f51b5';  // 土曜日 - 青
+    return '#757575';  // 平日 - グレー
   };
   
   // 週次ノルマの達成状況を判定する関数
@@ -135,7 +150,8 @@ const SimpleWeeklyQuotaCard: React.FC<SimpleWeeklyQuotaCardProps> = ({
     };
   };
   
-  if (isLoading) {
+  // ローディング中
+  if (isLoading || isSettingsLoading) {
     return (
       <Card elevation={2} sx={{ mb: 3 }}>
         <CardHeader 
@@ -190,7 +206,7 @@ const SimpleWeeklyQuotaCard: React.FC<SimpleWeeklyQuotaCardProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
             <CalendarIcon sx={{ mr: 0.5, fontSize: 18 }} />
             <Typography variant="body2">
-              {formatWeekPeriod(weeklyQuota.startDate, weeklyQuota.endDate)}
+              {formatDate(weeklyQuota.startDate)} - {formatDate(weeklyQuota.endDate)}
             </Typography>
           </Box>
         }

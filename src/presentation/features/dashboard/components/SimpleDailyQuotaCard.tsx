@@ -27,13 +27,14 @@ import { Subject } from '../../../../domain/models/SubjectModel';
 import { DailyQuota } from '../../../../domain/models/QuotaModel';
 import { calculateDailyQuota } from '../../../../domain/utils/quotaCalculator';
 import { useMaintenanceMessage } from '../../../../hooks/useMaintenanceMessage';
-// 仮の実装: userSettingsを単純な値として定義
-// 実際のアプリではユーザー設定をcontext等から取得します
-const userSettings = {
-  maxConcurrentSubjects: 3,
-  examBufferDays: 7,
-  averagePageReadingTime: 2
-};
+import { useUserSettings } from '../../../../hooks/useUserSettings';
+
+// 仮の実装を削除
+// const userSettings = {
+//   maxConcurrentSubjects: 3,
+//   examBufferDays: 7,
+//   averagePageReadingTime: 2
+// };
 
 interface SimpleDailyQuotaCardProps {
   subjects: Subject[];
@@ -48,6 +49,8 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
   isLoading = false
 }) => {
   const [dailyQuota, setDailyQuota] = useState<DailyQuota | null>(null);
+  // ユーザー設定を取得
+  const { userSettings, isLoading: isSettingsLoading } = useUserSettings();
   
   // メンテナンスメッセージフックを使用
   const { wrapWithMaintenanceMessage, MaintenanceMessageComponent } = useMaintenanceMessage({
@@ -62,12 +65,12 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
       setDailyQuota(quota);
     };
     
-    if (subjects.length > 0) {
+    if (subjects.length > 0 && !isSettingsLoading) {
       calculateQuota();
     } else {
       setDailyQuota(null);
     }
-  }, [subjects]);
+  }, [subjects, userSettings, isSettingsLoading]);
   
   // 手動更新用関数
   const handleRefresh = () => {
@@ -92,27 +95,16 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
     }
   };
   
-  // 達成状況の判定関数
+  // 本日の進捗状況を取得（仮実装）
   const getCompletionStatus = (item: any) => {
-    // 科目のIDを使って、対応する科目のデータを取得
-    const subjectData = subjects.find(subject => subject.id === item.subjectId);
-    
-    // 注意: 本実装では、実際に進捗データを取得する必要があります
-    // ここではデモ用に、ランダムなデータを生成します
-    
-    // ランダムに進捗があるかどうかを決定（実際のアプリでは進捗管理データベースから取得）
-    const hasProgressToday = Math.random() > 0.5;
-    
-    // ランダムにノルマ達成しているかどうかを決定
-    const metQuotaToday = hasProgressToday && Math.random() > 0.3;
-    
     return {
-      hasProgressToday,
-      metQuotaToday
+      hasProgressToday: Math.random() > 0.5,  // 実際にはユーザーの進捗データから計算
+      metQuotaToday: Math.random() > 0.7      // 実際にはユーザーの進捗データから計算
     };
   };
   
-  if (isLoading) {
+  // ローディング中
+  if (isLoading || isSettingsLoading) {
     return (
       <Card elevation={2} sx={{ mb: 3 }}>
         <CardHeader 
@@ -188,7 +180,7 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
         <Box sx={{ mb: 2 }}>
           <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
             同時進行科目: {dailyQuota.activeSubjectsCount || dailyQuota.quotaItems.length} 科目
-            (最大: {userSettings.maxConcurrentSubjects || 3}科目)
+            (最大: {userSettings.maxConcurrentSubjects}科目)
           </Typography>
         </Box>
         
