@@ -681,9 +681,15 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
                         position: 'relative',
                         height: '100%',
                         maxWidth: { sm: '100%', md: '550px', lg: '450px' },
-                        mx: 'auto'
+                        mx: 'auto',
+                        // タッチデバイス向け最適化
+                        WebkitTapHighlightColor: 'transparent',
+                        transition: 'transform 0.2s ease-in-out',
+                        '&:active': {
+                          transform: isMobile ? 'scale(0.98)' : 'none'
+                        }
                       }}>
-                        {/* 右上の進捗記録ボタンを削除（カード内の進捗記録ボタンに統一） */}
+                        {/* カードコンポーネント */}
                         <SubjectCard
                           subject={subject}
                           onProgressAdded={loadSubjects}
@@ -705,9 +711,9 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
                           p: { xs: 4, sm: 6 }, 
                           textAlign: 'center',
                           border: '1px dashed',
-                          borderColor: 'divider',
+                          borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
                           borderRadius: 2,
-                          bgcolor: 'white',
+                          bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'white',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
@@ -717,7 +723,7 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
                       >
                         <Box 
                           sx={{ 
-                            bgcolor: 'background.default',
+                            bgcolor: theme.palette.mode === 'dark' ? 'rgba(66, 66, 66, 0.5)' : 'background.default',
                             borderRadius: '50%',
                             p: 2,
                             mb: 3,
@@ -760,7 +766,8 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
                   borderRadius: 2, 
                   overflow: 'hidden',
                   border: '1px solid',
-                  borderColor: 'divider' 
+                  borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'transparent'
                 }}
               >
                 <SubjectListView

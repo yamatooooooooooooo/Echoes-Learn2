@@ -19,7 +19,9 @@ import {
   Paper,
   Chip,
   LinearProgress,
-  Tooltip
+  Tooltip,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { 
   ExpandMore as ExpandMoreIcon,
@@ -72,19 +74,30 @@ const cardStyles = {
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
     '&:hover': {
-      transform: 'translateY(-3px)',
-      boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+      transform: 'translateY(-4px)',
+      boxShadow: (theme: any) => theme.palette.mode === 'dark' 
+        ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
+        : '0 8px 24px rgba(0, 0, 0, 0.1)'
     },
     overflow: 'hidden',
-    borderRadius: 2,
+    borderRadius: 3,
     border: '1px solid',
-    borderColor: 'divider',
+    borderColor: (theme: any) => theme.palette.mode === 'dark' 
+      ? 'rgba(255, 255, 255, 0.1)' 
+      : 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
+      ? 'rgba(30, 30, 30, 0.7)' 
+      : 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(10px)',
+    boxShadow: (theme: any) => theme.palette.mode === 'dark'
+      ? '0 4px 12px rgba(0, 0, 0, 0.2)'
+      : '0 4px 12px rgba(0, 0, 0, 0.05)',
   },
   contentArea: {
-    p: { xs: 2.5, sm: 3 },
-    pt: { xs: 3.5, sm: 4 },
+    p: { xs: 2, sm: 2.5 },
+    pt: { xs: 3, sm: 3.5 },
     flexGrow: 1,
     display: 'flex',
     flexDirection: 'column'
@@ -100,7 +113,7 @@ const cardStyles = {
     top: 0,
     left: 0,
     right: 0,
-    height: '4px',
+    height: '6px',
     zIndex: 1
   },
   actionArea: {
@@ -111,10 +124,12 @@ const cardStyles = {
     pt: { xs: 1, sm: 1.5 },
     pb: { xs: 1, sm: 1.5 },
     borderTop: '1px solid',
-    borderColor: 'divider',
+    borderColor: (theme: any) => theme.palette.mode === 'dark' 
+      ? 'rgba(255, 255, 255, 0.08)' 
+      : 'rgba(0, 0, 0, 0.05)',
     backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
-      ? 'rgba(255,255,255,0.05)' 
-      : 'rgba(0,0,0,0.02)'
+      ? 'rgba(255, 255, 255, 0.03)' 
+      : 'rgba(0, 0, 0, 0.01)'
   },
   progressSection: {
     mt: 2,
@@ -125,14 +140,22 @@ const cardStyles = {
   progressBar: {
     height: 8,
     borderRadius: 4,
-    my: 1
+    my: 1,
+    backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
+      ? 'rgba(255, 255, 255, 0.1)' 
+      : 'rgba(0, 0, 0, 0.05)',
   },
   recordProgressButton: {
-    width: '100%',
-    borderRadius: '4px',
-    py: { xs: 1, sm: 1.2 },
-    fontSize: { xs: '0.85rem', sm: '0.9rem' },
-    fontWeight: 600
+    width: 'auto',
+    borderRadius: '20px',
+    py: { xs: 0.5, sm: 0.75 },
+    px: { xs: 1.5, sm: 2 },
+    fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+    fontWeight: 500,
+    boxShadow: 'none',
+    '&:hover': {
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+    }
   },
   tabPanel: {
     p: 2,
@@ -143,6 +166,14 @@ const cardStyles = {
     transition: 'transform 0.2s',
     '&.expanded': {
       transform: 'rotate(180deg)'
+    },
+    backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
+      ? 'rgba(255, 255, 255, 0.05)' 
+      : 'rgba(0, 0, 0, 0.04)',
+    '&:hover': {
+      backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
+        ? 'rgba(255, 255, 255, 0.1)' 
+        : 'rgba(0, 0, 0, 0.08)',
     }
   }
 };
@@ -174,6 +205,10 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   const { firestore, auth } = useFirebase();
   const { progressRepository } = useServices();
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [isHovered, setIsHovered] = useState(false);
+  
   // 計算値
   const daysRemaining = calculateDaysRemaining(subject?.examDate);
   const progress = calculateProgress(subject?.currentPage || 0, subject?.totalPages || 0);
