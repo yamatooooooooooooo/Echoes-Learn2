@@ -49,7 +49,6 @@ import { ProgressCharts } from './ProgressCharts';
 import { useSubjectProgress } from '../hooks/useSubjectProgress';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
 import { useServices } from '../../../../hooks/useServices';
-import { useProgressFormControl } from '../hooks/useProgressFormControl';
 
 // タブの種類
 type TabType = 'details' | 'history' | 'charts';
@@ -148,7 +147,6 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   
   const { firestore, auth } = useFirebase();
   const { progressRepository } = useServices();
-  const { progressService } = useServices();
 
   // 計算値
   const daysRemaining = calculateDaysRemaining(subject?.examDate);
@@ -180,13 +178,6 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     onProgressAdded, 
     onSubjectUpdated
   );
-
-  // モバイル向けにonAddとisAddingを提供するフック
-  const {
-    isAdding: isAddingFromHook,
-    setIsAdding: setIsAddingFromHook,
-    deleteProgressConfirm
-  } = useProgressFormControl(firestore, subject.id);
 
   // タッチイベントの調整
   useEffect(() => {
@@ -236,7 +227,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     if (onRecordProgress) {
       onRecordProgress(subject);
     } else {
-      setIsAdding(!isAddingFromHook);
+      setIsAdding(!isAdding);
     }
   };
 
@@ -446,7 +437,6 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
 
       {/* 操作ボタン */}
       <Box sx={cardStyles.actionArea}>
-        {/* モバイル向け大きな進捗記録ボタン */}
         <Button
           size="medium"
           startIcon={<AssignmentTurnedInIcon />}
