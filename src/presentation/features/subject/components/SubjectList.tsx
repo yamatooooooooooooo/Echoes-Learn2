@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Alert, Collapse, SelectChangeEvent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Typography, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Switch, Tooltip, CircularProgress, Grid, Snackbar, Paper, IconButton, List, ListItem, ListItemButton, ListItemText, Chip, LinearProgress } from '@mui/material';
+import { Box, Alert, Collapse, SelectChangeEvent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Typography, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Switch, Tooltip, CircularProgress, Grid, Snackbar, Paper, IconButton, List, ListItem, ListItemButton, ListItemText, Chip, LinearProgress, useMediaQuery, useTheme } from '@mui/material';
 import { 
   ViewModule as ViewModuleIcon, 
   ViewList as ViewListIcon, 
@@ -76,6 +76,9 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
   const { wrapWithMaintenanceMessage, MaintenanceMessageComponent } = useMaintenanceMessage({
     message: '科目の管理機能は現在メンテナンス中です。近日中に実装予定です。'
   });
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   /**
    * 科目の優先順位を計算する関数
@@ -418,25 +421,65 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
     setSnackbarOpen(true);
   };
 
+  // 初期レンダリング時にスクロール位置を最上部に設定
+  useEffect(() => {
+    const scrollTimeout = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      
+      // モバイル環境では追加のスクロール処理
+      if (isMobile) {
+        const subjectListContainer = document.getElementById('subject-list-container');
+        if (subjectListContainer) {
+          subjectListContainer.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+      }
+    }, 100);
+    
+    return () => clearTimeout(scrollTimeout);
+  }, [isMobile]);
+
   // レンダリング
   return (
     <Box 
+      id="subject-list-container"
       sx={{ 
         display: 'flex', 
         flexDirection: 'column',
-        height: '100%',
+        height: isMobile ? 'auto' : '100%',
         width: '100%',
-        maxWidth: { xs: '100%', sm: '92%', md: '1400px' }, // 最大幅を増やす
+        maxWidth: { xs: '100%', sm: '92%', md: '1400px' },
         mx: 'auto',
         flexGrow: 1,
-        overflow: 'hidden' // 全体のオーバーフローを防止
+        // モバイル環境ではoverflow: hiddenを使用しない
+        overflow: isMobile ? 'visible' : 'hidden',
+        p: { xs: 1, sm: 2 },
+        pt: { xs: 2, sm: 3 },
+        // モバイル環境での追加設定
+        ...(isMobile && {
+          minHeight: '100%',
+          WebkitOverflowScrolling: 'touch',
+          msOverflowStyle: 'none'
+        })
       }}
     >
       {/* メンテナンスメッセージ（開発中に表示） */}
       <MaintenanceMessageComponent />
       
       {/* 科目リストヘッダー */}
-      <Box sx={{ flexShrink: 0 }}>
+      <Box sx={{ 
+        flexShrink: 0,
+        width: '100%',
+        mb: 2,
+        // モバイル環境でのヘッダー表示を改善
+        ...(isMobile && {
+          position: 'relative',
+          zIndex: 2,
+          top: 0,
+          left: 0
+        })
+      }}>
         <SubjectListHeader
           onAddSubject={handleAddSubject}
           totalSubjects={subjects.length}
@@ -572,8 +615,15 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
       <Box 
         sx={{ 
           flexGrow: 1, 
-          overflow: 'auto',
-          pb: 2
+          // モバイル環境ではautoからvisibleに変更して全体表示を改善
+          overflow: isMobile ? 'visible' : 'auto',
+          pb: 2,
+          // モバイル環境での追加設定
+          ...(isMobile && {
+            WebkitOverflowScrolling: 'touch',
+            height: 'auto',
+            width: '100%'
+          })
         }}
       >
         {isLoading ? (
