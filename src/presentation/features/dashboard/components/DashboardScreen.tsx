@@ -89,7 +89,8 @@ const DashboardScreen: React.FC = () => {
         bgcolor: 'background.default',
         display: 'flex',
         flexDirection: 'column',
-        height: '100%'
+        minHeight: '100vh',
+        overflowX: 'hidden'
       }}
     >
       {/* ヘッダー部分 - 固定表示 */}
@@ -169,8 +170,10 @@ const DashboardScreen: React.FC = () => {
       <Box 
         sx={{ 
           flexGrow: 1, 
-          overflow: 'auto', 
-          pb: 2 
+          overflowY: 'visible', 
+          overflowX: 'hidden',
+          pb: 4,
+          width: '100%'
         }}
       >
         {/* カードコンテナ */}

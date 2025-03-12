@@ -7,10 +7,12 @@ import {
   Box,
   LinearProgress,
   Paper,
-  Divider
+  Divider,
+  Tooltip
 } from '@mui/material';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { calculateProgress } from '../../subject/utils/subjectUtils';
+import { useUserSettings } from '../../../../hooks/useUserSettings';
 
 interface SimpleProgressBarCardProps {
   subjects: Subject[];
@@ -24,6 +26,8 @@ const SimpleProgressBarCard: React.FC<SimpleProgressBarCardProps> = ({
   subjects,
   isLoading = false
 }) => {
+  // ユーザー設定を取得
+  const { userSettings, isLoading: isSettingsLoading } = useUserSettings();
   
   // 進捗率に応じた色を返す
   const getProgressColor = (progress: number): string => {
@@ -32,7 +36,32 @@ const SimpleProgressBarCard: React.FC<SimpleProgressBarCardProps> = ({
     return '#4caf50';  // 緑
   };
   
-  if (isLoading) {
+  // 目標達成までの日数を計算
+  const calculateDaysUntilTarget = (subject: Subject): number | null => {
+    if (!subject.examDate) return null;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const examDate = new Date(subject.examDate);
+    examDate.setHours(0, 0, 0, 0);
+    
+    const bufferDays = subject.bufferDays || userSettings.examBufferDays;
+    const targetDate = new Date(examDate);
+    targetDate.setDate(targetDate.getDate() - bufferDays);
+    
+    // 今日から目標日までの日数
+    const daysUntilTarget = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return daysUntilTarget > 0 ? daysUntilTarget : 0;
+  };
+  
+  // 残りの読了時間を計算
+  const calculateRemainingReadingTime = (subject: Subject): number => {
+    const remainingPages = subject.totalPages - (subject.currentPage || 0);
+    return remainingPages * userSettings.averagePageReadingTime;
+  };
+  
+  if (isLoading || isSettingsLoading) {
     return (
       <Card elevation={2} sx={{ mb: 3, maxWidth: '100%', width: '100%' }}>
         <CardHeader 
@@ -84,6 +113,8 @@ const SimpleProgressBarCard: React.FC<SimpleProgressBarCardProps> = ({
         {sortedSubjects.map((subject) => {
           const progress = calculateProgress(subject.currentPage || 0, subject.totalPages);
           const progressColor = getProgressColor(progress);
+          const daysUntilTarget = calculateDaysUntilTarget(subject);
+          const remainingMinutes = calculateRemainingReadingTime(subject);
           
           return (
             <Paper 
@@ -93,6 +124,11 @@ const SimpleProgressBarCard: React.FC<SimpleProgressBarCardProps> = ({
                 mb: 2,
                 p: 2,
                 borderLeft: `4px solid ${progressColor}`,
+                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                }
               }}
             >
               <Box sx={{ mb: 1 }}>
@@ -111,6 +147,21 @@ const SimpleProgressBarCard: React.FC<SimpleProgressBarCardProps> = ({
                     {progress}%
                   </Typography>
                 </Box>
+                
+                {daysUntilTarget !== null && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                    <Tooltip title={`目標達成までの残り日数（試験日の${userSettings.examBufferDays}日前までに完了）`}>
+                      <Typography variant="caption" color="text.secondary">
+                        目標達成まであと: {daysUntilTarget}日
+                      </Typography>
+                    </Tooltip>
+                    <Tooltip title={`1ページあたり${userSettings.averagePageReadingTime}分で計算`}>
+                      <Typography variant="caption" color="text.secondary">
+                        残り読了時間: 約{Math.ceil(remainingMinutes / 60)}時間
+                      </Typography>
+                    </Tooltip>
+                  </Box>
+                )}
               </Box>
               
               <LinearProgress 
