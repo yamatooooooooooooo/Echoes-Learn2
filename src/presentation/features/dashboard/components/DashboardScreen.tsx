@@ -8,7 +8,8 @@ import {
   Paper,
   IconButton,
   Tooltip,
-  useTheme
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { 
   Dashboard as DashboardIcon,
@@ -32,13 +33,25 @@ const DashboardScreen: React.FC = () => {
   const { dashboardData, isLoading, error, formatDate, refreshData } = useDashboardData();
   const { currentUser } = useAuth();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   // マウント時に最上部にスクロール
   useEffect(() => {
-    window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-  }, []);
+    const scrollTimeout = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      
+      if (isMobile) {
+        const dashboardContainer = document.getElementById('dashboard-root-container');
+        if (dashboardContainer) {
+          dashboardContainer.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+      }
+    }, 100);
+    
+    return () => clearTimeout(scrollTimeout);
+  }, [isMobile]);
   
   // 手動更新
   const handleRefresh = () => {
@@ -99,18 +112,26 @@ const DashboardScreen: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         height: 'auto',
-        minHeight: 'calc(100vh - 64px)', // ヘッダーの高さを考慮
+        minHeight: isMobile ? '100%' : 'calc(100vh - 64px)',
         marginTop: 0,
         paddingTop: { xs: 2, sm: 3, md: 4 },
-        position: 'static',
+        position: isMobile ? 'relative' : 'static',
         top: 0,
         left: 0,
         overflowX: 'hidden',
-        overflowY: 'visible',
+        overflowY: 'auto',
         scrollMarginTop: 0,
         scrollPaddingTop: 0,
         willChange: 'transform',
-        zIndex: 1
+        zIndex: 1,
+        ...(isMobile && {
+          WebkitOverflowScrolling: 'touch',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { 
+            display: 'none' 
+          },
+        })
       }}
     >
       {/* ヘッダー部分 - 固定表示 */}
@@ -121,7 +142,8 @@ const DashboardScreen: React.FC = () => {
           width: '100%',
           zIndex: 2,
           position: 'relative',
-          top: 0
+          top: 0,
+          left: 0
         }}
       >
         {/* ダッシュボードヘッダー */}
@@ -202,14 +224,18 @@ const DashboardScreen: React.FC = () => {
           display: 'block',
           width: '100%',
           position: 'relative',
-          overflowY: 'visible', 
+          overflowY: 'auto',
           overflowX: 'hidden',
           pb: 4,
-          scrollBehavior: 'smooth'
+          scrollBehavior: 'smooth',
+          ...(isMobile && {
+            WebkitOverflowScrolling: 'touch',
+            height: 'auto'
+          })
         }}
       >
         {/* カードコンテナ */}
-        <Grid container spacing={3} sx={{ mb: 2 }}>
+        <Grid container spacing={isMobile ? 2 : 3} sx={{ mb: 2 }}>
           {/* 試験スケジュールカード */}
           <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
             <Paper 
