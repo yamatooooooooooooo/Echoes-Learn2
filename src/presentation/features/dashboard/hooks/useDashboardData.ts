@@ -164,18 +164,32 @@ export const useDashboardData = () => {
       // 今後の試験の取得
       let upcomingExams: ExamData[] = [];
       try {
+        // 科目データのログを出力して確認
+        console.log('Dashboard subjects for exams:', subjects);
+        
         upcomingExams = subjects
           .filter(s => {
             // 試験日が設定されているかつ有効な日付のみを抽出
-            if (!s.examDate) return false;
+            if (!s.examDate) {
+              console.log(`Subject ${s.id} (${s.name}) has no exam date`);
+              return false;
+            }
             
             try {
               const examDate = new Date(s.examDate);
               // 無効な日付またはNaNの場合はfalseを返す
-              if (isNaN(examDate.getTime())) return false;
+              if (isNaN(examDate.getTime())) {
+                console.log(`Subject ${s.id} (${s.name}) has invalid exam date: ${s.examDate}`);
+                return false;
+              }
               // 未来の日付のみ抽出
-              return examDate > new Date();
+              const isUpcoming = examDate > new Date();
+              if (!isUpcoming) {
+                console.log(`Subject ${s.id} (${s.name}) has past exam date: ${examDate.toISOString()}`);
+              }
+              return isUpcoming;
             } catch (error) {
+              console.error(`Error processing exam date for subject ${s.id} (${s.name}):`, error);
               return false;
             }
           })
@@ -184,14 +198,28 @@ export const useDashboardData = () => {
             const dateB = new Date(b.examDate || new Date()).getTime();
             return dateA - dateB;
           })
-          .map(s => ({
-            subjectId: s.id,
-            subjectName: s.name,
-            examDate: s.examDate,
-            reportDeadline: s.reportDeadline,
-            remainingDays: Math.ceil((new Date(s.examDate || new Date()).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
-            completion: Math.round(((s.currentPage || 0) / (s.totalPages || 1)) * 100)
-          }));
+          .map(s => {
+            // 文字列として確実に扱うために型変換
+            const examDateStr = typeof s.examDate === 'string' 
+              ? s.examDate 
+              : (s.examDate as Date).toISOString();
+            
+            const examDate = new Date(examDateStr);
+            const remainingDays = Math.ceil(
+              (examDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+            );
+            
+            return {
+              subjectId: s.id,
+              subjectName: s.name,
+              examDate: s.examDate,
+              reportDeadline: s.reportDeadline,
+              remainingDays: remainingDays,
+              completion: Math.round(((s.currentPage || 0) / (s.totalPages || 1)) * 100)
+            };
+          });
+        
+        console.log('Upcoming exams after processing:', upcomingExams);
       } catch (error) {
         console.error('試験データの処理中にエラーが発生しました:', error);
         upcomingExams = [];

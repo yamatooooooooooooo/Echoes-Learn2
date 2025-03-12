@@ -36,41 +36,70 @@ interface UpcomingExamsCardProps {
 export const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }) => {
   // 科目を試験日ごとにグループ化
   const examGroups = useMemo(() => {
+    console.log('UpcomingExamsCard received subjects:', subjects);
     const groups: { [key: string]: ExamGroup } = {};
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     // 有効な科目のみフィルタリング
     const validSubjects = subjects.filter(subject => {
-      if (!subject.examDate) return false;
-      const examDate = new Date(subject.examDate);
-      return examDate >= today;
+      // 科目が有効で試験日が設定されているか確認
+      if (!subject || !subject.examDate) {
+        console.log('Filtered out subject with missing data:', subject);
+        return false;
+      }
+
+      try {
+        const examDate = new Date(subject.examDate);
+        // 無効な日付はフィルタリング
+        if (isNaN(examDate.getTime())) {
+          console.log('Filtered out subject with invalid date:', subject.name, subject.examDate);
+          return false;
+        }
+        
+        const isUpcoming = examDate >= today;
+        if (!isUpcoming) {
+          console.log('Filtered out past exam date:', subject.name, examDate.toISOString());
+        }
+        return isUpcoming;
+      } catch (err) {
+        console.error('Error processing subject for exam card:', subject, err);
+        return false;
+      }
     });
+
+    console.log('Valid subjects for exam groups:', validSubjects);
 
     // 試験日ごとにグループ化
     validSubjects.forEach(subject => {
       if (!subject.examDate) return;
 
-      const examDate = new Date(subject.examDate);
-      examDate.setHours(0, 0, 0, 0);
-      const dateKey = examDate.toISOString().split('T')[0];
+      try {
+        const examDate = new Date(subject.examDate);
+        examDate.setHours(0, 0, 0, 0);
+        const dateKey = examDate.toISOString().split('T')[0];
 
-      // 残り日数を計算
-      const daysRemaining = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        // 残り日数を計算
+        const daysRemaining = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-      if (!groups[dateKey]) {
-        groups[dateKey] = {
-          date: examDate,
-          subjects: [],
-          daysRemaining
-        };
+        if (!groups[dateKey]) {
+          groups[dateKey] = {
+            date: examDate,
+            subjects: [],
+            daysRemaining
+          };
+        }
+
+        groups[dateKey].subjects.push(subject);
+      } catch (err) {
+        console.error('Error grouping subject by date:', subject, err);
       }
-
-      groups[dateKey].subjects.push(subject);
     });
 
     // 日付順にソートして配列に変換
-    return Object.values(groups).sort((a, b) => a.date.getTime() - b.date.getTime());
+    const sortedGroups = Object.values(groups).sort((a, b) => a.date.getTime() - b.date.getTime());
+    console.log('Sorted exam groups:', sortedGroups);
+    return sortedGroups;
   }, [subjects]);
 
   // 残り日数に応じた色を返す
