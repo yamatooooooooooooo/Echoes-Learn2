@@ -49,17 +49,19 @@ import { ProgressCharts } from './ProgressCharts';
 import { useSubjectProgress } from '../hooks/useSubjectProgress';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
 import { useServices } from '../../../../hooks/useServices';
+import { useProgressFormControl } from '../hooks/useProgressFormControl';
 
 // タブの種類
 type TabType = 'details' | 'history' | 'charts';
 
 interface SubjectCardProps {
   subject: Subject;
-  onProgressAdded: () => void;
-  onSubjectUpdated: (subject: Subject) => void;
-  onEdit: (subject: Subject) => void;
-  onDelete: (subject: Subject) => void;
+  onProgressAdded?: () => void;
+  onSubjectUpdated?: (updatedSubject: Subject) => void;
+  onEdit?: (subject: Subject) => void;
+  onDelete?: (subject: Subject) => void;
   formatDate: (date: Date | string | undefined) => string;
+  onRecordProgress?: (subject: Subject) => void;
 }
 
 // カードのスタイリング
@@ -130,7 +132,8 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   onSubjectUpdated,
   onEdit,
   onDelete,
-  formatDate
+  formatDate,
+  onRecordProgress
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
@@ -145,6 +148,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
   
   const { firestore, auth } = useFirebase();
   const { progressRepository } = useServices();
+  const { progressService } = useServices();
 
   // 計算値
   const daysRemaining = calculateDaysRemaining(subject?.examDate);
@@ -176,6 +180,13 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
     onProgressAdded, 
     onSubjectUpdated
   );
+
+  // モバイル向けにonAddとisAddingを提供するフック
+  const {
+    isAdding: isAddingFromHook,
+    setIsAdding: setIsAddingFromHook,
+    deleteProgressConfirm
+  } = useProgressFormControl(firestore, subject.id);
 
   // タッチイベントの調整
   useEffect(() => {
@@ -222,7 +233,11 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
 
   // 進捗フォーム開閉
   const handleToggleProgressForm = () => {
-    setIsAdding(!isAddingFromHook);
+    if (onRecordProgress) {
+      onRecordProgress(subject);
+    } else {
+      setIsAdding(!isAddingFromHook);
+    }
   };
 
   // 優先度に応じた色を取得
@@ -478,24 +493,29 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
         </Box>
       </Box>
 
-      {/* 進捗フォーム */}
-      <ProgressForm
-        subject={subject}
-        open={isAdding}
-        onClose={handleToggleProgressForm}
-        onSuccess={(progressId) => {
-          handleToggleProgressForm();
-          if (onProgressAdded) onProgressAdded();
-        }}
-      />
-      
-      {/* 進捗削除確認ダイアログ */}
-      <ProgressDeleteDialog
-        open={isDeleteDialogOpen}
-        onClose={closeDeleteDialog}
-        onConfirm={deleteProgress}
-        isDeleting={false}
-      />
+      {/* onRecordProgressが提供されていない場合のみ内蔵フォームを表示 */}
+      {!onRecordProgress && (
+        <>
+          {/* 進捗フォーム */}
+          <ProgressForm
+            subject={subject}
+            open={isAdding}
+            onClose={handleToggleProgressForm}
+            onSuccess={(progressId) => {
+              handleToggleProgressForm();
+              if (onProgressAdded) onProgressAdded();
+            }}
+          />
+          
+          {/* 進捗削除確認ダイアログ */}
+          <ProgressDeleteDialog
+            open={isDeleteDialogOpen}
+            onClose={closeDeleteDialog}
+            onConfirm={deleteProgress}
+            isDeleting={false}
+          />
+        </>
+      )}
     </Paper>
   );
 }; 

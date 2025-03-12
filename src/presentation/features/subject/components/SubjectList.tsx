@@ -631,38 +631,7 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
                         position: 'relative',
                         height: '100%',
                       }}>
-                        {/* 進捗記録ボタンを目立つ位置に配置 */}
-                        <Box sx={{ 
-                          position: 'absolute', 
-                          top: 12, 
-                          right: 12, 
-                          zIndex: 10,
-                          display: { sm: 'block', xs: 'none' } // モバイルでは非表示
-                        }}>
-                          <Tooltip title="進捗を記録">
-                            <IconButton 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenProgressModal(subject);
-                              }}
-                              color="primary"
-                              size="small"
-                              sx={{
-                                backgroundColor: 'primary.main',
-                                color: 'white',
-                                '&:hover': {
-                                  backgroundColor: 'primary.dark',
-                                },
-                                boxShadow: 2,
-                                width: 40,
-                                height: 40
-                              }}
-                            >
-                              <AssignmentTurnedInIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                        
+                        {/* 右上の進捗記録ボタンを削除（カード内の進捗記録ボタンに統一） */}
                         <SubjectCard
                           subject={subject}
                           onProgressAdded={loadSubjects}
@@ -670,6 +639,7 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
                           onEdit={handleEditSubject}
                           onDelete={handleDeleteConfirm}
                           formatDate={formatDate}
+                          onRecordProgress={() => handleOpenProgressModal(subject)}
                         />
                       </Box>
                     </Grid>
