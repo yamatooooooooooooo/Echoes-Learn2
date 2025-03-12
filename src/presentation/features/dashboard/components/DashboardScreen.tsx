@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Box, 
   Typography, 
@@ -32,6 +32,13 @@ const DashboardScreen: React.FC = () => {
   const { dashboardData, isLoading, error, formatDate, refreshData } = useDashboardData();
   const { currentUser } = useAuth();
   const theme = useTheme();
+  
+  // マウント時に最上部にスクロール
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }, []);
   
   // 手動更新
   const handleRefresh = () => {
@@ -80,6 +87,7 @@ const DashboardScreen: React.FC = () => {
   
   return (
     <Box 
+      id="dashboard-root-container"
       sx={{ 
         width: '100%', 
         maxWidth: { xs: '100%', sm: '95%', md: '1400px' },
@@ -91,18 +99,31 @@ const DashboardScreen: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         height: 'auto',
-        position: 'relative',
+        minHeight: 'calc(100vh - 64px)', // ヘッダーの高さを考慮
+        marginTop: 0,
+        paddingTop: { xs: 2, sm: 3, md: 4 },
+        position: 'static',
+        top: 0,
+        left: 0,
         overflowX: 'hidden',
-        overflowY: 'auto'
+        overflowY: 'visible',
+        scrollMarginTop: 0,
+        scrollPaddingTop: 0,
+        willChange: 'transform',
+        zIndex: 1
       }}
     >
       {/* ヘッダー部分 - 固定表示 */}
-      <Box sx={{ 
-        flexShrink: 0, 
-        mb: { xs: 2, sm: 3 },
-        width: '100%',
-        zIndex: 2
-      }}>
+      <Box 
+        sx={{ 
+          flexShrink: 0, 
+          mb: { xs: 2, sm: 3 },
+          width: '100%',
+          zIndex: 2,
+          position: 'relative',
+          top: 0
+        }}
+      >
         {/* ダッシュボードヘッダー */}
         <Paper 
           elevation={0} 
@@ -183,7 +204,8 @@ const DashboardScreen: React.FC = () => {
           position: 'relative',
           overflowY: 'visible', 
           overflowX: 'hidden',
-          pb: 4
+          pb: 4,
+          scrollBehavior: 'smooth'
         }}
       >
         {/* カードコンテナ */}
