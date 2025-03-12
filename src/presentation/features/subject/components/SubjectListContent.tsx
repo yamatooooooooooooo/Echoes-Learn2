@@ -42,48 +42,17 @@ export const SubjectListContent: React.FC<SubjectListContentProps> = ({
   }
 
   return (
-    <Grid 
-      container 
-      spacing={{ xs: 2, sm: 2, md: 3 }} 
-      sx={{ 
-        width: '100%', 
-        margin: 0,
-        px: { xs: 1, sm: 0 }
-      }}
-    >
+    <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ width: '100%', mb: 2 }}>
       {subjects.map((subject) => (
-        <Grid 
-          item 
-          xs={12} 
-          sm={6} 
-          md={4} 
-          lg={4}
-          key={subject.id}
-          sx={{
-            display: 'flex',
-            '& > *': { width: '100%' }
-          }}
-        >
-          <Box sx={{ position: 'relative', height: '100%', width: '100%' }}>
-            {/* 進捗記録ボタンを配置 */}
-            <Box sx={{ 
-              position: 'absolute', 
-              top: 8, 
-              right: 8, 
-              zIndex: 10 
-            }}>
-              {/* ボタンコンテンツ */}
-            </Box>
-            
-            <SubjectCard
-              subject={subject}
-              formatDate={formatDate}
-              onProgressAdded={() => {}}
-              onSubjectUpdated={onSubjectUpdated}
-              onEdit={onSubjectEdit}
-              onDelete={onSubjectDelete}
-            />
-          </Box>
+        <Grid item xs={12} sm={6} md={4} lg={4} key={subject.id}>
+          <SubjectCard
+            subject={subject}
+            formatDate={formatDate}
+            onProgressAdded={() => {}}
+            onSubjectUpdated={onSubjectUpdated}
+            onEdit={onSubjectEdit}
+            onDelete={onSubjectDelete}
+          />
         </Grid>
       ))}
     </Grid>

@@ -426,7 +426,7 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
         flexDirection: 'column',
         height: '100%',
         width: '100%',
-        maxWidth: '1200px',
+        maxWidth: { xs: '100%', sm: '92%', md: '1400px' }, // 最大幅を増やす
         mx: 'auto',
         flexGrow: 1,
         overflow: 'hidden' // 全体のオーバーフローを防止

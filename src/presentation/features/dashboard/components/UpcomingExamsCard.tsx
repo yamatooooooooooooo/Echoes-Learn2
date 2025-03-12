@@ -138,7 +138,7 @@ export const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }
   }
 
   return (
-    <Box>
+    <Box sx={{ width: '100%' }}>
       <CardHeader 
         title="試験スケジュール" 
         titleTypographyProps={{ variant: 'h6' }}
@@ -147,15 +147,17 @@ export const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }
       <CardContent sx={{ 
         maxHeight: { xs: '300px', sm: '350px', md: '400px' }, 
         overflow: 'auto',
-        p: { xs: 1, sm: 2 }
+        p: { xs: 1, sm: 2 },
+        width: '100%'
       }}>
         {examGroups.map((group, index) => (
-          <Box key={group.date.toISOString()} sx={{ mb: index < examGroups.length - 1 ? 3 : 0 }}>
+          <Box key={group.date.toISOString()} sx={{ mb: index < examGroups.length - 1 ? 3 : 0, width: '100%' }}>
             <Paper 
               elevation={0} 
               sx={{ 
                 p: 2, 
                 mb: 1,
+                width: '100%',
                 borderLeft: `4px solid ${getDaysRemainingColor(group.daysRemaining)}`,
                 bgcolor: 'background.paper'
               }}

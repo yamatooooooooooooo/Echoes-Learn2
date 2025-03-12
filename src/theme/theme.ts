@@ -195,8 +195,16 @@ export const lightThemeOptions: ThemeOptions = {
           border: '1px solid #E0E0E0',
           transition: 'all 0.25s ease-in-out',
           backgroundColor: '#FFFFFF',
+          width: '100%',  // コンテナの幅いっぱいに広がる
+          maxWidth: '100%', // 横幅が親要素を超えないようにする
           '@media (max-width:600px)': {
             borderRadius: 6, // モバイルでは角丸を小さくする
+          },
+          '@media (min-width:601px)': {
+            minWidth: '500px', // タブレット以上では最小幅を設定
+          },
+          '@media (min-width:960px)': {
+            minWidth: '600px', // デスクトップでは最小幅を大きく
           },
           '&:hover': {
             borderColor: '#C0C0C0',

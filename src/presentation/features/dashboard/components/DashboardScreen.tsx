@@ -69,9 +69,9 @@ const DashboardScreen: React.FC = () => {
     <Box 
       sx={{ 
         width: '100%', 
-        maxWidth: '1200px', 
+        maxWidth: { xs: '100%', sm: '92%', md: '1400px' },
         mx: 'auto', 
-        p: { xs: 1, sm: 2 },
+        p: { xs: 1, sm: 2, md: 3 },
         pt: { xs: 2, sm: 3, md: 4 },
         bgcolor: 'background.default',
         display: 'flex',
