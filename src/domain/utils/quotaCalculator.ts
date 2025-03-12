@@ -74,7 +74,7 @@ export const calculateDailyQuota = (subjects: Subject[], userSettings?: Partial<
     const daysUntilTarget = Math.max(1, Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
     
     // 残りのページ数
-    const remainingPages = subject.totalPages - subject.currentPage;
+    const remainingPages = subject.totalPages - (subject.currentPage || 0);
     
     // 実際に学習する日数（週あたりの学習日数から計算）
     // 例: 週5日学習なら、実際の学習日数は全日数の(5/7)
@@ -82,10 +82,12 @@ export const calculateDailyQuota = (subjects: Subject[], userSettings?: Partial<
     const actualStudyDays = Math.max(1, Math.ceil(daysUntilTarget * studyDaysRatio));
     
     // 1日あたりのノルマページ数（切り上げ）
-    const pagesPerDay = Math.ceil(remainingPages / actualStudyDays);
+    const pagesPerDay = isNaN(remainingPages) || remainingPages <= 0 || isNaN(actualStudyDays) || actualStudyDays <= 0 
+      ? 0
+      : Math.ceil(remainingPages / actualStudyDays);
     
     // 推定学習時間（ユーザー設定の1ページあたりの時間を使用）
-    const estimatedMinutes = pagesPerDay * settings.averagePageReadingTime;
+    const estimatedMinutes = isNaN(pagesPerDay) ? 0 : pagesPerDay * settings.averagePageReadingTime;
     
     // 残り日数の計算
     const daysRemaining = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -210,14 +212,16 @@ export const calculateWeeklyQuota = (subjects: Subject[], userSettings?: Partial
     const daysUntilTarget = Math.max(1, Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
     
     // 残りのページ数
-    const remainingPages = subject.totalPages - subject.currentPage;
+    const remainingPages = subject.totalPages - (subject.currentPage || 0);
     
     // 実際に学習する日数（週あたりの学習日数から計算）
     const studyDaysRatio = settings.studyDaysPerWeek / 7;
     const actualStudyDays = Math.max(1, Math.ceil(daysUntilTarget * studyDaysRatio));
     
     // 1日あたりのノルマページ数
-    const pagesPerDay = Math.ceil(remainingPages / actualStudyDays);
+    const pagesPerDay = isNaN(remainingPages) || remainingPages <= 0 || isNaN(actualStudyDays) || actualStudyDays <= 0
+      ? 0
+      : Math.ceil(remainingPages / actualStudyDays);
     
     // 今週に含まれる日数（今日から目標日まで、または今週の終わりまでの短い方）
     // 実際に学習する日数を考慮
@@ -225,10 +229,10 @@ export const calculateWeeklyQuota = (subjects: Subject[], userSettings?: Partial
     const actualStudyDaysInWeek = Math.max(1, Math.ceil(daysInWeek * studyDaysRatio));
     
     // 今週のノルマページ数
-    const pagesThisWeek = pagesPerDay * actualStudyDaysInWeek;
+    const pagesThisWeek = isNaN(pagesPerDay) ? 0 : pagesPerDay * actualStudyDaysInWeek;
     
     // 推定学習時間（ユーザー設定の1ページあたりの時間を使用）
-    const estimatedMinutes = pagesThisWeek * settings.averagePageReadingTime;
+    const estimatedMinutes = isNaN(pagesThisWeek) ? 0 : pagesThisWeek * settings.averagePageReadingTime;
     
     quotaItems.push({
       subjectId: subject.id,

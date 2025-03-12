@@ -10,6 +10,7 @@ import {
   Divider
 } from '@mui/material';
 import { Subject } from '../../../../domain/models/SubjectModel';
+import { calculateProgress } from '../../subject/utils/subjectUtils';
 
 interface SimpleProgressBarCardProps {
   subjects: Subject[];
@@ -23,12 +24,6 @@ const SimpleProgressBarCard: React.FC<SimpleProgressBarCardProps> = ({
   subjects,
   isLoading = false
 }) => {
-  
-  // 進捗率を計算
-  const calculateProgress = (subject: Subject): number => {
-    if (!subject.totalPages) return 0;
-    return Math.round((subject.currentPage / subject.totalPages) * 100);
-  };
   
   // 進捗率に応じた色を返す
   const getProgressColor = (progress: number): string => {
@@ -87,7 +82,7 @@ const SimpleProgressBarCard: React.FC<SimpleProgressBarCardProps> = ({
         <Divider sx={{ mb: 2 }} />
         
         {sortedSubjects.map((subject) => {
-          const progress = calculateProgress(subject);
+          const progress = calculateProgress(subject.currentPage || 0, subject.totalPages);
           const progressColor = getProgressColor(progress);
           
           return (

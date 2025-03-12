@@ -173,11 +173,11 @@ const SimpleDailyQuotaCard: React.FC<SimpleDailyQuotaCardProps> = ({
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <BookIcon sx={{ mr: 0.5, fontSize: 18 }} />
-              <Typography variant="body2">合計: {dailyQuota.totalPages} ページ</Typography>
+              <Typography variant="body2">合計: {isNaN(dailyQuota.totalPages) ? 0 : dailyQuota.totalPages} ページ</Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <TimerIcon sx={{ mr: 0.5, fontSize: 18 }} />
-              <Typography variant="body2">推定時間: {Math.round(dailyQuota.totalMinutes / 60 * 10) / 10} 時間</Typography>
+              <Typography variant="body2">推定時間: {isNaN(dailyQuota.totalMinutes) ? 0 : Math.round(dailyQuota.totalMinutes / 60 * 10) / 10} 時間</Typography>
             </Box>
           </Box>
         </Box>

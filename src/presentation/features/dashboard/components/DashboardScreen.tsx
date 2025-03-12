@@ -157,40 +157,21 @@ const DashboardScreen: React.FC = () => {
         </Box>
         
         {/* ノルマカード */}
-        <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: { xs: 2, sm: 3 } }}>
+        <Grid container spacing={2}>
+          {/* 今日のノルマ */}
           <Grid item xs={12} md={6}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                borderRadius: 2,
-                height: '100%',
-                overflow: 'hidden',
-                border: '1px solid',
-                borderColor: 'divider' 
-              }}
-            >
-              <SimpleDailyQuotaCard 
-                subjects={dashboardData?.subjects || []} 
-                isLoading={isLoading} 
-              />
-            </Paper>
+            <SimpleDailyQuotaCard 
+              subjects={dashboardData?.subjects || []} 
+              isLoading={isLoading} 
+            />
           </Grid>
+          
+          {/* 今週のノルマ */}
           <Grid item xs={12} md={6}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                borderRadius: 2,
-                height: '100%',
-                overflow: 'hidden',
-                border: '1px solid',
-                borderColor: 'divider' 
-              }}
-            >
-              <SimpleWeeklyQuotaCard 
-                subjects={dashboardData?.subjects || []} 
-                isLoading={isLoading} 
-              />
-            </Paper>
+            <SimpleWeeklyQuotaCard 
+              subjects={dashboardData?.subjects || []} 
+              isLoading={isLoading} 
+            />
           </Grid>
         </Grid>
         

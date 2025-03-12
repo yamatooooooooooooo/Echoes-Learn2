@@ -207,11 +207,11 @@ const SimpleWeeklyQuotaCard: React.FC<SimpleWeeklyQuotaCardProps> = ({
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <BookIcon sx={{ mr: 0.5, fontSize: 18 }} />
-              <Typography variant="body2">合計: {weeklyQuota.totalPages} ページ</Typography>
+              <Typography variant="body2">合計: {isNaN(weeklyQuota.totalPages) ? 0 : weeklyQuota.totalPages} ページ</Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <TimerIcon sx={{ mr: 0.5, fontSize: 18 }} />
-              <Typography variant="body2">推定時間: {Math.round(weeklyQuota.totalMinutes / 60 * 10) / 10} 時間</Typography>
+              <Typography variant="body2">推定時間: {isNaN(weeklyQuota.totalMinutes) ? 0 : Math.round(weeklyQuota.totalMinutes / 60 * 10) / 10} 時間</Typography>
             </Box>
           </Box>
         </Box>

@@ -13,7 +13,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton
+  IconButton,
+  FormControl,
+  LinearProgress
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Subject } from '../../../../domain/models/SubjectModel';
@@ -23,6 +25,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { ja } from 'date-fns/locale';
+import InfoIcon from '@mui/icons-material/Info';
+import { calculateProgress } from '../utils/subjectUtils';
 
 interface ProgressFormProps {
   subject?: Subject;
@@ -79,6 +83,75 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
     }
   };
 
+  // クイック入力用の関数
+  const handleQuickIncrement = (pages: number) => {
+    const newEndPage = Math.min(
+      (formData.endPage || 0) + pages,
+      subject?.totalPages || Number.MAX_SAFE_INTEGER
+    );
+    
+    handleChange({
+      target: {
+        name: 'endPage',
+        value: newEndPage.toString(),
+        type: 'number'
+      }
+    } as React.ChangeEvent<HTMLInputElement>);
+  };
+
+  // クイック入力ボタンを追加します
+  const QuickInputButtons = ({ handleQuickIncrement, isSubmitting }: { 
+    handleQuickIncrement: (pages: number) => void,
+    isSubmitting: boolean
+  }) => (
+    <Box sx={{ 
+      display: 'flex', 
+      flexWrap: 'wrap', 
+      gap: 1,
+      my: 2
+    }}>
+      <Typography variant="body2" color="text.secondary" sx={{ width: '100%', mb: 0.5 }}>
+        クイック入力:
+      </Typography>
+      {[1, 5, 10, 20, 50].map(pages => (
+        <Button 
+          key={pages} 
+          variant="outlined" 
+          size="small"
+          onClick={() => handleQuickIncrement(pages)}
+          disabled={isSubmitting}
+          sx={{ 
+            minWidth: { xs: '60px', sm: '48px' },
+            minHeight: { xs: '48px', sm: '36px' },
+            borderRadius: 2,
+            fontWeight: 'bold'
+          }}
+        >
+          +{pages}
+        </Button>
+      ))}
+    </Box>
+  );
+
+  // 日付入力値の安全な変換
+  const getSafeDate = (dateValue: string | Date | undefined): Date => {
+    if (!dateValue) return new Date();
+    
+    try {
+      // 文字列の場合は日付オブジェクトに変換
+      if (typeof dateValue === 'string') {
+        const parsedDate = new Date(dateValue);
+        // 不正な日付の場合は今日の日付を返す
+        return isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+      }
+      // 日付オブジェクトの場合はそのまま返す
+      return dateValue;
+    } catch (e) {
+      // 変換エラーの場合は今日の日付を返す
+      return new Date();
+    }
+  };
+
   return (
     <Dialog
       open={open}
@@ -111,75 +184,96 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
               <Typography variant="body2">
                 科目名: {subject.name}
               </Typography>
-              <Typography variant="body2">
-                現在のページ: {subject.currentPage || 0} / {subject.totalPages} ページ
-              </Typography>
+              <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    現在の進捗:
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {subject.currentPage || 0} / {subject.totalPages} ページ
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ mt: 1 }}>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={calculateProgress(subject.currentPage || 0, subject.totalPages)} 
+                    sx={{ 
+                      height: 8, 
+                      borderRadius: 4,
+                      '& .MuiLinearProgress-bar': {
+                        borderRadius: 4
+                      }
+                    }} 
+                  />
+                </Box>
+              </Box>
             </Paper>
           )}
           
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ja}>
-                <DatePicker
-                  label="記録日"
-                  value={formData.recordDate ? new Date(formData.recordDate) : null}
-                  onChange={handleDateChange}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      margin: "dense",
-                      size: "small",
-                      error: !!fieldErrors.recordDate,
-                      helperText: fieldErrors.recordDate
-                    }
-                  }}
-                />
-              </LocalizationProvider>
+              <FormControl fullWidth>
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ja}>
+                  <DatePicker
+                    label="記録日"
+                    value={getSafeDate(formData.recordDate)}
+                    onChange={(newDate) => handleDateChange(newDate)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        variant: 'outlined',
+                        error: !!fieldErrors.recordDate,
+                        helperText: fieldErrors.recordDate
+                      }
+                    }}
+                  />
+                </LocalizationProvider>
+              </FormControl>
             </Grid>
             
             <Grid item xs={6}>
               <TextField
                 label="開始ページ"
-                type="number"
                 name="startPage"
+                type="number"
+                fullWidth
+                variant="outlined"
                 value={formData.startPage}
                 onChange={handleChange}
-                fullWidth
-                margin="dense"
-                size="small"
                 error={!!fieldErrors.startPage}
                 helperText={fieldErrors.startPage}
+                disabled={isSubmitting}
+                InputProps={{
+                  inputProps: { min: 0, max: formData.endPage }
+                }}
+                sx={{ '& input': { fontSize: { xs: '1.1rem', sm: '1rem' } } }}
               />
             </Grid>
             
             <Grid item xs={6}>
               <TextField
                 label="終了ページ"
-                type="number"
                 name="endPage"
+                type="number"
+                fullWidth
+                variant="outlined"
                 value={formData.endPage}
                 onChange={handleChange}
-                fullWidth
-                margin="dense"
-                size="small"
                 error={!!fieldErrors.endPage}
                 helperText={fieldErrors.endPage}
+                disabled={isSubmitting}
+                InputProps={{
+                  inputProps: { min: formData.startPage }
+                }}
+                sx={{ '& input': { fontSize: { xs: '1.1rem', sm: '1rem' } } }}
               />
             </Grid>
             
             <Grid item xs={12}>
-              <TextField
-                label="学習時間（分）"
-                type="number"
-                name="studyDuration"
-                value={formData.studyDuration}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-                size="small"
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">分</InputAdornment>,
-                }}
+              <QuickInputButtons 
+                handleQuickIncrement={handleQuickIncrement}
+                isSubmitting={isSubmitting}
               />
             </Grid>
             
@@ -187,13 +281,14 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
               <TextField
                 label="メモ"
                 name="memo"
+                multiline
+                rows={3}
+                fullWidth
+                variant="outlined"
                 value={formData.memo || ''}
                 onChange={handleChange}
-                fullWidth
-                multiline
-                rows={2}
-                margin="dense"
-                size="small"
+                placeholder="学習内容のメモを残しておくと後で振り返りに役立ちます"
+                disabled={isSubmitting}
               />
             </Grid>
             
