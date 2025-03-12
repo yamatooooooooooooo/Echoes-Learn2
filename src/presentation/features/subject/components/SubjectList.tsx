@@ -424,23 +424,44 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
         flexDirection: 'column',
         height: '100%',
         width: '100%',
-        flexGrow: 1
+        maxWidth: '1200px',
+        mx: 'auto',
+        flexGrow: 1,
+        overflow: 'hidden' // 全体のオーバーフローを防止
       }}
     >
       {/* メンテナンスメッセージ（開発中に表示） */}
       <MaintenanceMessageComponent />
       
       {/* 科目リストヘッダー */}
-      <SubjectListHeader
-        onAddSubject={handleAddSubject}
-        totalSubjects={subjects.length}
-      />
+      <Box sx={{ flexShrink: 0 }}>
+        <SubjectListHeader
+          onAddSubject={handleAddSubject}
+          totalSubjects={subjects.length}
+        />
+      </Box>
       
       {/* 科目リストツールバー */}
-      <Box sx={{ mb: 2 }}>
-        <Paper sx={{ p: 2, borderRadius: 2 }}>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+      <Box sx={{ mb: 2, flexShrink: 0 }}>
+        <Paper sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'stretch', sm: 'center' }, 
+              justifyContent: 'space-between',
+              gap: 1.5
+            }}
+          >
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                flexWrap: 'wrap',
+                gap: { xs: 1, sm: 2 },
+                width: { xs: '100%', sm: 'auto' }
+              }}
+            >
               {/* 自動優先度設定 */}
               <FormControlLabel
                 control={
@@ -473,34 +494,39 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
               </Tooltip>
             </Box>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: { xs: 1, sm: 2 },
+                width: { xs: '100%', sm: 'auto' }
+              }}
+            >
               {/* 表示切替 */}
-              <ToggleButtonGroup
-                value={viewType}
-                exclusive
-                onChange={handleViewTypeChange}
-                aria-label="表示形式"
-                size="small"
-              >
-                <ToggleButton value="card" aria-label="カード表示">
-                  <Tooltip title="カード表示">
-                    <ViewModuleIcon fontSize="small" />
-                  </Tooltip>
-                </ToggleButton>
-                <ToggleButton value="list" aria-label="リスト表示">
-                  <Tooltip title="リスト表示">
-                    <ViewListIcon fontSize="small" />
-                  </Tooltip>
-                </ToggleButton>
-                {/* <ToggleButton value="calendar" aria-label="カレンダー表示">
-                  <Tooltip title="カレンダー表示">
-                    <CalendarViewMonthIcon fontSize="small" />
-                  </Tooltip>
-                </ToggleButton> */}
-              </ToggleButtonGroup>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <ToggleButtonGroup
+                  value={viewType}
+                  exclusive
+                  onChange={handleViewTypeChange}
+                  aria-label="表示形式"
+                  size="small"
+                >
+                  <ToggleButton value="card" aria-label="カード表示">
+                    <Tooltip title="カード表示">
+                      <ViewModuleIcon fontSize="small" />
+                    </Tooltip>
+                  </ToggleButton>
+                  <ToggleButton value="list" aria-label="リスト表示">
+                    <Tooltip title="リスト表示">
+                      <ViewListIcon fontSize="small" />
+                    </Tooltip>
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
               
               {/* ソート */}
-              <FormControl variant="outlined" size="small" sx={{ minWidth: 180 }}>
+              <FormControl variant="outlined" size="small" sx={{ minWidth: { xs: '100%', sm: 180 } }}>
                 <InputLabel id="sort-select-label">並び替え</InputLabel>
                 <Select
                   labelId="sort-select-label"
@@ -530,8 +556,14 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
         </Alert>
       </Collapse>
       
-      {/* 科目リストコンテンツ */}
-      <Box sx={{ flexGrow: 1, overflow: 'auto', minHeight: 0 }}>
+      {/* 科目リストコンテンツ - スクロール可能な領域 */}
+      <Box 
+        sx={{ 
+          flexGrow: 1, 
+          overflow: 'auto',
+          pb: 2
+        }}
+      >
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
             <CircularProgress />
@@ -539,9 +571,9 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
         ) : (
           <>
             {viewType === 'card' ? (
-              <Grid container spacing={2}>
+              <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} sx={{ width: '100%', mx: 0 }}>
                 {sortedSubjects.map(subject => (
-                  <Grid item xs={12} sm={6} md={4} key={subject.id}>
+                  <Grid item xs={12} sm={6} md={4} lg={4} key={subject.id}>
                     <Box sx={{ 
                       position: 'relative',
                       height: '100%',
