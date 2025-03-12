@@ -10,6 +10,7 @@ import PrivateRoute from './presentation/components/PrivateRoute';
 import ErrorBoundary from './presentation/components/common/ErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
 import { getAnalytics, logEvent } from 'firebase/analytics';
+import { SettingsPage } from './presentation/features/settings/pages/SettingsPage';
 
 // ナビゲーションコンテキスト
 interface NavigationContextType {
@@ -104,6 +105,8 @@ const App: React.FC = () => {
         return <DashboardScreen />;
       case 'subjects':
         return <SubjectList formatDate={formatDate} />;
+      case 'settings':
+        return <SettingsPage />;
       // 以下のケースは一時的に無効化
       // case 'progress':
       //   return <ProgressStatsPage />;

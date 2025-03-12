@@ -83,8 +83,8 @@ const cardStyles = {
     borderColor: 'divider',
   },
   contentArea: {
-    p: { xs: 2, sm: 2.5 },
-    pt: { xs: 3, sm: 3.5 },
+    p: { xs: 2.5, sm: 3 },
+    pt: { xs: 3.5, sm: 4 },
     flexGrow: 1,
     display: 'flex',
     flexDirection: 'column'
@@ -99,27 +99,51 @@ const cardStyles = {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: '100%',
-    height: 8,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8
-  },
-  progressSection: {
-    mt: 'auto',
-    pt: { xs: 2, sm: 2.5 }
+    right: 0,
+    height: '4px',
+    zIndex: 1
   },
   actionArea: {
     display: 'flex',
     justifyContent: 'space-between',
-    p: { xs: 2, sm: 2 },
+    alignItems: 'center',
+    p: { xs: 1.5, sm: 2 },
+    pt: { xs: 1, sm: 1.5 },
+    pb: { xs: 1, sm: 1.5 },
     borderTop: '1px solid',
     borderColor: 'divider',
-    bgcolor: 'background.paper'
+    backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
+      ? 'rgba(255,255,255,0.05)' 
+      : 'rgba(0,0,0,0.02)'
   },
-  mobileActionButton: {
-    minWidth: '44px',
-    minHeight: '44px',
-    borderRadius: '50%'
+  progressSection: {
+    mt: 2,
+    mb: 1,
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+    my: 1
+  },
+  recordProgressButton: {
+    width: '100%',
+    borderRadius: '4px',
+    py: { xs: 1, sm: 1.2 },
+    fontSize: { xs: '0.85rem', sm: '0.9rem' },
+    fontWeight: 600
+  },
+  tabPanel: {
+    p: 2,
+    pt: 3
+  },
+  expandButton: {
+    transform: 'rotate(0deg)',
+    transition: 'transform 0.2s',
+    '&.expanded': {
+      transform: 'rotate(180deg)'
+    }
   }
 };
 
