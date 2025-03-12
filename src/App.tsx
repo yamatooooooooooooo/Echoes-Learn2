@@ -60,7 +60,7 @@ const App: React.FC = () => {
 
   const handleMenuSelect = (menu: string) => {
     // 現在は「ダッシュボード」と「科目管理」のみ有効
-    if (menu === 'dashboard' || menu === 'subjects') {
+    if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings') {
       setSelectedMenu(menu);
     } else {
       setSelectedMenu('dashboard');
@@ -75,7 +75,7 @@ const App: React.FC = () => {
   // ナビゲーション関数
   const navigateTo = (menu: string) => {
     // 現在は「ダッシュボード」と「科目管理」のみ有効
-    if (menu === 'dashboard' || menu === 'subjects') {
+    if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings') {
       setSelectedMenu(menu);
     } else {
       setSelectedMenu('dashboard');
