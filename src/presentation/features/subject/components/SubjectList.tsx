@@ -626,10 +626,12 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
               
                 <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} sx={{ width: '100%', mx: 0 }}>
                   {sortedSubjects.map(subject => (
-                    <Grid item xs={12} sm={6} md={4} lg={4} key={subject.id}>
+                    <Grid item xs={12} sm={6} md={6} lg={4} key={subject.id}>
                       <Box sx={{ 
                         position: 'relative',
                         height: '100%',
+                        maxWidth: { sm: '100%', md: '550px', lg: '450px' },
+                        mx: 'auto'
                       }}>
                         {/* 右上の進捗記録ボタンを削除（カード内の進捗記録ボタンに統一） */}
                         <SubjectCard

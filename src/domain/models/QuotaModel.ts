@@ -30,6 +30,8 @@ export interface DailyQuota {
   targetPages?: number;       // 既存コードとの互換性のため
   completedPages?: number;    // 既存コードとの互換性のため
   activeSubjectsCount?: number; // 同時進行中の科目数
+  isExceedingDailyLimit?: boolean; // 1日の目標学習時間を超えているか
+  dailyStudyMinutes?: number;  // 1日の目標学習時間（分）
 }
 
 /**
@@ -49,4 +51,7 @@ export interface WeeklyQuota {
   weekEnd?: string;           // 既存コードとの互換性のため
   targetPages?: number;       // 既存コードとの互換性のため
   completedPages?: number;    // 既存コードとの互換性のため
+  isExceedingWeeklyLimit?: boolean; // 週の目標学習時間を超えているか
+  weeklyStudyMinutes?: number; // 週の目標学習時間（分）
+  studyDaysPerWeek?: number;  // 週あたりの学習日数
 } 
