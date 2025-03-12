@@ -86,15 +86,23 @@ const DashboardScreen: React.FC = () => {
         mx: 'auto', 
         p: { xs: 1, sm: 2, md: 3 },
         pt: { xs: 2, sm: 3, md: 4 },
+        pb: { xs: 4, sm: 5, md: 6 },
         bgcolor: 'background.default',
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
-        overflowX: 'hidden'
+        height: 'auto',
+        position: 'relative',
+        overflowX: 'hidden',
+        overflowY: 'auto'
       }}
     >
       {/* ヘッダー部分 - 固定表示 */}
-      <Box sx={{ flexShrink: 0, mb: { xs: 2, sm: 3 } }}>
+      <Box sx={{ 
+        flexShrink: 0, 
+        mb: { xs: 2, sm: 3 },
+        width: '100%',
+        zIndex: 2
+      }}>
         {/* ダッシュボードヘッダー */}
         <Paper 
           elevation={0} 
@@ -170,16 +178,18 @@ const DashboardScreen: React.FC = () => {
       <Box 
         sx={{ 
           flexGrow: 1, 
+          display: 'block',
+          width: '100%',
+          position: 'relative',
           overflowY: 'visible', 
           overflowX: 'hidden',
-          pb: 4,
-          width: '100%'
+          pb: 4
         }}
       >
         {/* カードコンテナ */}
-        <Grid container spacing={3}>
+        <Grid container spacing={3} sx={{ mb: 2 }}>
           {/* 試験スケジュールカード */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
             <Paper 
               elevation={0} 
               sx={{ 
@@ -187,7 +197,10 @@ const DashboardScreen: React.FC = () => {
                 overflow: 'hidden',
                 border: '1px solid',
                 borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                width: '100%',
                 height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
                 backdropFilter: 'blur(10px)',
                 bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
                 transition: 'transform 0.3s ease, box-shadow 0.3s ease',
@@ -204,7 +217,7 @@ const DashboardScreen: React.FC = () => {
           </Grid>
           
           {/* レポート締切カード */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
             <Paper 
               elevation={0} 
               sx={{ 
@@ -212,7 +225,10 @@ const DashboardScreen: React.FC = () => {
                 overflow: 'hidden',
                 border: '1px solid',
                 borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                width: '100%',
                 height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
                 backdropFilter: 'blur(10px)',
                 bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
                 transition: 'transform 0.3s ease, box-shadow 0.3s ease',
@@ -253,6 +269,9 @@ const DashboardScreen: React.FC = () => {
                 overflow: 'hidden',
                 border: '1px solid',
                 borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
                 backdropFilter: 'blur(10px)',
                 bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
                 transition: 'transform 0.3s ease, box-shadow 0.3s ease',
@@ -281,6 +300,9 @@ const DashboardScreen: React.FC = () => {
                   overflow: 'hidden',
                   border: '1px solid',
                   borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
                   backdropFilter: 'blur(10px)',
                   bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
                   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
@@ -300,19 +322,18 @@ const DashboardScreen: React.FC = () => {
               </Paper>
             </Grid>
           )}
-          
-          {/* データクリーンアップボタン */}
-          <Grid item xs={12}>
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'flex-end', 
-              mt: 3,
-              mb: 2
-            }}>
-              <DataCleanupButton size="small" />
-            </Box>
-          </Grid>
         </Grid>
+        
+        {/* データクリーンアップボタン */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          mt: 3,
+          mb: 2,
+          width: '100%'
+        }}>
+          <DataCleanupButton size="small" />
+        </Box>
       </Box>
     </Box>
   );
