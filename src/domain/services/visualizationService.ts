@@ -34,8 +34,19 @@ export const getRadarChartData = (subjects: Subject[]): RadarChartData[] => {
       return [];
     }
 
+    const today = new Date();
+
+    // ノルマ計算対象の科目のみをフィルタリング
+    const activeSubjects = subjects.filter(subject => {
+      const examDate = new Date(subject.examDate);
+      // 試験日が設定されており、今日以降で、かつ完了していない科目
+      return subject.examDate && 
+             examDate >= today && 
+             subject.currentPage < subject.totalPages;
+    });
+
     // 科目ごとの進捗率を計算
-    return subjects.map(subject => {
+    return activeSubjects.map(subject => {
       const progress = calculateProgress(subject);
       
       return {

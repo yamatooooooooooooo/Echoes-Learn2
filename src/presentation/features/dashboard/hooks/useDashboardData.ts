@@ -7,6 +7,11 @@ import { StudySession, SubjectPerformance } from '../../../../domain/models/Stud
 import { useFirebase } from '../../../../contexts/FirebaseContext';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Subject } from '../../../../domain/models/SubjectModel';
+import { format } from 'date-fns';
+import { ja } from 'date-fns/locale';
+import { useServices } from '../../../../hooks/useServices';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { RadarChartData } from '../../../../domain/services/visualizationService';
 
 // インターフェースの定義
 interface RecentProgress extends Progress {
@@ -42,6 +47,7 @@ export interface DashboardData {
   studySessions: StudySession[];
   subjectPerformances: SubjectPerformance[];
   subjects: Subject[];
+  radarChartData: RadarChartData[];
 }
 
 export const useDashboardData = () => {
@@ -49,6 +55,8 @@ export const useDashboardData = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { firestore, auth } = useFirebase();
+  const { subjectRepository, progressRepository } = useServices();
+  const { currentUser } = useAuth();
 
   // 日付フォーマット関数
   const formatDate = useCallback((date: Date | string | undefined): string => {
@@ -136,7 +144,8 @@ export const useDashboardData = () => {
           weeklyProgressData: [],
           studySessions: [],
           subjectPerformances: [],
-          subjects: []
+          subjects: [],
+          radarChartData: []
         });
         setIsLoading(false);
         return;
@@ -366,6 +375,18 @@ export const useDashboardData = () => {
         subjectPerformances = [];
       }
       
+      // レーダーチャートデータの生成
+      const radarChartData = subjects
+        .filter(subject => {
+          const examDate = new Date(subject.examDate);
+          const today = new Date();
+          return examDate >= today && subject.currentPage < subject.totalPages;
+        })
+        .map(subject => ({
+          subject: subject.name,
+          progress: calculateProgress(subject)
+        }));
+      
       // ダッシュボードデータの設定
       setDashboardData({
         totalSubjects: subjects.length,
@@ -379,7 +400,8 @@ export const useDashboardData = () => {
         weeklyProgressData,
         studySessions,
         subjectPerformances,
-        subjects
+        subjects,
+        radarChartData
       });
       
     } catch (error) {
@@ -388,7 +410,7 @@ export const useDashboardData = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [formatDateToString, generateLast7Days, firestore, auth]);
+  }, [formatDateToString, generateLast7Days, firestore, auth, subjectRepository, progressRepository]);
 
   // コンポーネントマウント時にAuthの状態を監視してデータを読み込む
   useEffect(() => {
@@ -411,4 +433,16 @@ export const useDashboardData = () => {
   }, [loadDashboardData]);
 
   return { dashboardData, isLoading, error, formatDate, refreshData };
+};
+
+// 進捗率を計算するヘルパー関数
+const calculateProgress = (subject: Subject): number => {
+  if (!subject.totalPages || subject.totalPages <= 0) {
+    return 0;
+  }
+  
+  const currentPage = subject.currentPage || 0;
+  const progress = Math.round((currentPage / subject.totalPages) * 100);
+  
+  return Math.max(0, Math.min(100, progress));
 }; 

@@ -14,7 +14,8 @@ import {
   Tooltip,
   Zoom,
   CardHeader,
-  CardContent
+  CardContent,
+  Chip
 } from '@mui/material';
 import {
   Timeline as TimelineIcon,
@@ -25,20 +26,26 @@ import {
   CalendarToday as CalendarTodayIcon,
   AccessTime as AccessTimeIcon,
   Book as BookIcon,
-  HistoryOutlined as HistoryOutlinedIcon
+  HistoryOutlined as HistoryOutlinedIcon,
+  Assignment as AssignmentIcon,
+  SentimentSatisfiedAlt as SentimentSatisfiedAltIcon
 } from '@mui/icons-material';
 import { NotionStyleCard } from '../../../components/common/NotionStyleCard';
 import { Progress } from '../../../../domain/models/ProgressModel';
+import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
+import SentimentSatisfiedIcon from '@mui/icons-material/SentimentSatisfied';
+import SentimentVerySatisfiedIcon from '@mui/icons-material/SentimentVerySatisfied';
 
 // DashboardScreenと互換性のあるインターフェース
 interface RecentProgress extends Progress {
   subjectName: string;
 }
 
+// コンポーネントのプロパティ型
 interface RecentProgressCardProps {
   recentProgress: RecentProgress[];
   formatDate: (date: Date | string) => string;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 /**
@@ -59,6 +66,7 @@ export const RecentProgressCard: React.FC<RecentProgressCardProps> = ({
   
   // ページ数を計算
   const getPageCount = (start: number, end: number) => {
+    if (start === 0 && end === 0) return 0;
     return end - start + 1;
   };
   
@@ -119,6 +127,25 @@ export const RecentProgressCard: React.FC<RecentProgressCardProps> = ({
     }
     
     return `${formatDate(dateObj)} ${formatTime(dateObj)}`;
+  };
+
+  // 満足度アイコンの取得
+  const getSatisfactionIcon = (level?: number) => {
+    if (!level) return null;
+    
+    if (level === 1) {
+      return <SentimentDissatisfiedIcon fontSize="small" color="error" />;
+    } else if (level === 2) {
+      return <SentimentSatisfiedIcon fontSize="small" color="warning" />;
+    } else {
+      return <SentimentVerySatisfiedIcon fontSize="small" color="success" />;
+    }
+  };
+
+  // 満足度テキストの取得
+  const getSatisfactionText = (level?: number) => {
+    if (!level) return "";
+    return level === 1 ? "不満" : level === 2 ? "普通" : "満足";
   };
   
   // ローディング中
@@ -200,15 +227,27 @@ export const RecentProgressCard: React.FC<RecentProgressCardProps> = ({
                       TransitionComponent={Zoom}
                       arrow
                     >
-                      <MenuBookIcon 
-                        fontSize="small" 
-                        color="primary" 
-                        sx={{ 
-                          opacity: 0.8,
-                          transition: 'all 0.2s ease',
-                          transform: expandedProgressId === progress.id ? 'scale(1.2)' : 'scale(1)'
-                        }}
-                      />
+                      {progress.reportProgress ? (
+                        <AssignmentIcon 
+                          fontSize="small" 
+                          color="secondary" 
+                          sx={{ 
+                            opacity: 0.8,
+                            transition: 'all 0.2s ease',
+                            transform: expandedProgressId === progress.id ? 'scale(1.2)' : 'scale(1)'
+                          }}
+                        />
+                      ) : (
+                        <MenuBookIcon 
+                          fontSize="small" 
+                          color="primary" 
+                          sx={{ 
+                            opacity: 0.8,
+                            transition: 'all 0.2s ease',
+                            transform: expandedProgressId === progress.id ? 'scale(1.2)' : 'scale(1)'
+                          }}
+                        />
+                      )}
                     </Tooltip>
                   </ListItemIcon>
                   <ListItemText
@@ -236,13 +275,30 @@ export const RecentProgressCard: React.FC<RecentProgressCardProps> = ({
                         >
                           {formatDateTime(progress.createdAt)}
                         </Typography>
-                        <Typography 
-                          variant="caption" 
-                          sx={{ display: 'block', color: 'text.secondary' }}
-                        >
-                          {progress.startPage}ページ → {progress.endPage}ページ 
-                          （{getPageCount(progress.startPage, progress.endPage)}ページ）
-                        </Typography>
+                        {getPageCount(progress.startPage, progress.endPage) > 0 ? (
+                          <Typography 
+                            variant="caption" 
+                            sx={{ display: 'block', color: 'text.secondary' }}
+                          >
+                            {progress.startPage}ページ → {progress.endPage}ページ 
+                            （{getPageCount(progress.startPage, progress.endPage)}ページ）
+                          </Typography>
+                        ) : progress.reportProgress ? (
+                          <Typography 
+                            variant="caption" 
+                            sx={{ display: 'block', color: 'text.secondary' }}
+                          >
+                            レポート進捗: {progress.reportProgress.substring(0, 20)}
+                            {progress.reportProgress.length > 20 ? '...' : ''}
+                          </Typography>
+                        ) : (
+                          <Typography 
+                            variant="caption" 
+                            sx={{ display: 'block', color: 'text.secondary' }}
+                          >
+                            {progress.memo ? `メモ: ${progress.memo.substring(0, 30)}${progress.memo.length > 30 ? '...' : ''}` : '記録あり'}
+                          </Typography>
+                        )}
                       </Box>
                     }
                   />
@@ -254,23 +310,41 @@ export const RecentProgressCard: React.FC<RecentProgressCardProps> = ({
                       minWidth: '42px'
                     }}
                   >
-                    <Tooltip title="学習したページ数" arrow>
-                      <Typography 
-                        variant="h6" 
-                        sx={{ 
-                          fontWeight: 500, 
-                          color: 'primary.main',
-                          fontSize: '1.1rem',
-                          transition: 'all 0.2s ease',
-                          transform: expandedProgressId === progress.id ? 'scale(1.1)' : 'scale(1)'
-                        }}
-                      >
-                        {getPageCount(progress.startPage, progress.endPage)}
-                      </Typography>
-                    </Tooltip>
-                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                      ページ
-                    </Typography>
+                    {getPageCount(progress.startPage, progress.endPage) > 0 ? (
+                      <>
+                        <Tooltip title="学習したページ数" arrow>
+                          <Typography 
+                            variant="h6" 
+                            sx={{ 
+                              fontWeight: 500, 
+                              color: 'primary.main',
+                              fontSize: '1.1rem',
+                              transition: 'all 0.2s ease',
+                              transform: expandedProgressId === progress.id ? 'scale(1.1)' : 'scale(1)'
+                            }}
+                          >
+                            {getPageCount(progress.startPage, progress.endPage)}
+                          </Typography>
+                        </Tooltip>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                          ページ
+                        </Typography>
+                      </>
+                    ) : progress.satisfactionLevel ? (
+                      <Tooltip title={`満足度: ${getSatisfactionText(progress.satisfactionLevel)}`} arrow>
+                        <Box sx={{ textAlign: 'center' }}>
+                          {getSatisfactionIcon(progress.satisfactionLevel)}
+                        </Box>
+                      </Tooltip>
+                    ) : progress.reportProgress ? (
+                      <Tooltip title="レポート進捗あり" arrow>
+                        <AssignmentIcon color="secondary" fontSize="small" />
+                      </Tooltip>
+                    ) : (
+                      <Tooltip title="学習メモあり" arrow>
+                        <MenuBookIcon color="primary" fontSize="small" />
+                      </Tooltip>
+                    )}
                   </Box>
                   <IconButton 
                     size="small" 
@@ -326,25 +400,76 @@ export const RecentProgressCard: React.FC<RecentProgressCardProps> = ({
                           <strong>記録時間:</strong> {formatTime(progress.createdAt || new Date())}
                         </Typography>
                       </Box>
+                      
+                      {progress.satisfactionLevel && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: '160px' }}>
+                          <SentimentSatisfiedAltIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
+                          <Typography variant="body2">
+                            <strong>満足度:</strong> {getSatisfactionText(progress.satisfactionLevel)}
+                          </Typography>
+                        </Box>
+                      )}
+                      
+                      {progress.studyDuration && progress.studyDuration > 0 && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: '160px' }}>
+                          <AccessTimeIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
+                          <Typography variant="body2">
+                            <strong>学習時間:</strong> {progress.studyDuration}分
+                          </Typography>
+                        </Box>
+                      )}
                     </Box>
                     
-                    <Box 
-                      sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        mt: 2, 
-                        p: 1,
-                        borderRadius: 1,
-                        bgcolor: 'primary.light',
-                        color: 'primary.dark'
-                      }}
-                    >
-                      <MenuBookIcon fontSize="small" sx={{ mr: 1 }} />
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {progress.startPage}ページから{progress.endPage}ページまで
-                        （合計: {getPageCount(progress.startPage, progress.endPage)}ページ）を学習しました
-                      </Typography>
-                    </Box>
+                    {getPageCount(progress.startPage, progress.endPage) > 0 && (
+                      <Box 
+                        sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          mt: 2, 
+                          p: 1,
+                          borderRadius: 1,
+                          bgcolor: 'primary.light',
+                          color: 'primary.dark'
+                        }}
+                      >
+                        <MenuBookIcon fontSize="small" sx={{ mr: 1 }} />
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {progress.startPage}ページから{progress.endPage}ページまで
+                          （合計: {getPageCount(progress.startPage, progress.endPage)}ページ）を学習しました
+                        </Typography>
+                      </Box>
+                    )}
+                    
+                    {progress.memo && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                          学習メモ:
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>
+                          {progress.memo}
+                        </Typography>
+                      </Box>
+                    )}
+                    
+                    {progress.reportProgress && (
+                      <Box 
+                        sx={{ 
+                          mt: 2, 
+                          p: 1,
+                          borderRadius: 1,
+                          bgcolor: 'secondary.light',
+                          color: 'secondary.dark'
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 500, display: 'flex', alignItems: 'center' }}>
+                          <AssignmentIcon fontSize="small" sx={{ mr: 1 }} />
+                          レポート進捗:
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>
+                          {progress.reportProgress}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 </Collapse>
               </React.Fragment>
