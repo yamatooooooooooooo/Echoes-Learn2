@@ -144,12 +144,12 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
     >
       {/* リストヘッダー */}
       <Box sx={{ 
-        display: 'flex', 
         p: 2, 
         bgcolor: 'background.default', 
         borderBottom: '1px solid',
         borderColor: 'divider',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        display: { xs: 'none', sm: 'flex' } // モバイルではヘッダーを非表示
       }}>
         <Box sx={{ width: '40%', pl: 5 }}>科目名</Box>
         <Box sx={{ width: '15%', textAlign: 'center' }}>優先度</Box>
@@ -167,24 +167,34 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
           scrollBehavior: 'smooth'
         }}
       >
-        <List disablePadding>
+        <List 
+          disablePadding
+          sx={{
+            '& .MuiListItem-root:hover': {
+              boxShadow: (theme) => theme.palette.mode === 'dark' 
+                ? '0 2px 8px rgba(0, 0, 0, 0.2)' 
+                : '0 2px 8px rgba(0, 0, 0, 0.08)'
+            }
+          }}
+        >
           {subjectsWithValues.map(({ subject, progress, daysRemaining }, index) => (
             <React.Fragment key={subject.id}>
               <ListItem 
                 disablePadding 
                 onClick={() => onSubjectEdit && onSubjectEdit(subject)}
                 sx={{ 
-                  py: { xs: 1.5, sm: 2 }, 
-                  px: { xs: 1.5, sm: 2, md: 3 }, 
+                  py: { xs: 2, sm: 1.5 }, 
+                  px: { xs: 2, sm: 2, md: 2 }, 
                   cursor: 'pointer',
-                  '&:hover': {
-                    bgcolor: theme.palette.mode === 'dark' 
-                      ? 'rgba(255, 255, 255, 0.05)' 
-                      : 'rgba(0, 0, 0, 0.03)'
-                  },
-                  borderLeft: '3px solid',
+                  borderLeft: '4px solid',
                   borderColor: `${getPriorityColorClass(subject.priority)}.main`,
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s, transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-1px)',
+                    bgcolor: theme.palette.mode === 'dark' 
+                      ? 'rgba(255, 255, 255, 0.08)' 
+                      : 'rgba(0, 0, 0, 0.04)'
+                  }
                 }}
               >
                 <Box 
@@ -193,7 +203,7 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                     flexDirection: { xs: 'column', sm: 'row' },
                     alignItems: { xs: 'flex-start', sm: 'center' },
                     width: '100%',
-                    gap: { xs: 1, sm: 0 }
+                    gap: { xs: 1.5, sm: 1 }
                   }}
                 >
                   {/* 科目名 */}
@@ -207,12 +217,15 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                       color="primary" 
                       sx={{ 
                         mr: 1.5, 
-                        fontSize: { xs: '1.2rem', sm: '1.4rem' }
+                        fontSize: { xs: '1.3rem', sm: '1.4rem' }
                       }}
                     />
                     <Typography 
                       variant={isMobile ? "body1" : "subtitle1"}
-                      sx={{ fontWeight: subject.priority === 'high' ? 600 : 400 }}
+                      sx={{ 
+                        fontWeight: subject.priority === 'high' ? 600 : 500,
+                        fontSize: { xs: '0.95rem', sm: '1rem' }
+                      }}
                     >
                       {subject.name}
                     </Typography>
@@ -223,7 +236,8 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                     width: { xs: '50%', sm: '15%' }, 
                     textAlign: 'center',
                     display: { xs: 'inline-flex', sm: 'flex' },
-                    justifyContent: { xs: 'flex-start', sm: 'center' }
+                    justifyContent: { xs: 'flex-start', sm: 'center' },
+                    alignItems: 'center'
                   }}>
                     <Tooltip title={`優先度: ${getPriorityLabel(subject.priority)}`} placement="top">
                       <Chip 
@@ -231,7 +245,12 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                         color={getPriorityColorClass(subject.priority)} 
                         size="small" 
                         variant="outlined"
-                        sx={{ height: 24, minWidth: 40 }}
+                        sx={{ 
+                          height: 26, 
+                          minWidth: 46, 
+                          fontSize: '0.75rem',
+                          fontWeight: 500
+                        }}
                       />
                     </Tooltip>
                   </Box>
@@ -241,12 +260,16 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                     width: { xs: '50%', sm: '15%' }, 
                     textAlign: 'center',
                     display: { xs: 'inline-flex', sm: 'flex' },
-                    justifyContent: { xs: 'flex-end', sm: 'center' }
+                    justifyContent: { xs: 'flex-end', sm: 'center' },
+                    alignItems: 'center'
                   }}>
                     <Typography 
                       variant="body2" 
                       component="span"
-                      sx={getDaysRemainingStyle(daysRemaining)}
+                      sx={{
+                        ...getDaysRemainingStyle(daysRemaining),
+                        fontSize: { xs: '0.80rem', sm: '0.85rem' }
+                      }}
                     >
                       {subject.examDate 
                         ? (daysRemaining !== null 
@@ -262,21 +285,30 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                     textAlign: 'center',
                     mt: { xs: 0.5, sm: 0 }
                   }}>
-                    <Box sx={{ px: { xs: 0, sm: 2 } }}>
+                    <Box sx={{ px: { xs: 0, sm: 1 } }}>
                       <Box sx={{ 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: { xs: 'space-between', sm: 'center' }, 
-                        mb: 0.5 
+                        mb: 0.5,
+                        gap: 1
                       }}>
                         <Typography 
                           variant="body2" 
                           component="span"
-                          sx={getProgressStyle(progress)}
+                          sx={{
+                            ...getProgressStyle(progress),
+                            fontSize: { xs: '0.80rem', sm: '0.85rem' }
+                          }}
                         >
                           {progress}%
                         </Typography>
-                        <Typography variant="body2" component="span" color="text.secondary">
+                        <Typography 
+                          variant="body2" 
+                          component="span" 
+                          color="text.secondary"
+                          sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' } }}
+                        >
                           ({subject.currentPage || 0}/{subject.totalPages})
                         </Typography>
                       </Box>
@@ -284,8 +316,8 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                         variant="determinate" 
                         value={progress}
                         sx={{ 
-                          height: 4, 
-                          borderRadius: 2,
+                          height: 6, 
+                          borderRadius: 3,
                           bgcolor: 'rgba(0, 0, 0, 0.05)'
                         }}
                       />
@@ -297,7 +329,8 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                     width: { xs: '100%', sm: '10%' }, 
                     display: 'flex',
                     justifyContent: { xs: 'flex-end', sm: 'center' },
-                    mt: { xs: 1, sm: 0 }
+                    mt: { xs: 1, sm: 0 },
+                    gap: 0.5
                   }}>
                     {/* 進捗記録ボタン */}
                     {onRecordProgress && (
@@ -307,7 +340,10 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                           e.stopPropagation();
                           onRecordProgress(subject);
                         }}
-                        sx={{ mr: 1 }}
+                        sx={{ 
+                          mr: { xs: 0.5, sm: 0.5 },
+                          bgcolor: theme.palette.primary.main + '10'
+                        }}
                         color="primary"
                       >
                         <Tooltip title="進捗を記録">
@@ -323,7 +359,10 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                         e.stopPropagation();
                         onSubjectEdit && onSubjectEdit(subject);
                       }}
-                      sx={{ mr: 1 }}
+                      sx={{ 
+                        mr: { xs: 0.5, sm: 0.5 },
+                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)'
+                      }}
                     >
                       <Tooltip title="編集">
                         <EditIcon fontSize="small" />
@@ -337,6 +376,9 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                         e.stopPropagation();
                         onSubjectDelete && onSubjectDelete(subject);
                       }}
+                      sx={{ 
+                        bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)'
+                      }}
                     >
                       <Tooltip title="削除">
                         <DeleteIcon fontSize="small" />
@@ -346,7 +388,9 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                 </Box>
               </ListItem>
               
-              {index < subjects.length - 1 && <Divider />}
+              {index < subjects.length - 1 && (
+                <Divider sx={{ opacity: 0.6 }} />
+              )}
             </React.Fragment>
           ))}
         </List>

@@ -80,16 +80,6 @@ const sidebarItems: SidebarItem[] = [
     type: 'section',
     children: [
       { id: 'subjects', text: '科目管理', icon: <MenuBookIcon />, type: 'page' },
-      { 
-        id: 'studyTracking', 
-        text: '学習状況', 
-        icon: <ShowChartIcon />, 
-        type: 'folder',
-        children: [
-          { id: 'progress', text: '学習進捗', icon: <ShowChartIcon />, type: 'page' },
-          { id: 'study', text: '学習記録', icon: <HistoryIcon />, type: 'page' },
-        ]
-      },
       { id: 'gamification', text: '学習成果', icon: <EmojiEventsIcon />, type: 'page' },
     ]
   },
@@ -128,8 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [resizing, setResizing] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
     favorites: true,
-    workspace: true,
-    studyTracking: false
+    workspace: true
   });
   const [searchQuery, setSearchQuery] = useState('');
 

@@ -107,11 +107,7 @@ const App: React.FC = () => {
         return <SubjectList formatDate={formatDate} />;
       case 'settings':
         return <SettingsPage />;
-      // 以下のケースは一時的に無効化
-      // case 'progress':
-      //   return <ProgressStatsPage />;
-      // case 'study':
-      //   return <StudySessionPage />;
+      // 将来の拡張のために準備
       // case 'gamification':
       //   return <GamificationPage />;
       default:
