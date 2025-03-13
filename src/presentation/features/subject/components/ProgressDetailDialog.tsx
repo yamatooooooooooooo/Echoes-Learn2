@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -24,10 +24,178 @@ interface ProgressDetailDialogProps {
   formatDate: (date: string | Date) => string;
 }
 
+// 満足度インジケーターを分離してメモ化
+const SatisfactionIndicator = memo(({ level }: { level?: number }) => {
+  if (!level) return null;
+
+  switch (level) {
+    case 1:
+      return (
+        <>
+          <SentimentDissatisfiedIcon color="error" sx={{ mr: 1 }} />
+          <Typography>不満</Typography>
+        </>
+      );
+    case 2:
+      return (
+        <>
+          <SentimentSatisfiedIcon color="warning" sx={{ mr: 1 }} />
+          <Typography>普通</Typography>
+        </>
+      );
+    case 3:
+      return (
+        <>
+          <SentimentVerySatisfiedIcon color="success" sx={{ mr: 1 }} />
+          <Typography>満足</Typography>
+        </>
+      );
+    default:
+      return null;
+  }
+});
+
+// ダイアログ内の詳細情報セクションをメモ化
+const ProgressDetails = memo(({ progress, formatDate }: { progress: Progress, formatDate: (date: string | Date) => string }) => {
+  // 進捗詳細の表示データをメモ化
+  const formattedData = useMemo(() => ({
+    recordDate: formatDate(progress.recordDate),
+    startPage: progress.startPage,
+    endPage: progress.endPage,
+    pagesRead: progress.pagesRead,
+    studyDuration: progress.studyDuration,
+    memo: progress.memo,
+    reportProgress: progress.reportProgress,
+    satisfactionLevel: progress.satisfactionLevel,
+    createdAt: formatDate(progress.createdAt),
+    updatedAt: progress.updatedAt ? formatDate(progress.updatedAt) : null
+  }), [progress, formatDate]);
+  
+  return (
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <Typography variant="subtitle2" color="text.secondary">
+          記録日
+        </Typography>
+        <Typography variant="body1">
+          {formattedData.recordDate}
+        </Typography>
+      </Grid>
+      
+      <Grid item xs={12}>
+        <Divider />
+      </Grid>
+      
+      <Grid item xs={4}>
+        <Typography variant="subtitle2" color="text.secondary">
+          開始ページ
+        </Typography>
+        <Typography variant="body1">
+          {formattedData.startPage}
+        </Typography>
+      </Grid>
+      
+      <Grid item xs={4}>
+        <Typography variant="subtitle2" color="text.secondary">
+          終了ページ
+        </Typography>
+        <Typography variant="body1">
+          {formattedData.endPage}
+        </Typography>
+      </Grid>
+      
+      <Grid item xs={4}>
+        <Typography variant="subtitle2" color="text.secondary">
+          読了ページ数
+        </Typography>
+        <Typography variant="body1">
+          {formattedData.pagesRead} ページ
+        </Typography>
+      </Grid>
+      
+      <Grid item xs={12}>
+        <Divider />
+      </Grid>
+      
+      {formattedData.studyDuration && formattedData.studyDuration > 0 && (
+        <Grid item xs={12}>
+          <Typography variant="subtitle2" color="text.secondary">
+            学習時間
+          </Typography>
+          <Typography variant="body1">
+            {formattedData.studyDuration} 分
+          </Typography>
+        </Grid>
+      )}
+      
+      {formattedData.memo && (
+        <Grid item xs={12}>
+          <Typography variant="subtitle2" color="text.secondary">
+            学習メモ
+          </Typography>
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+              {formattedData.memo}
+            </Typography>
+          </Box>
+        </Grid>
+      )}
+      
+      {formattedData.reportProgress && (
+        <Grid item xs={12}>
+          <Typography variant="subtitle2" color="text.secondary">
+            レポート進捗
+          </Typography>
+          <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+              {formattedData.reportProgress}
+            </Typography>
+          </Box>
+        </Grid>
+      )}
+      
+      {formattedData.satisfactionLevel && (
+        <Grid item xs={12}>
+          <Typography variant="subtitle2" color="text.secondary">
+            満足度
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+            <SatisfactionIndicator level={formattedData.satisfactionLevel} />
+          </Box>
+        </Grid>
+      )}
+      
+      <Grid item xs={12}>
+        <Divider />
+      </Grid>
+      
+      <Grid item xs={6}>
+        <Typography variant="subtitle2" color="text.secondary">
+          作成日時
+        </Typography>
+        <Typography variant="body2">
+          {formattedData.createdAt}
+        </Typography>
+      </Grid>
+      
+      {formattedData.updatedAt && (
+        <Grid item xs={6}>
+          <Typography variant="subtitle2" color="text.secondary">
+            最終更新日時
+          </Typography>
+          <Typography variant="body2">
+            {formattedData.updatedAt}
+          </Typography>
+        </Grid>
+      )}
+    </Grid>
+  );
+});
+
 /**
  * 進捗記録の詳細を表示するダイアログコンポーネント
  */
-export const ProgressDetailDialog: React.FC<ProgressDetailDialogProps> = ({
+export const ProgressDetailDialog = memo<ProgressDetailDialogProps>(({
   open,
   progress,
   onClose,
@@ -59,140 +227,7 @@ export const ProgressDetailDialog: React.FC<ProgressDetailDialogProps> = ({
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2" color="text.secondary">
-              記録日
-            </Typography>
-            <Typography variant="body1">
-              {formatDate(progress.recordDate)}
-            </Typography>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Divider />
-          </Grid>
-          
-          <Grid item xs={4}>
-            <Typography variant="subtitle2" color="text.secondary">
-              開始ページ
-            </Typography>
-            <Typography variant="body1">
-              {progress.startPage}
-            </Typography>
-          </Grid>
-          
-          <Grid item xs={4}>
-            <Typography variant="subtitle2" color="text.secondary">
-              終了ページ
-            </Typography>
-            <Typography variant="body1">
-              {progress.endPage}
-            </Typography>
-          </Grid>
-          
-          <Grid item xs={4}>
-            <Typography variant="subtitle2" color="text.secondary">
-              読了ページ数
-            </Typography>
-            <Typography variant="body1">
-              {progress.pagesRead} ページ
-            </Typography>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Divider />
-          </Grid>
-          
-          {progress.studyDuration && progress.studyDuration > 0 && (
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" color="text.secondary">
-                学習時間
-              </Typography>
-              <Typography variant="body1">
-                {progress.studyDuration} 分
-              </Typography>
-            </Grid>
-          )}
-          
-          {progress.memo && (
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" color="text.secondary">
-                学習メモ
-              </Typography>
-              <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {progress.memo}
-                </Typography>
-              </Box>
-            </Grid>
-          )}
-          
-          {progress.reportProgress && (
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" color="text.secondary">
-                レポート進捗
-              </Typography>
-              <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {progress.reportProgress}
-                </Typography>
-              </Box>
-            </Grid>
-          )}
-          
-          {progress.satisfactionLevel && (
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" color="text.secondary">
-                満足度
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                {progress.satisfactionLevel === 1 && (
-                  <>
-                    <SentimentDissatisfiedIcon color="error" sx={{ mr: 1 }} />
-                    <Typography>不満</Typography>
-                  </>
-                )}
-                {progress.satisfactionLevel === 2 && (
-                  <>
-                    <SentimentSatisfiedIcon color="warning" sx={{ mr: 1 }} />
-                    <Typography>普通</Typography>
-                  </>
-                )}
-                {progress.satisfactionLevel === 3 && (
-                  <>
-                    <SentimentVerySatisfiedIcon color="success" sx={{ mr: 1 }} />
-                    <Typography>満足</Typography>
-                  </>
-                )}
-              </Box>
-            </Grid>
-          )}
-          
-          <Grid item xs={12}>
-            <Divider />
-          </Grid>
-          
-          <Grid item xs={6}>
-            <Typography variant="subtitle2" color="text.secondary">
-              作成日時
-            </Typography>
-            <Typography variant="body2">
-              {formatDate(progress.createdAt)}
-            </Typography>
-          </Grid>
-          
-          {progress.updatedAt && (
-            <Grid item xs={6}>
-              <Typography variant="subtitle2" color="text.secondary">
-                最終更新日時
-              </Typography>
-              <Typography variant="body2">
-                {formatDate(progress.updatedAt)}
-              </Typography>
-            </Grid>
-          )}
-        </Grid>
+        <ProgressDetails progress={progress} formatDate={formatDate} />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="primary">
@@ -201,4 +236,4 @@ export const ProgressDetailDialog: React.FC<ProgressDetailDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-}; 
+}); 

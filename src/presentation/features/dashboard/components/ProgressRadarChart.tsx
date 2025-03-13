@@ -94,8 +94,6 @@ const EmptyChartMessage = React.memo(() => (
   <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
     <CardContent sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Typography variant="body1" color="text.secondary" textAlign="center">
-        表示するデータがありません。<br />
-        科目を追加して学習を開始しましょう。
       </Typography>
     </CardContent>
   </Card>
@@ -105,8 +103,6 @@ const EmptyChartMessage = React.memo(() => (
 const ChartDescription = React.memo(({ dividerColor }: { dividerColor: string }) => (
   <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${dividerColor}` }}>
     <Typography variant="body2" color="text.secondary">
-      このチャートは各科目の学習進捗率（完了ページ数/総ページ数）を表しています。
-      外側に近いほど進捗率が高いことを示します。
     </Typography>
   </Box>
 ));

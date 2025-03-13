@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, memo } from 'react';
 import {
   Box,
   TextField,
@@ -42,6 +42,122 @@ interface ProgressFormProps {
   onSuccess: (progressId: string) => void;
   isEditMode?: boolean;
 }
+
+// 満足度選択コンポーネントをメモ化
+const SatisfactionSelector = memo(({ 
+  value, 
+  onChange, 
+  disabled, 
+  fieldError 
+}: { 
+  value: number; 
+  onChange: (value: string) => void; 
+  disabled: boolean;
+  fieldError?: string;
+}) => {
+  // メモ化によりフォームの他の部分が更新されても再レンダリングされない
+  return (
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      mb: 1,
+      border: (theme) => `1px solid ${theme.palette.divider}`,
+      borderRadius: 1,
+      p: 2
+    }}>
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        学習の満足度 (学習効率の分析に活用されます)
+      </Typography>
+      
+      <ToggleButtonGroup
+        value={String(value || 2)}
+        exclusive
+        onChange={(e, newValue) => {
+          if (newValue !== null) {
+            onChange(newValue);
+          }
+        }}
+        aria-label="満足度"
+        sx={{ mt: 1, justifyContent: 'center' }}
+        disabled={disabled}
+      >
+        <ToggleButton value="1" aria-label="不満">
+          <Tooltip title="不満">
+            <SentimentDissatisfiedIcon 
+              fontSize="large"
+              sx={{ 
+                color: (theme) => String(value) === "1" ? theme.palette.error.main : 'inherit' 
+              }}
+            />
+          </Tooltip>
+        </ToggleButton>
+        <ToggleButton value="2" aria-label="普通">
+          <Tooltip title="普通">
+            <SentimentSatisfiedIcon 
+              fontSize="large"
+              sx={{ 
+                color: (theme) => String(value) === "2" ? theme.palette.warning.main : 'inherit' 
+              }}
+            />
+          </Tooltip>
+        </ToggleButton>
+        <ToggleButton value="3" aria-label="満足">
+          <Tooltip title="満足">
+            <SentimentVerySatisfiedIcon 
+              fontSize="large"
+              sx={{ 
+                color: (theme) => String(value) === "3" ? theme.palette.success.main : 'inherit' 
+              }}
+            />
+          </Tooltip>
+        </ToggleButton>
+      </ToggleButtonGroup>
+      
+      {fieldError && (
+        <Typography variant="caption" color="error.main" sx={{ mt: 1 }}>
+          {fieldError}
+        </Typography>
+      )}
+    </Box>
+  );
+});
+
+// クイック入力ボタンコンポーネントをメモ化
+const QuickInputButtons = memo(({ 
+  handleQuickIncrement, 
+  isSubmitting 
+}: { 
+  handleQuickIncrement: (pages: number) => void,
+  isSubmitting: boolean
+}) => (
+  <Box sx={{ 
+    display: 'flex', 
+    flexWrap: 'wrap', 
+    gap: 1,
+    my: 2
+  }}>
+    <Typography variant="body2" color="text.secondary" sx={{ width: '100%', mb: 0.5 }}>
+      クイック入力:
+    </Typography>
+    {[1, 5, 10, 20, 50].map(pages => (
+      <Button 
+        key={pages} 
+        variant="outlined" 
+        size="small"
+        onClick={() => handleQuickIncrement(pages)}
+        disabled={isSubmitting}
+        sx={{ 
+          minWidth: { xs: '60px', sm: '48px' },
+          minHeight: { xs: '48px', sm: '36px' },
+          borderRadius: 2,
+          fontWeight: 'bold'
+        }}
+      >
+        +{pages}
+      </Button>
+    ))}
+  </Box>
+));
 
 /**
  * 進捗記録フォームコンポーネント
@@ -89,8 +205,8 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
     }
   };
 
-  // クイック入力用の関数
-  const handleQuickIncrement = (pages: number) => {
+  // クイック入力用の関数をメモ化
+  const handleQuickIncrement = useCallback((pages: number) => {
     const newEndPage = Math.min(
       (formData.endPage || 0) + pages,
       subject?.totalPages || Number.MAX_SAFE_INTEGER
@@ -103,44 +219,21 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
         type: 'number'
       }
     } as React.ChangeEvent<HTMLInputElement>);
-  };
+  }, [formData.endPage, subject?.totalPages, handleChange]);
 
-  // クイック入力ボタンを追加します
-  const QuickInputButtons = ({ handleQuickIncrement, isSubmitting }: { 
-    handleQuickIncrement: (pages: number) => void,
-    isSubmitting: boolean
-  }) => (
-    <Box sx={{ 
-      display: 'flex', 
-      flexWrap: 'wrap', 
-      gap: 1,
-      my: 2
-    }}>
-      <Typography variant="body2" color="text.secondary" sx={{ width: '100%', mb: 0.5 }}>
-        クイック入力:
-      </Typography>
-      {[1, 5, 10, 20, 50].map(pages => (
-        <Button 
-          key={pages} 
-          variant="outlined" 
-          size="small"
-          onClick={() => handleQuickIncrement(pages)}
-          disabled={isSubmitting}
-          sx={{ 
-            minWidth: { xs: '60px', sm: '48px' },
-            minHeight: { xs: '48px', sm: '36px' },
-            borderRadius: 2,
-            fontWeight: 'bold'
-          }}
-        >
-          +{pages}
-        </Button>
-      ))}
-    </Box>
-  );
+  // 満足度変更ハンドラー - メモ化されたコンポーネントに渡すため
+  const handleSatisfactionChange = useCallback((newValue: string) => {
+    handleChange({
+      target: {
+        name: 'satisfactionLevel',
+        value: newValue,
+        type: 'number'
+      }
+    } as React.ChangeEvent<HTMLInputElement>);
+  }, [handleChange]);
 
   // 日付入力値の安全な変換
-  const getSafeDate = (dateValue: string | Date | undefined): Date => {
+  const getSafeDate = useCallback((dateValue: string | Date | undefined): Date => {
     if (!dateValue) return new Date();
     
     try {
@@ -156,7 +249,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
       // 変換エラーの場合は今日の日付を返す
       return new Date();
     }
-  };
+  }, []);
 
   return (
     <Dialog
@@ -335,83 +428,13 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
             </Grid>
             
             <Grid item xs={12}>
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                mb: 1,
-                border: (theme) => `1px solid ${theme.palette.divider}`,
-                borderRadius: 1,
-                p: 2
-              }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  学習の満足度 (学習効率の分析に活用されます)
-                </Typography>
-                
-                <ToggleButtonGroup
-                  value={String(formData.satisfactionLevel || 2)}
-                  exclusive
-                  onChange={(e, newValue) => {
-                    if (newValue !== null) {
-                      handleChange({
-                        target: {
-                          name: 'satisfactionLevel',
-                          value: newValue,
-                          type: 'number'
-                        }
-                      } as React.ChangeEvent<HTMLInputElement>);
-                    }
-                  }}
-                  aria-label="満足度"
-                  sx={{ mt: 1, justifyContent: 'center' }}
-                  disabled={isSubmitting}
-                >
-                  <ToggleButton value="1" aria-label="不満">
-                    <Tooltip title="不満">
-                      <SentimentDissatisfiedIcon 
-                        fontSize="large"
-                        sx={{ 
-                          color: (theme) => 
-                            String(formData.satisfactionLevel) === "1" 
-                              ? theme.palette.error.main 
-                              : 'inherit' 
-                        }}
-                      />
-                    </Tooltip>
-                  </ToggleButton>
-                  <ToggleButton value="2" aria-label="普通">
-                    <Tooltip title="普通">
-                      <SentimentSatisfiedIcon 
-                        fontSize="large"
-                        sx={{ 
-                          color: (theme) => 
-                            String(formData.satisfactionLevel) === "2" 
-                              ? theme.palette.warning.main 
-                              : 'inherit' 
-                        }}
-                      />
-                    </Tooltip>
-                  </ToggleButton>
-                  <ToggleButton value="3" aria-label="満足">
-                    <Tooltip title="満足">
-                      <SentimentVerySatisfiedIcon 
-                        fontSize="large"
-                        sx={{ 
-                          color: (theme) => 
-                            String(formData.satisfactionLevel) === "3" 
-                              ? theme.palette.success.main 
-                              : 'inherit' 
-                        }}
-                      />
-                    </Tooltip>
-                  </ToggleButton>
-                </ToggleButtonGroup>
-                
-                {fieldErrors.satisfactionLevel && (
-                  <Typography variant="caption" color="error.main" sx={{ mt: 1 }}>
-                    {fieldErrors.satisfactionLevel}
-                  </Typography>
-                )}
-              </Box>
+              {/* 満足度セレクターをメモ化されたコンポーネントに置き換え */}
+              <SatisfactionSelector
+                value={Number(formData.satisfactionLevel || 2)}
+                onChange={handleSatisfactionChange}
+                disabled={isSubmitting}
+                fieldError={fieldErrors.satisfactionLevel}
+              />
             </Grid>
           </Grid>
           

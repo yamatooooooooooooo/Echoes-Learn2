@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { Box, Grid, Typography, Card, CardContent, useTheme, Chip, Tabs, Tab, Paper, Divider, LinearProgress } from '@mui/material';
-import { Assignment as AssignmentIcon, Event as EventIcon } from '@mui/icons-material';
+import { Box, Grid, Typography, Card, CardContent, useTheme, Chip, Tabs, Tab, Paper, Divider, LinearProgress, IconButton, Collapse } from '@mui/material';
+import { Assignment as AssignmentIcon, Event as EventIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import CountdownPieChart from './CountdownPieChart';
 import { CountdownData } from '../../../../domain/services/visualizationService';
 import { Subject } from '../../../../domain/models/SubjectModel';
@@ -171,6 +171,7 @@ const GroupedCountdownItem = React.memo(({
 }) => {
   const theme = useTheme();
   const isReport = items[0].isReport;
+  const [expanded, setExpanded] = useState(items.length <= 3 || items.some(item => item.remainingDays <= 3));
   
   // 日付のフォーマット
   const formattedDate = format(date, 'yyyy/MM/dd');
@@ -187,6 +188,11 @@ const GroupedCountdownItem = React.memo(({
     }
     return theme.palette.success.main;
   }, [remainingDays, theme]);
+
+  // 科目リストの折りたたみを切り替え
+  const toggleExpanded = () => {
+    setExpanded(!expanded);
+  };
 
   return (
     <Card sx={{ 
@@ -205,6 +211,7 @@ const GroupedCountdownItem = React.memo(({
           : '0 6px 16px rgba(0, 0, 0, 0.1)',
       },
       position: 'relative',
+      overflow: 'hidden',
     }}>
       {/* 締切タイプチップ */}
       {isReport ? 
@@ -236,7 +243,7 @@ const GroupedCountdownItem = React.memo(({
         />
       }
       
-      <CardContent>
+      <CardContent sx={{ flexGrow: 1, pb: 1 }}>
         {/* 日付と残り日数 */}
         <Box sx={{ mb: 2, mt: 1 }}>
           <Typography variant="h6" component="div" gutterBottom>
@@ -255,35 +262,70 @@ const GroupedCountdownItem = React.memo(({
         </Box>
         
         {/* 科目リスト */}
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 1 }} />
         <Box>
-          <Typography variant="subtitle2" gutterBottom>
-            科目：
-          </Typography>
-          {items.map((item, idx) => (
-            <Box key={`${item.subject}-${idx}`} sx={{ mb: 1, pl: 1 }}>
-              <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>{item.subject}</span>
-                <span>{item.progressData[0].value}%</span>
-              </Typography>
-              <LinearProgress 
-                variant="determinate" 
-                value={item.progressData[0].value} 
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            mb: 1 
+          }}>
+            <Typography variant="subtitle2">
+              科目 ({items.length})
+            </Typography>
+            {items.length > 3 && (
+              <IconButton 
+                size="small" 
+                onClick={toggleExpanded}
                 sx={{ 
-                  height: 6, 
-                  borderRadius: 3,
-                  mt: 0.5,
-                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)',
-                  '& .MuiLinearProgress-bar': {
-                    borderRadius: 3,
-                    bgcolor: isReport ? 
-                      (item.progressData[0].value === 100 ? theme.palette.success.main : theme.palette.secondary.main) :
-                      theme.palette.primary.main
-                  }
+                  transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s'
                 }}
-              />
-            </Box>
-          ))}
+              >
+                <ExpandMoreIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
+          
+          <Box sx={{ maxHeight: expanded ? '300px' : '150px', overflowY: 'auto', pr: 1 }}>
+            {(expanded ? items : items.slice(0, 3)).map((item, idx) => (
+              <Box key={`${item.subject}-${idx}`} sx={{ mb: 1, pl: 1 }}>
+                <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{item.subject}</span>
+                  <span>{item.progressData[0].value}%</span>
+                </Typography>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={item.progressData[0].value} 
+                  sx={{ 
+                    height: 6, 
+                    borderRadius: 3,
+                    mt: 0.5,
+                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 3,
+                      bgcolor: isReport ? 
+                        (item.progressData[0].value === 100 ? theme.palette.success.main : theme.palette.secondary.main) :
+                        theme.palette.primary.main
+                    }
+                  }}
+                />
+              </Box>
+            ))}
+            {!expanded && items.length > 3 && (
+              <Box sx={{ 
+                textAlign: 'center',
+                mt: 1,
+                pt: 1,
+                borderTop: `1px dashed ${theme.palette.divider}`,
+                color: theme.palette.text.secondary
+              }}>
+                <Typography variant="caption">
+                  他 {items.length - 3} 件...
+                </Typography>
+              </Box>
+            )}
+          </Box>
         </Box>
       </CardContent>
     </Card>
@@ -377,44 +419,63 @@ const CountdownContainer: React.FC<CountdownContainerProps> = React.memo(({
       <Statistics data={sortedData} theme={theme} />
       
       {/* タブ切り替え */}
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          mt: 1,
-          borderRadius: 2,
-          bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'
-        }}
-      >
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
-          indicatorColor="primary"
-          textColor="primary"
-          variant="fullWidth"
+      {includeReportDeadlines && subjects && subjects.length > 0 && (
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            mt: 1,
+            borderRadius: 16,
+            overflow: 'hidden',
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+            border: '1px solid',
+            borderColor: theme.palette.divider
+          }}
         >
-          <Tab 
-            icon={<EventIcon />} 
-            label="試験" 
-            iconPosition="start"
-            sx={{ borderRadius: 2 }}
-          />
-          <Tab 
-            icon={<AssignmentIcon />} 
-            label="レポート" 
-            iconPosition="start"
-            sx={{ borderRadius: 2 }}
-          />
-        </Tabs>
-      </Paper>
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange}
+            indicatorColor="primary"
+            textColor="primary"
+            variant="fullWidth"
+            sx={{
+              minHeight: '36px',
+              '.MuiTab-root': { 
+                minHeight: '36px',
+                py: 0.5,
+                px: 2
+              }
+            }}
+          >
+            <Tab 
+              icon={<EventIcon fontSize="small" />} 
+              label="試験" 
+              iconPosition="start"
+              sx={{ 
+                borderRadius: 16,
+                fontSize: '0.825rem',
+                fontWeight: tabValue === 0 ? 'bold' : 'normal',
+              }}
+            />
+            <Tab 
+              icon={<AssignmentIcon fontSize="small" />} 
+              label="レポート" 
+              iconPosition="start"
+              sx={{ 
+                borderRadius: 16,
+                fontSize: '0.825rem',
+                fontWeight: tabValue === 1 ? 'bold' : 'normal',
+              }}
+            />
+          </Tabs>
+        </Paper>
+      )}
     </Box>
-  ), [sortedData, theme, title, tabValue]);
+  ), [sortedData, theme, title, tabValue, handleTabChange, includeReportDeadlines, subjects]);
 
   // メモ化されたフッター部分
   const FooterSection = useMemo(() => (
     <Box sx={{ px: 2, py: 1, borderTop: `1px solid ${theme.palette.divider}` }}>
       <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-        このウィジェットは各科目の{tabValue === 0 ? '試験日' : 'レポート締切日'}までの残り日数と進捗状況を表示しています。
-        残り日数が7日以内の場合は赤色、8～14日の場合は黄色で表示されます。
       </Typography>
     </Box>
   ), [theme.palette.divider, tabValue]);
@@ -425,8 +486,6 @@ const CountdownContainer: React.FC<CountdownContainerProps> = React.memo(({
       <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <CardContent sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Typography variant="body1" color="text.secondary" textAlign="center">
-            表示するデータがありません。<br />
-            科目を追加して{tabValue === 0 ? '試験日' : 'レポート締切日'}を設定しましょう。
           </Typography>
         </CardContent>
       </Card>
@@ -437,10 +496,10 @@ const CountdownContainer: React.FC<CountdownContainerProps> = React.memo(({
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {HeaderSection}
       
-      <Box sx={{ flexGrow: 1, px: 2, pb: 2 }}>
+      <Box sx={{ flexGrow: 1, px: 2, pb: 2, overflowY: 'auto' }}>
         <Grid container spacing={3}>
           {groupedData.map((group, index) => (
-            <Grid item xs={12} sm={12} md={12} key={`countdown-group-${index}`}>
+            <Grid item xs={12} sm={6} md={4} lg={4} key={`countdown-group-${index}`}>
               <GroupedCountdownItem date={group.date} items={group.items} />
             </Grid>
           ))}

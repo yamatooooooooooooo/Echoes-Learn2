@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { HelpTooltip } from './HelpTooltip';
 
 interface CardHeaderProps {
   title: string;
@@ -8,6 +9,7 @@ interface CardHeaderProps {
   action?: React.ReactNode;
   isVisible?: boolean;
   onToggleVisibility?: () => void;
+  helpText?: string;
 }
 
 export const CardHeader: React.FC<CardHeaderProps> = ({
@@ -15,7 +17,8 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
   subtitle,
   action,
   isVisible = true,
-  onToggleVisibility
+  onToggleVisibility,
+  helpText
 }) => {
   return (
     <Box sx={{ 
@@ -26,14 +29,23 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
       px: 2,
       pt: 2
     }}>
-      <Box>
-        <Typography variant="h6" component="div">
-          {title}
-        </Typography>
-        {subtitle && (
-          <Typography variant="body2" color="text.secondary">
-            {subtitle}
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h6" component="div">
+            {title}
           </Typography>
+          {subtitle && (
+            <Typography variant="body2" color="text.secondary">
+              {subtitle}
+            </Typography>
+          )}
+        </Box>
+        {helpText && (
+          <HelpTooltip 
+            helpText={helpText} 
+            tooltipText={`${title}の使い方`}
+            sx={{ marginLeft: 1 }}
+          />
         )}
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

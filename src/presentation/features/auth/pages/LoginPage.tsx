@@ -20,8 +20,7 @@ import {
   VisibilityOff as VisibilityOffIcon
 } from '@mui/icons-material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { useFirebase } from '../../../../contexts/FirebaseContext';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 /**
  * ログインページコンポーネント
@@ -33,7 +32,7 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const { auth } = useFirebase();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   
   // メールアドレスとパスワードでログイン
@@ -43,7 +42,7 @@ const LoginPage: React.FC = () => {
     setError(null);
     
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await login(email, password);
       navigate('/');
     } catch (err: any) {
       console.error('ログインエラー:', err);
@@ -71,8 +70,7 @@ const LoginPage: React.FC = () => {
     setError(null);
     
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await loginWithGoogle();
       navigate('/');
     } catch (err: any) {
       console.error('Googleログインエラー:', err);

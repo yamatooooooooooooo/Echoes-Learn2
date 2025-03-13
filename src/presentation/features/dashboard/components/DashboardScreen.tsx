@@ -210,10 +210,10 @@ const DashboardScreen: React.FC = () => {
               <Paper sx={{ /* existing styles */ }}>
                 <CardHeader
                   title="データ可視化"
-                  subtitle="学習進捗と試験準備の状況を視覚的に確認できます"
-                  isVisible={settings.visualization}
                   onToggleVisibility={() => toggleCard('visualization')}
+                  isVisible={settings.visualization}
                   action={<IntegratedVisualizationControls />}
+                  helpText="このカードでは科目ごとの進捗率をレーダーチャートで可視化します。外側に近いほど進捗率が高いことを示します。また、各科目の試験日までの残り日数もカウントダウン表示します。"
                 />
                 <IntegratedVisualizationSection />
               </Paper>
@@ -228,6 +228,7 @@ const DashboardScreen: React.FC = () => {
                   title="試験スケジュール"
                   isVisible={settings.upcomingExams}
                   onToggleVisibility={() => toggleCard('upcomingExams')}
+                  helpText="今後の試験日程を時系列順に表示します。日付が近い順に並べられ、赤色は7日以内、黄色は14日以内の試験を示します。"
                 />
                 <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
               </Paper>
@@ -242,6 +243,7 @@ const DashboardScreen: React.FC = () => {
                   title="レポート締切"
                   isVisible={settings.deadlines}
                   onToggleVisibility={() => toggleCard('deadlines')}
+                  helpText="レポート提出の締切日を時系列順に表示します。日付が近い順に並べられ、赤色は7日以内、黄色は14日以内の締切を示します。"
                 />
                 <DeadlinesCard subjects={dashboardData?.subjects || []} />
               </Paper>
@@ -259,6 +261,7 @@ const DashboardScreen: React.FC = () => {
                       title="日次ノルマ"
                       isVisible={settings.dailyQuota}
                       onToggleVisibility={() => toggleCard('dailyQuota')}
+                      helpText="各科目の1日あたりの学習ページ数目標を表示します。試験日までの残り日数と総ページ数から自動計算されます。設定画面で学習日数を調整できます。"
                     />
                     <SimpleDailyQuotaCard 
                       subjects={dashboardData?.subjects || []} 
@@ -276,6 +279,7 @@ const DashboardScreen: React.FC = () => {
                       title="週次ノルマ"
                       isVisible={settings.weeklyQuota}
                       onToggleVisibility={() => toggleCard('weeklyQuota')}
+                      helpText="各科目の1週間あたりの学習ページ数目標を表示します。試験日までの残り週数と総ページ数から自動計算されます。設定画面で週あたりの学習日数を調整できます。"
                     />
                     <SimpleWeeklyQuotaCard 
                       subjects={dashboardData?.subjects || []} 
@@ -294,6 +298,7 @@ const DashboardScreen: React.FC = () => {
                   title="進捗状況"
                   isVisible={settings.progressBar}
                   onToggleVisibility={() => toggleCard('progressBar')}
+                  helpText="各科目の全体的な進捗状況をプログレスバーで表示します。現在のページ数と総ページ数の比率を視覚的に確認できます。"
                 />
                 <SimpleProgressBarCard 
                   subjects={dashboardData?.subjects || []} 
@@ -311,6 +316,7 @@ const DashboardScreen: React.FC = () => {
                   title="最近の進捗"
                   isVisible={settings.recentProgress}
                   onToggleVisibility={() => toggleCard('recentProgress')}
+                  helpText="最近記録した学習進捗を時系列で表示します。各科目の学習記録を確認でき、いつどの科目をどれだけ学習したかが一目でわかります。"
                 />
                 <RecentProgressCard 
                   recentProgress={dashboardData.recentProgress} 
@@ -501,9 +507,6 @@ const IntegratedVisualizationControls = React.memo(() => {
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-        最終更新: {formattedUpdateTime}
-      </Typography>
       <Tooltip title="データを更新">
         <IconButton 
           onClick={handleRefresh} 
@@ -564,7 +567,6 @@ const IntegratedVisualizationSection = React.memo(() => {
       mb: 2
     }}>
       <Typography variant="h5" component="h2">
-        学習状況
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <IconButton 
@@ -575,12 +577,9 @@ const IntegratedVisualizationSection = React.memo(() => {
         >
           <RefreshIcon />
         </IconButton>
-        <Typography variant="caption" color="text.secondary">
-          {formattedLastUpdated}
-        </Typography>
       </Box>
     </Box>
-  ), [handleRefresh, isLoading, formattedLastUpdated]);
+  ), [handleRefresh, isLoading]);
 
   return (
     <Grid container spacing={3}>

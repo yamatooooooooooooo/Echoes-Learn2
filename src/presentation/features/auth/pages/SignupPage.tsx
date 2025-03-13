@@ -19,8 +19,7 @@ import {
   VisibilityOff as VisibilityOffIcon
 } from '@mui/icons-material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { useFirebase } from '../../../../contexts/FirebaseContext';
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, updateProfile } from 'firebase/auth';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 /**
  * 新規登録ページコンポーネント
@@ -34,7 +33,7 @@ const SignupPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const { auth } = useFirebase();
+  const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   
   // パスワードのバリデーション
@@ -48,31 +47,22 @@ const SignupPage: React.FC = () => {
     return null;
   };
   
-  // メールアドレスとパスワードで新規登録
-  const handleSignup = async (e: React.FormEvent) => {
+  // フォーム送信
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // パスワードのバリデーション
-    const passwordError = validatePassword();
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
-    
     setLoading(true);
     setError(null);
     
+    // パスワードの検証
+    const passwordError = validatePassword();
+    if (passwordError) {
+      setError(passwordError);
+      setLoading(false);
+      return;
+    }
+    
     try {
-      // アカウント作成
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // プロフィール更新（表示名の設定）
-      if (name && userCredential.user) {
-        await updateProfile(userCredential.user, {
-          displayName: name
-        });
-      }
-      
+      await signup(email, password);
       navigate('/');
     } catch (err: any) {
       console.error('新規登録エラー:', err);
@@ -81,11 +71,9 @@ const SignupPage: React.FC = () => {
       if (err.code === 'auth/email-already-in-use') {
         setError('このメールアドレスは既に使用されています。');
       } else if (err.code === 'auth/invalid-email') {
-        setError('無効なメールアドレス形式です。');
+        setError('有効なメールアドレスを入力してください。');
       } else if (err.code === 'auth/weak-password') {
-        setError('パスワードが弱すぎます。より強力なパスワードを設定してください。');
-      } else if (err.code === 'auth/operation-not-allowed') {
-        setError('この認証方法は現在無効になっています。');
+        setError('このパスワードは脆弱です。より強いパスワードを設定してください。');
       } else {
         setError(`新規登録に失敗しました: ${err.message}`);
       }
@@ -100,8 +88,7 @@ const SignupPage: React.FC = () => {
     setError(null);
     
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await loginWithGoogle();
       navigate('/');
     } catch (err: any) {
       console.error('Google新規登録エラー:', err);
@@ -133,9 +120,10 @@ const SignupPage: React.FC = () => {
             </Alert>
           )}
           
-          <Box component="form" onSubmit={handleSignup} sx={{ mt: 2 }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
             <TextField
               margin="normal"
+              required
               fullWidth
               id="name"
               label="名前"
@@ -146,6 +134,7 @@ const SignupPage: React.FC = () => {
               onChange={(e) => setName(e.target.value)}
               disabled={loading}
             />
+            
             <TextField
               margin="normal"
               required
@@ -158,6 +147,7 @@ const SignupPage: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
             />
+            
             <TextField
               margin="normal"
               required
@@ -183,8 +173,8 @@ const SignupPage: React.FC = () => {
                   </InputAdornment>
                 ),
               }}
-              helperText="6文字以上のパスワードを設定してください"
             />
+            
             <TextField
               margin="normal"
               required

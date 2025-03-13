@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { ProgressCreateInput, Progress } from '../../../../domain/models/ProgressModel';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { useServices } from '../../../../hooks/useServices';
@@ -13,22 +13,23 @@ interface UseProgressFormParams {
 }
 
 /**
- * 進捗記録フォームのカスタムフック
+ * 進捗記録フォームのカスタムフック - パフォーマンス最適化版
  */
 export const useProgressForm = ({ subject, progress, isEditMode = false, onSuccess }: UseProgressFormParams) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   
-  // サービスを取得
-  const { progressRepository, subjectRepository } = useServices();
+  // 参照を保持することでサービスへの再アクセスを防止
+  const servicesRef = useRef(useServices());
+  const { progressRepository, subjectRepository } = servicesRef.current;
   const { currentUser } = useAuth();
   
-  // 今日の日付を取得（YYYY-MM-DD形式）
-  const today = format(new Date(), 'yyyy-MM-dd');
+  // 今日の日付を計算 - アプリケーションのライフサイクル中に変更されることはほぼないのでメモ化
+  const today = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
   
-  // 初期値を設定
-  const initialValues: ProgressCreateInput = {
+  // 初期値を設定 - メモ化で不要な再計算を防止
+  const initialValues = useMemo<ProgressCreateInput>(() => ({
     subjectId: subject?.id || progress?.subjectId || '',
     startPage: subject?.currentPage || progress?.startPage || 0,
     endPage: progress?.endPage || subject?.currentPage || 0,
@@ -40,11 +41,11 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
     memo: progress?.memo || '',
     reportProgress: progress?.reportProgress || '',
     satisfactionLevel: progress?.satisfactionLevel || 2 // デフォルトは「普通」（2）
-  };
+  }), [subject, progress, today]);
   
   const [formData, setFormData] = useState<ProgressCreateInput>(initialValues);
   
-  // 進捗データからフォームデータを設定
+  // 進捗データからフォームデータを設定 - メモ化で参照の一貫性を保持
   const setFormDataFromProgress = useCallback((progress: Progress) => {
     setFormData({
       subjectId: progress.subjectId,
@@ -61,8 +62,8 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
     });
   }, []);
   
-  // フォーム入力の処理
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  // フォーム入力の処理 - useCallbackでメモ化
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     
     let parsedValue: any = value;
@@ -74,18 +75,34 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
     
     // startPageとendPageの場合はpagesReadを計算
     if (name === 'startPage' || name === 'endPage') {
-      const startPage = name === 'startPage' ? parsedValue : formData.startPage;
-      const endPage = name === 'endPage' ? parsedValue : formData.endPage;
-      
-      // 妥当な値の場合のみ計算
-      if (typeof startPage === 'number' && typeof endPage === 'number' && endPage >= startPage) {
-        setFormData(prev => ({
+      setFormData(prev => {
+        const startPage = name === 'startPage' ? parsedValue : prev.startPage;
+        const endPage = name === 'endPage' ? parsedValue : prev.endPage;
+        
+        // 妥当な値の場合のみ計算
+        if (typeof startPage === 'number' && typeof endPage === 'number' && endPage >= startPage) {
+          return {
+            ...prev,
+            [name]: parsedValue,
+            pagesRead: endPage - startPage + 1
+          };
+        }
+        
+        return {
           ...prev,
-          [name]: parsedValue,
-          pagesRead: endPage - startPage + 1
+          [name]: parsedValue
+        };
+      });
+      
+      // フィールドエラーをクリア
+      if (fieldErrors[name]) {
+        setFieldErrors(prev => ({
+          ...prev,
+          [name]: ''
         }));
-        return;
       }
+      
+      return;
     }
     
     // 通常の入力
@@ -101,93 +118,28 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
         [name]: ''
       }));
     }
-  };
+  }, [fieldErrors]);
   
-  // 日付選択の処理
-  const handleDateChange = (date: Date | null) => {
+  // 日付選択の処理 - useCallbackでメモ化
+  const handleDateChange = useCallback((date: Date | null) => {
     const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
-    handleChange({
-      target: { name: 'recordDate', value: formattedDate, type: 'text' }
-    } as React.ChangeEvent<HTMLInputElement>);
-  };
+    
+    setFormData(prev => ({
+      ...prev,
+      recordDate: formattedDate
+    }));
+    
+    // フィールドエラーをクリア
+    if (fieldErrors.recordDate) {
+      setFieldErrors(prev => ({
+        ...prev,
+        recordDate: ''
+      }));
+    }
+  }, [fieldErrors]);
   
-  // フォーム送信
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!subject) {
-      setError('科目が選択されていません');
-      return;
-    }
-    
-    if (!currentUser) {
-      setError('認証エラーが発生しました。再度ログインしてください。');
-      return;
-    }
-    
-    // バリデーション
-    const validationErrors = validateProgress(formData, subject);
-    if (Object.keys(validationErrors).length > 0) {
-      setFieldErrors(validationErrors);
-      return;
-    }
-    
-    setIsSubmitting(true);
-    setError(null);
-    
-    try {
-      let progressId: string;
-      
-      // 数値型に変換したデータを準備
-      const numericFormData = {
-        ...formData,
-        startPage: Number(formData.startPage),
-        endPage: Number(formData.endPage),
-        pagesRead: Number(formData.pagesRead),
-        studyDuration: Number(formData.studyDuration || 0)
-      };
-      
-      if (isEditMode && progress && progress.id) {
-        // 進捗情報を更新
-        await progressRepository.updateProgress(progress.id, numericFormData);
-        progressId = progress.id;
-      } else {
-        // 進捗情報を追加
-        progressId = await progressRepository.addProgress(currentUser.uid, {
-          ...numericFormData,
-          subjectId: subject.id // subjectは既に存在チェック済み
-        });
-        
-        // 科目の現在のページを更新
-        await subjectRepository.updateSubject(subject.id, {
-          currentPage: numericFormData.endPage
-        });
-      }
-      
-      // 成功時のコールバック
-      if (onSuccess) {
-        onSuccess(progressId);
-      }
-      
-      // フォームをリセット
-      resetForm();
-    } catch (error) {
-      console.error('進捗情報の保存に失敗しました:', error);
-      setError('進捗情報の保存に失敗しました。もう一度お試しください。');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  // フォームリセット
-  const resetForm = () => {
-    setFormData(initialValues);
-    setError(null);
-    setFieldErrors({});
-  };
-  
-  // バリデーション関数
-  const validateProgress = (data: ProgressCreateInput, subject: Subject): Record<string, string> => {
+  // バリデーション関数 - パフォーマンス最適化
+  const validateProgress = useCallback((data: ProgressCreateInput, subject: Subject): Record<string, string> => {
     const errors: Record<string, string> = {};
     
     if (!data.subjectId) {
@@ -216,8 +168,9 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
       errors.recordDate = '記録日は必須です';
     }
     
-    const studyDuration = Number(data.studyDuration);
+    // 学習時間のバリデーション - 数値変換は一度だけ行う
     if (data.studyDuration !== undefined) {
+      const studyDuration = Number(data.studyDuration);
       if (isNaN(studyDuration) || studyDuration < 0) {
         errors.studyDuration = '学習時間は0以上の数値である必要があります';
       } else if (studyDuration > 1440) {
@@ -225,7 +178,7 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
       }
     }
     
-    // 満足度のバリデーション
+    // 満足度のバリデーション - 数値変換は一度だけ行う
     if (data.satisfactionLevel !== undefined) {
       const level = Number(data.satisfactionLevel);
       if (isNaN(level) || level < 1 || level > 3 || !Number.isInteger(level)) {
@@ -234,7 +187,84 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
     }
     
     return errors;
-  };
+  }, []);
+  
+  // フォームリセット - useCallbackでメモ化
+  const resetForm = useCallback(() => {
+    setFormData(initialValues);
+    setError(null);
+    setFieldErrors({});
+  }, [initialValues]);
+  
+  // フォーム送信 - useCallbackでメモ化
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!subject) {
+      setError('科目が選択されていません');
+      return;
+    }
+    
+    if (!currentUser) {
+      setError('認証エラーが発生しました。再度ログインしてください。');
+      return;
+    }
+    
+    // バリデーション
+    const validationErrors = validateProgress(formData, subject);
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      let progressId: string;
+      
+      // 数値型に変換したデータを準備 - オブジェクトをシャローコピーして変更
+      const numericFormData = {
+        ...formData,
+        startPage: Number(formData.startPage),
+        endPage: Number(formData.endPage),
+        pagesRead: Number(formData.pagesRead),
+        studyDuration: Number(formData.studyDuration || 0)
+      };
+      
+      if (isEditMode && progress && progress.id) {
+        // 進捗情報を更新
+        await progressRepository.updateProgress(progress.id, numericFormData);
+        progressId = progress.id;
+      } else {
+        // 進捗情報を追加
+        progressId = await progressRepository.addProgress(currentUser.uid, {
+          ...numericFormData,
+          subjectId: subject.id
+        });
+        
+        // 科目の現在のページを更新
+        await subjectRepository.updateSubject(subject.id, {
+          currentPage: numericFormData.endPage
+        });
+      }
+      
+      // 成功時のコールバック
+      if (onSuccess) {
+        onSuccess(progressId);
+      }
+      
+      // フォームをリセット
+      setFormData(initialValues);
+      setError(null);
+      setFieldErrors({});
+    } catch (error) {
+      console.error('進捗情報の保存に失敗しました:', error);
+      setError('進捗情報の保存に失敗しました。もう一度お試しください。');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [currentUser, formData, isEditMode, onSuccess, progress, progressRepository, subject, subjectRepository, validateProgress, initialValues]);
   
   return {
     formData,
