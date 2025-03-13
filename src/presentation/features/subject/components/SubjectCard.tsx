@@ -1,38 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Card, 
-  CardContent, 
-  Divider,
+  Paper,
   Box,
   IconButton,
-  Collapse,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Typography,
-  Alert,
-  CircularProgress,
-  Tabs,
-  Tab,
-  Paper,
-  Chip,
   LinearProgress,
   Tooltip,
+  Chip,
   useTheme,
   useMediaQuery
 } from '@mui/material';
 import { 
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
-  Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Timeline as TimelineIcon,
-  Info as InfoIcon,
-  History as HistoryIcon,
-  BarChart as BarChartIcon,
   MenuBook as MenuBookIcon,
   Event as EventIcon,
   AccessTime as AccessTimeIcon,
@@ -41,13 +22,8 @@ import {
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { Progress } from '../../../../domain/models/ProgressModel';
 import { calculateDaysRemaining, calculateProgress } from '../utils/subjectUtils';
-import { SubjectHeader } from './SubjectHeader';
-import { SubjectInfo } from './SubjectInfo';
 import { ProgressForm } from './ProgressForm';
-import { ProgressList } from './ProgressList';
-import { ProgressHistory } from './ProgressHistory';
 import { ProgressDeleteDialog } from './ProgressDeleteDialog';
-import { ProgressCharts } from './ProgressCharts';
 import { useSubjectProgress } from '../hooks/useSubjectProgress';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
 import { useServices } from '../../../../hooks/useServices';

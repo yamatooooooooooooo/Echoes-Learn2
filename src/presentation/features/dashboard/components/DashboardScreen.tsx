@@ -17,7 +17,7 @@ import {
 } from '@mui/icons-material';
 import { SimpleDailyQuotaCard } from './SimpleDailyQuotaCard';
 import { SimpleWeeklyQuotaCard } from './SimpleWeeklyQuotaCard';
-import SimpleProgressBarCard from './SimpleProgressBarCard';
+import { SimpleProgressBarCard } from './SimpleProgressBarCard';
 import { RecentProgressCard } from './RecentProgressCard';
 import { UpcomingExamsCard } from './UpcomingExamsCard';
 import { DeadlinesCard } from './DeadlinesCard';
