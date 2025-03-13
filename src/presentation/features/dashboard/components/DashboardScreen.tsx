@@ -50,65 +50,14 @@ const DashboardScreen: React.FC = () => {
   useEffect(() => {
     const scrollToTop = () => {
       try {
-        // 最もシンプルなスクロールリセット
+        // シンプルなスクロールリセット - 一つだけの方法を使用
         window.scrollTo(0, 0);
         
-        // バックアップとして詳細なスクロールリセット
-        window.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: 'auto'
-        });
-        
-        // スクロール位置を強制的にリセット
-        if ('scrollY' in window) {
-          window.scrollY = 0;
-        }
-        document.body.scrollTop = 0;
-        document.documentElement.scrollTop = 0;
-        
-        // コンテナのスクロール位置もリセット
-        if (containerRef.current) {
-          containerRef.current.scrollTop = 0;
-        }
-        
-        // ダッシュボードコンテナ要素を見つけて調整
-        const dashboardContainer = document.getElementById('dashboard-root-container');
-        if (dashboardContainer) {
-          dashboardContainer.scrollTop = 0;
-          
-          // 要素を表示領域内の先頭に表示
-          dashboardContainer.scrollIntoView({
-            block: 'start',
-            inline: 'start',
-            behavior: 'auto'
-          });
-        }
-        
-        // iOS Safariなどのモバイルブラウザ向けの追加対応
+        // モバイルの場合のみ、遅延して再度スクロール位置を確認
         if (isMobile) {
-          // 先に少し遅延を入れて実行（レンダリング完了を待つ）
           setTimeout(() => {
             window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-            
-            if (dashboardContainer) {
-              dashboardContainer.scrollTop = 0;
-              dashboardContainer.scrollIntoView({
-                block: 'start',
-                inline: 'start',
-                behavior: 'auto'
-              });
-            }
-            
-            // さらに追加の調整を行う
-            setTimeout(() => {
-              window.scrollTo(0, 0);
-              document.body.scrollTop = 0;
-              document.documentElement.scrollTop = 0;
-            }, 300);
-          }, 500);
+          }, 300);
         }
       } catch (error) {
         console.error('スクロール処理中にエラーが発生しました:', error);
@@ -118,18 +67,11 @@ const DashboardScreen: React.FC = () => {
     // 初回レンダリング時に実行
     scrollToTop();
     
-    // 複数回にわたって実行して確実に適用
-    const timeoutIds = [
-      setTimeout(scrollToTop, 100),
-      setTimeout(scrollToTop, 300),
-      setTimeout(scrollToTop, 800),
-      setTimeout(scrollToTop, 1500),
-      setTimeout(scrollToTop, 3000)
-    ];
+    // 一度だけ遅延実行
+    const timeoutId = setTimeout(scrollToTop, 300);
     
     return () => {
-      // すべてのタイマーをクリア
-      timeoutIds.forEach(id => clearTimeout(id));
+      clearTimeout(timeoutId);
     };
   }, [isMobile]);
   
@@ -187,26 +129,20 @@ const DashboardScreen: React.FC = () => {
         maxWidth: { xs: '100%', sm: '95%', md: '1400px' },
         mx: 'auto', 
         p: { xs: 2, sm: 3, md: 4 },
-        pt: { xs: 80, sm: 80, md: 80 }, // 極端に大きな上部パディングを設定
-        pb: { xs: 120, sm: 80, md: 60 }, // 十分な下部パディングも設定
+        pt: { xs: 2, sm: 3, md: 4 }, // パディングを適正化
+        pb: { xs: 6, sm: 6, md: 6 }, // パディングを適正化
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
         height: 'auto',
-        minHeight: '100vh',
         backgroundColor: 'background.default',
-        scrollBehavior: 'smooth',
+        overflow: 'visible', // スクロールを無効化
         WebkitOverflowScrolling: 'touch',
-        overflowY: 'visible',
-        overflowX: 'hidden',
-        marginTop: { xs: 30, sm: 40, md: 40 }, // 上部にマージンを追加
-        ...(!isMobile && {
-          marginTop: 50, // デスクトップでの上部マージン
-        }),
+        marginTop: { xs: 2, sm: 3, md: 4 }, // マージンを適正化
         ...(isMobile && {
-          paddingTop: 100, // モバイルでの上部パディングをさらに増やす
-          paddingBottom: 200,
-          marginTop: 40 // モバイルでの上部マージン
+          paddingTop: 3, // モバイルでのパディングを調整
+          paddingBottom: 20,
+          marginTop: 2 // モバイルでのマージンを調整
         })
       }}
     >
@@ -214,16 +150,16 @@ const DashboardScreen: React.FC = () => {
       <Box 
         sx={{ 
           width: '100%',
-          mb: { xs: 3, sm: 4, md: 4 }, // 下部のマージンを増やす
+          mb: { xs: 3, sm: 3, md: 3 }, // マージンを統一
           position: 'relative',
           zIndex: 10,
           backgroundColor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(8px)',
           borderRadius: 2,
           boxShadow: 1,
-          py: 2, // 上下のパディングを増やす
-          px: { xs: 2, sm: 3 }, // 左右のパディングを追加
-          marginTop: { xs: 10, sm: 10, md: 10 }, // 上部のマージンを大きく増やす
+          py: 1.5, // パディングを調整
+          px: { xs: 2, sm: 2, md: 2 }, // パディングを統一
+          marginTop: { xs: 2, sm: 2, md: 2 }, // マージンを適正化
           border: '1px solid',
           borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
         }}

@@ -164,7 +164,7 @@ const App: React.FC = () => {
                 }),
               }),
               height: '100vh',
-              overflow: 'auto',
+              overflow: 'auto', // メインコンテナでのみスクロールを許可
               display: 'flex',
               flexDirection: 'column',
               position: 'relative',
@@ -176,13 +176,14 @@ const App: React.FC = () => {
             <Box 
               sx={{ 
                 padding: { xs: 1, sm: 2, md: 3 },
-                paddingTop: { xs: 24, sm: 24, md: 24 },
-                paddingBottom: { xs: 100, sm: 50, md: 30 },
+                paddingTop: { xs: 12, sm: 12, md: 12 }, // パディングを調整
+                paddingBottom: { xs: 80, sm: 40, md: 20 }, // パディングを調整
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
-                minHeight: '100vh'
+                minHeight: '100vh',
+                overflow: 'visible' // 内部コンテナではスクロールを無効化
               }}
             >
               <NavigationContext.Provider value={{ navigateTo }}>
