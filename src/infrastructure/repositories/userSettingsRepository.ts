@@ -15,6 +15,9 @@ import { ModuleSettings } from '../../presentation/features/dashboard/hooks/useD
 import { getDefaultModuleSettings } from '../../config/dashboardModules';
 import { UserSettingsRepository } from '../../domain/repositories/UserSettingsRepository';
 
+// UserSettingsRepositoryインターフェースを再エクスポート
+export type { UserSettingsRepository } from '../../domain/repositories/UserSettingsRepository';
+
 /**
  * ダッシュボード設定の型定義
  */
