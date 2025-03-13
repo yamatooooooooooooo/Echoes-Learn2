@@ -259,10 +259,10 @@ const DashboardScreen: React.FC = () => {
           mt: 2,
         }}
       >
-        {/* カードコンテナ */}
-        <Grid container spacing={isMobile ? 2 : 3} sx={{ mb: 2 }}>
-          {/* 試験スケジュールカード - 縦に配置するためにxs:12に変更 */}
-          <Grid item xs={12} sx={{ display: 'flex' }}>
+        {/* カードコンテナ - 縦に並ぶように並び替え */}
+        <Grid container direction="column" spacing={isMobile ? 2 : 3} sx={{ mb: 2 }}>
+          {/* 試験スケジュールカード - 必ず縦に配置されるように修正 */}
+          <Grid item>
             <Paper 
               elevation={0} 
               sx={{ 
@@ -289,8 +289,8 @@ const DashboardScreen: React.FC = () => {
             </Paper>
           </Grid>
           
-          {/* レポート締切カード - 縦に配置するためにxs:12に変更 */}
-          <Grid item xs={12} sx={{ display: 'flex' }}>
+          {/* レポート締切カード - 必ず縦に配置されるように修正 */}
+          <Grid item>
             <Paper 
               elevation={0} 
               sx={{ 
@@ -317,24 +317,29 @@ const DashboardScreen: React.FC = () => {
             </Paper>
           </Grid>
           
-          {/* ノルマカード */}
-          <Grid item xs={12} md={6}>
-            <SimpleDailyQuotaCard 
-              subjects={dashboardData?.subjects || []} 
-              isLoading={isLoading}
-            />
-          </Grid>
-          
-          {/* 今週のノルマ */}
-          <Grid item xs={12} md={6}>
-            <SimpleWeeklyQuotaCard 
-              subjects={dashboardData?.subjects || []} 
-              isLoading={isLoading}
-            />
+          {/* ノルマカードのコンテナ */}
+          <Grid item>
+            <Grid container spacing={isMobile ? 2 : 3}>
+              {/* 今日のノルマ */}
+              <Grid item xs={12} md={6}>
+                <SimpleDailyQuotaCard 
+                  subjects={dashboardData?.subjects || []} 
+                  isLoading={isLoading}
+                />
+              </Grid>
+              
+              {/* 今週のノルマ */}
+              <Grid item xs={12} md={6}>
+                <SimpleWeeklyQuotaCard 
+                  subjects={dashboardData?.subjects || []} 
+                  isLoading={isLoading}
+                />
+              </Grid>
+            </Grid>
           </Grid>
           
           {/* 進捗バー */}
-          <Grid item xs={12}>
+          <Grid item>
             <Paper 
               elevation={0} 
               sx={{ 
@@ -365,7 +370,7 @@ const DashboardScreen: React.FC = () => {
           
           {/* 最近の進捗 */}
           {dashboardData && dashboardData.recentProgress && dashboardData.recentProgress.length > 0 && (
-            <Grid item xs={12}>
+            <Grid item>
               <Paper 
                 elevation={0} 
                 sx={{ 
