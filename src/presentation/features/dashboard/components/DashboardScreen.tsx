@@ -564,7 +564,6 @@ const DashboardScreen: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 2, width: '100%' }}>
           <DataCleanupButton size="small" />
         </Box>
-      )}
     </Box>
   );
 };
