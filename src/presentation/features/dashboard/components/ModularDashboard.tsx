@@ -34,6 +34,7 @@ import { RecentProgressCard } from './RecentProgressCard';
 import { LearningAnalyticsCard } from './LearningAnalyticsCard';
 import { DashboardSettingsDialog } from './DashboardSettingsDialog';
 import { NotionStyleCard } from '../../../components/common/NotionStyleCard';
+import CountdownContainer from './CountdownContainer';
 
 interface ModularDashboardProps {
   formatDate: (date: Date | string | undefined) => string;
@@ -157,8 +158,18 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
         );
       case 'exams':
         return (
-          <UpcomingExamsCard
-            subjects={dashboardData.subjects || []}
+          <CountdownContainer 
+            title="試験日カウントダウン"
+            subjects={dashboardData.subjects}
+            includeReportDeadlines={false}
+          />
+        );
+      case 'reports':
+        return (
+          <CountdownContainer 
+            title="レポート締切カウントダウン"
+            subjects={dashboardData.subjects}
+            includeReportDeadlines={true}
           />
         );
       case 'recentProgress':
@@ -276,6 +287,9 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
                       onToggleCollapse={() => toggleModuleCollapsed(moduleId)}
                       onToggleVisibility={() => toggleModuleEnabled(moduleId)}
                       isDraggingEnabled={editMode}
+                      canHide={dashboardModules[moduleId]?.canDisable || false}
+                      isFirst={index === 0}
+                      isLast={index === enabledModules.length - 1}
                     >
                       {renderModule(moduleId)}
                     </DraggableModuleCard>
