@@ -79,4 +79,7 @@ const DashboardScreen: React.FC = () => {
   );
 };
 
+// 名前付きエクスポートも提供
+export const DashboardScreenComponent = DashboardScreen;
+
 export default DashboardScreen; 

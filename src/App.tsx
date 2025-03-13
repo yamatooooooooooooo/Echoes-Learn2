@@ -1,7 +1,7 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
 import { Box, CssBaseline, Typography, Button, useMediaQuery, useTheme } from '@mui/material';
 import { SubjectList } from './presentation/features/subject/components/SubjectList';
-import DashboardScreen from './presentation/features/dashboard/components/DashboardScreen';
+import DashboardScreen, { DashboardScreenComponent } from './presentation/features/dashboard/components/DashboardScreen';
 import { Sidebar } from './presentation/components/Sidebar';
 import { Routes, Route } from 'react-router-dom';
 import LoginPage from './presentation/features/auth/pages/LoginPage';
@@ -102,7 +102,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (selectedMenu) {
       case 'dashboard':
-        return <DashboardScreen />;
+        return <DashboardScreenComponent />;
       case 'subjects':
         return <SubjectList formatDate={formatDate} />;
       case 'settings':
@@ -111,7 +111,7 @@ const App: React.FC = () => {
       // case 'gamification':
       //   return <GamificationPage />;
       default:
-        return <DashboardScreen />;
+        return <DashboardScreenComponent />;
     }
   };
 
