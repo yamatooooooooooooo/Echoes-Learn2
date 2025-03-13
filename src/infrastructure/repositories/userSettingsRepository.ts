@@ -37,14 +37,6 @@ const MOCK_DASHBOARD_SETTINGS: DashboardSettings = {
 };
 
 /**
- * ユーザー設定リポジトリのインターフェース
- */
-export interface UserSettingsRepository {
-  getUserSettings(): Promise<UserSettings>;
-  updateUserSettings(settings: Partial<UserSettings>): Promise<void>;
-}
-
-/**
  * ユーザー設定リポジトリの Firebase 実装
  */
 export class FirebaseUserSettingsRepository implements UserSettingsRepository {
@@ -116,43 +108,54 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
         throw new Error('ユーザーが認証されていていません');
       }
       
+      console.log('設定更新を開始します。ユーザーID:', currentUser.uid);
+      
       const settingsRef = doc(this.firestore, 'userSettings', currentUser.uid);
       const settingsSnap = await getDoc(settingsRef);
       
+      // nullやundefinedを含む可能性のあるフィールドを削除
+      const cleanSettings = Object.entries(settings).reduce((acc, [key, value]) => {
+        if (value !== undefined && value !== null) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
+      // 最終更新日時を追加
+      cleanSettings.updatedAt = serverTimestamp();
+      
       if (settingsSnap.exists()) {
         // 既存の設定を更新
-        console.log('既存の設定を更新します:', settings);
+        console.log('既存の設定を更新します:', cleanSettings);
         
-        // nullやundefinedを含む可能性のあるフィールドを削除
-        const cleanSettings = Object.entries(settings).reduce((acc, [key, value]) => {
-          if (value !== undefined && value !== null) {
-            acc[key] = value;
-          }
-          return acc;
-        }, {} as Record<string, any>);
-        
-        // 最終更新日時を追加
-        cleanSettings.updatedAt = serverTimestamp();
-        
-        await setDoc(settingsRef, cleanSettings, { merge: true });
-        console.log('設定の更新が完了しました');
+        try {
+          await setDoc(settingsRef, cleanSettings, { merge: true });
+          console.log('設定の更新が完了しました');
+        } catch (updateError) {
+          console.error('設定の更新中にエラーが発生しました:', updateError);
+          throw updateError;
+        }
       } else {
         // 新しい設定を作成
-        console.log('設定が存在しないため、新しい設定を作成します:', settings);
+        console.log('設定が存在しないため、新しい設定を作成します:', cleanSettings);
         
         const newSettings = {
           ...DEFAULT_USER_SETTINGS,
-          ...settings,
-          id: currentUser.uid,
+          ...cleanSettings,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         };
         
-        await setDoc(settingsRef, newSettings);
-        console.log('新しい設定の作成が完了しました');
+        try {
+          await setDoc(settingsRef, newSettings);
+          console.log('新しい設定の作成が完了しました');
+        } catch (createError) {
+          console.error('新しい設定の作成中にエラーが発生しました:', createError);
+          throw createError;
+        }
       }
     } catch (error) {
-      console.error('設定の更新中にエラーが発生しました:', error);
+      console.error('設定の更新処理でエラーが発生しました:', error);
       throw error;
     }
   }

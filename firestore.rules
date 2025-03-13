@@ -65,6 +65,12 @@ service cloud.firestore {
       allow write: if isUserAuthenticated(userId);
     }
     
+    // userSettingsコレクション用のルールを追加
+    match /userSettings/{userId} {
+      allow read: if isUserAuthenticated(userId);
+      allow write: if isUserAuthenticated(userId);
+    }
+    
     // ユーザードキュメント（ネストされたコレクション用）
     match /users/{userId} {
       allow read, write: if isUserAuthenticated(userId);
