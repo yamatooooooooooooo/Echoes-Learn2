@@ -10,7 +10,7 @@ import { ModularDashboard } from './ModularDashboard';
 /**
  * ダッシュボード画面コンポーネント
  */
-export const DashboardScreen: React.FC = () => {
+const DashboardScreen: React.FC = () => {
   const { currentUser } = useAuth();
   const { dashboardData, isLoading, error, formatDate, refreshData } = useDashboardData();
 
@@ -77,4 +77,6 @@ export const DashboardScreen: React.FC = () => {
       )}
     </Box>
   );
-}; 
+};
+
+export default DashboardScreen; 
