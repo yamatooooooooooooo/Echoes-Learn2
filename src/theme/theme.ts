@@ -4,45 +4,45 @@ import { createTheme, ThemeOptions, PaletteOptions, Components } from '@mui/mate
 const darkPalette: PaletteOptions = {
   mode: 'dark',
   primary: {
-    main: '#10b981',
-    light: '#34d399',
-    dark: '#059669',
+    main: '#0077CC', // Notionのブルー
+    light: '#3399FF',
+    dark: '#005599',
     contrastText: '#ffffff',
   },
   secondary: {
-    main: '#7c3aed',
-    light: '#9d6af0',
-    dark: '#5b21b6',
+    main: '#606060', // ダークグレー
+    light: '#808080',
+    dark: '#454545',
     contrastText: '#ffffff',
   },
   background: {
-    default: '#121212', // ダーク背景
-    paper: '#1e1e1e',  // カード背景
+    default: '#191919', // ダーク背景
+    paper: '#2D2D2D',  // カード背景
   },
   text: {
-    primary: '#f3f4f6',
-    secondary: '#d1d5db',
+    primary: '#EDEDED',
+    secondary: '#AAAAAA',
   },
   divider: 'rgba(255, 255, 255, 0.12)',
   error: {
-    main: '#ef4444',
-    light: '#f87171',
-    dark: '#b91c1c',
+    main: '#E03E3E', // Notion風の赤
+    light: '#FF5555',
+    dark: '#CC3333',
   },
   warning: {
-    main: '#f59e0b',
-    light: '#fbbf24',
-    dark: '#d97706',
+    main: '#D9730D', // Notion風のオレンジ
+    light: '#F0A958',
+    dark: '#B15A00',
   },
   info: {
-    main: '#3b82f6',
-    light: '#60a5fa',
-    dark: '#2563eb',
+    main: '#0077CC', // ブルー（primaryと同じ）
+    light: '#3399FF',
+    dark: '#005599',
   },
   success: {
-    main: '#10b981',
-    light: '#34d399',
-    dark: '#059669',
+    main: '#0F7B6C', // Notion風の緑
+    light: '#1EA993',
+    dark: '#096158',
   },
 };
 
@@ -50,45 +50,45 @@ const darkPalette: PaletteOptions = {
 const lightPalette: PaletteOptions = {
   mode: 'light',
   primary: {
-    main: '#10b981',
-    light: '#d1fae5',
-    dark: '#059669',
+    main: '#0077CC', // Notionのブルー
+    light: '#E6F2FF',
+    dark: '#005599',
     contrastText: '#ffffff',
   },
   secondary: {
-    main: '#7c3aed',
-    light: '#ede9fe',
-    dark: '#5b21b6',
+    main: '#606060', // ダークグレー
+    light: '#F5F5F5',
+    dark: '#454545',
     contrastText: '#ffffff',
   },
   background: {
-    default: '#f5f5f5',
-    paper: '#ffffff',
+    default: '#FFFFFF', // 純白の背景
+    paper: '#FFFFFF',  // カード背景も白
   },
   text: {
-    primary: '#111827',
-    secondary: '#4b5563',
+    primary: '#37352F', // Notionの本文色
+    secondary: '#6B6B6B',
   },
-  divider: 'rgba(0, 0, 0, 0.12)',
+  divider: 'rgba(0, 0, 0, 0.08)',
   error: {
-    main: '#ef4444',
-    light: '#fca5a5',
-    dark: '#b91c1c',
+    main: '#E03E3E', // Notion風の赤
+    light: '#FFEAEA',
+    dark: '#CC3333',
   },
   warning: {
-    main: '#f59e0b',
-    light: '#fcd34d',
-    dark: '#d97706',
+    main: '#D9730D', // Notion風のオレンジ
+    light: '#FFEFDD',
+    dark: '#B15A00',
   },
   info: {
-    main: '#3b82f6',
-    light: '#93c5fd',
-    dark: '#2563eb',
+    main: '#0077CC', // ブルー（primaryと同じ）
+    light: '#E6F2FF',
+    dark: '#005599',
   },
   success: {
-    main: '#10b981',
-    light: '#6ee7b7',
-    dark: '#059669',
+    main: '#0F7B6C', // Notion風の緑
+    light: '#E7F7F5',
+    dark: '#096158',
   },
 };
 
@@ -97,15 +97,15 @@ const darkComponents: Components = {
   MuiCssBaseline: {
     styleOverrides: {
       body: {
-        backgroundColor: '#121212',
-        color: '#f3f4f6',
-        scrollbarColor: 'rgba(255, 255, 255, 0.2) #121212',
+        backgroundColor: '#191919',
+        color: '#EDEDED',
+        scrollbarColor: 'rgba(255, 255, 255, 0.2) #191919',
         '&::-webkit-scrollbar': {
           width: '8px',
           height: '8px',
         },
         '&::-webkit-scrollbar-track': {
-          background: '#1e1e1e',
+          background: '#2D2D2D',
         },
         '&::-webkit-scrollbar-thumb': {
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -117,8 +117,10 @@ const darkComponents: Components = {
   MuiCard: {
     styleOverrides: {
       root: {
-        backgroundColor: '#1e1e1e',
+        backgroundColor: '#2D2D2D',
         backgroundImage: 'none',
+        boxShadow: 'none',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
       },
     },
   },
@@ -126,6 +128,7 @@ const darkComponents: Components = {
     styleOverrides: {
       root: {
         backgroundImage: 'none',
+        boxShadow: 'none',
       },
     },
   },
@@ -140,7 +143,7 @@ const darkComponents: Components = {
     styleOverrides: {
       paper: {
         backgroundImage: 'none',
-        backgroundColor: '#1a1a1a',
+        backgroundColor: '#232323',
       },
     },
   },
@@ -148,6 +151,8 @@ const darkComponents: Components = {
     styleOverrides: {
       root: {
         backgroundImage: 'none',
+        boxShadow: 'none',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
       },
     },
   },
@@ -155,8 +160,8 @@ const darkComponents: Components = {
     styleOverrides: {
       input: {
         '&:-webkit-autofill': {
-          '-webkit-box-shadow': '0 0 0 100px #1e1e1e inset !important',
-          '-webkit-text-fill-color': '#f3f4f6 !important',
+          '-webkit-box-shadow': '0 0 0 100px #2D2D2D inset !important',
+          '-webkit-text-fill-color': '#EDEDED !important',
         },
       },
     },
@@ -164,21 +169,21 @@ const darkComponents: Components = {
   MuiOutlinedInput: {
     styleOverrides: {
       notchedOutline: {
-        borderColor: 'rgba(255, 255, 255, 0.23)',
+        borderColor: 'rgba(255, 255, 255, 0.15)',
       },
     },
   },
   MuiTableCell: {
     styleOverrides: {
       root: {
-        borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
       },
     },
   },
   MuiChip: {
     styleOverrides: {
       filled: {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
       },
     },
   },
@@ -186,7 +191,7 @@ const darkComponents: Components = {
     styleOverrides: {
       root: {
         '&.Mui-selected': {
-          backgroundColor: 'rgba(255, 255, 255, 0.12)',
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
         },
       },
     },
@@ -194,16 +199,16 @@ const darkComponents: Components = {
   MuiAlert: {
     styleOverrides: {
       standardSuccess: {
-        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+        backgroundColor: 'rgba(15, 123, 108, 0.15)',
       },
       standardError: {
-        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        backgroundColor: 'rgba(224, 62, 62, 0.15)',
       },
       standardWarning: {
-        backgroundColor: 'rgba(245, 158, 11, 0.15)',
+        backgroundColor: 'rgba(217, 115, 13, 0.15)',
       },
       standardInfo: {
-        backgroundColor: 'rgba(59, 130, 246, 0.15)',
+        backgroundColor: 'rgba(0, 119, 204, 0.15)',
       },
     },
   },
@@ -214,20 +219,44 @@ const lightComponents: Components = {
   MuiCssBaseline: {
     styleOverrides: {
       body: {
-        backgroundColor: '#f5f5f5',
-        color: '#111827',
-        scrollbarColor: 'rgba(0, 0, 0, 0.2) #f5f5f5',
+        backgroundColor: '#FFFFFF',
+        color: '#37352F',
+        scrollbarColor: 'rgba(0, 0, 0, 0.15) #FFFFFF',
         '&::-webkit-scrollbar': {
           width: '8px',
           height: '8px',
         },
         '&::-webkit-scrollbar-track': {
-          background: '#f5f5f5',
+          background: '#F5F5F5',
         },
         '&::-webkit-scrollbar-thumb': {
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          backgroundColor: 'rgba(0, 0, 0, 0.15)',
           borderRadius: '4px',
         },
+      },
+    },
+  },
+  MuiCard: {
+    styleOverrides: {
+      root: {
+        boxShadow: 'none',
+        border: '1px solid rgba(0, 0, 0, 0.05)',
+        borderRadius: '3px',
+      },
+    },
+  },
+  MuiPaper: {
+    styleOverrides: {
+      root: {
+        boxShadow: 'none',
+      },
+    },
+  },
+  MuiAppBar: {
+    styleOverrides: {
+      root: {
+        boxShadow: 'none',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
       },
     },
   },
@@ -235,8 +264,40 @@ const lightComponents: Components = {
     styleOverrides: {
       input: {
         '&:-webkit-autofill': {
-          '-webkit-box-shadow': '0 0 0 100px #ffffff inset !important',
-          '-webkit-text-fill-color': '#111827 !important',
+          '-webkit-box-shadow': '0 0 0 100px #FFFFFF inset !important',
+          '-webkit-text-fill-color': '#37352F !important',
+        },
+      },
+    },
+  },
+  MuiOutlinedInput: {
+    styleOverrides: {
+      root: {
+        borderRadius: '3px',
+      },
+      notchedOutline: {
+        borderColor: 'rgba(0, 0, 0, 0.15)',
+      },
+    },
+  },
+  MuiButton: {
+    styleOverrides: {
+      root: {
+        boxShadow: 'none',
+        textTransform: 'none',
+        borderRadius: '3px',
+        fontWeight: 500,
+      },
+      contained: {
+        boxShadow: 'none',
+        '&:hover': {
+          boxShadow: 'none',
+        },
+      },
+      outlined: {
+        borderWidth: '1px',
+        '&:hover': {
+          borderWidth: '1px',
         },
       },
     },
@@ -244,23 +305,23 @@ const lightComponents: Components = {
   MuiChip: {
     styleOverrides: {
       filled: {
-        backgroundColor: 'rgba(0, 0, 0, 0.08)',
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
       },
     },
   },
   MuiAlert: {
     styleOverrides: {
       standardSuccess: {
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        backgroundColor: 'rgba(15, 123, 108, 0.08)',
       },
       standardError: {
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        backgroundColor: 'rgba(224, 62, 62, 0.08)',
       },
       standardWarning: {
-        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        backgroundColor: 'rgba(217, 115, 13, 0.08)',
       },
       standardInfo: {
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        backgroundColor: 'rgba(0, 119, 204, 0.08)',
       },
     },
   },
@@ -283,27 +344,27 @@ const commonOptions = {
     ].join(','),
     h1: {
       fontSize: '2rem',
-      fontWeight: 600,
+      fontWeight: 500,
     },
     h2: {
       fontSize: '1.75rem',
-      fontWeight: 600,
+      fontWeight: 500,
     },
     h3: {
       fontSize: '1.5rem',
-      fontWeight: 600,
+      fontWeight: 500,
     },
     h4: {
       fontSize: '1.25rem',
-      fontWeight: 600,
+      fontWeight: 500,
     },
     h5: {
       fontSize: '1.125rem',
-      fontWeight: 600,
+      fontWeight: 500,
     },
     h6: {
       fontSize: '1rem',
-      fontWeight: 600,
+      fontWeight: 500,
     },
     body1: {
       fontSize: '1rem',
@@ -317,7 +378,7 @@ const commonOptions = {
     },
   },
   shape: {
-    borderRadius: 8,
+    borderRadius: 3,
   },
   mixins: {
     toolbar: {
