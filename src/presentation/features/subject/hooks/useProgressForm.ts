@@ -37,7 +37,9 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
       (typeof progress.recordDate === 'string' ? progress.recordDate : format(progress.recordDate, 'yyyy-MM-dd')) : 
       today,
     studyDuration: progress?.studyDuration || 0,
-    memo: progress?.memo || ''
+    memo: progress?.memo || '',
+    reportProgress: progress?.reportProgress || '',
+    satisfactionLevel: progress?.satisfactionLevel || 2 // デフォルトは「普通」（2）
   };
   
   const [formData, setFormData] = useState<ProgressCreateInput>(initialValues);
@@ -53,7 +55,9 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
         ? progress.recordDate 
         : format(progress.recordDate, 'yyyy-MM-dd'),
       studyDuration: progress.studyDuration || 0,
-      memo: progress.memo || ''
+      memo: progress.memo || '',
+      reportProgress: progress.reportProgress || '',
+      satisfactionLevel: progress.satisfactionLevel || 2
     });
   }, []);
   
@@ -218,6 +222,14 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
         errors.studyDuration = '学習時間は0以上の数値である必要があります';
       } else if (studyDuration > 1440) {
         errors.studyDuration = '学習時間は24時間（1440分）以内である必要があります';
+      }
+    }
+    
+    // 満足度のバリデーション
+    if (data.satisfactionLevel !== undefined) {
+      const level = Number(data.satisfactionLevel);
+      if (isNaN(level) || level < 1 || level > 3 || !Number.isInteger(level)) {
+        errors.satisfactionLevel = '満足度は1から3の整数値である必要があります';
       }
     }
     

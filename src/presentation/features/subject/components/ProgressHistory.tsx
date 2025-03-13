@@ -20,8 +20,13 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Info as InfoIcon,
-  FilterList as FilterListIcon
+  FilterList as FilterListIcon,
+  AccessTime as AccessTimeIcon,
+  Assignment as AssignmentIcon
 } from '@mui/icons-material';
+import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
+import SentimentSatisfiedIcon from '@mui/icons-material/SentimentSatisfied';
+import SentimentVerySatisfiedIcon from '@mui/icons-material/SentimentVerySatisfied';
 import { Progress } from '../../../../domain/models/ProgressModel';
 import { ProgressDetailDialog } from './ProgressDetailDialog';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
@@ -278,24 +283,85 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
                             color="primary" 
                             variant="outlined"
                           />
+                          
+                          {/* 学習時間があれば表示 */}
+                          {progress.studyDuration && progress.studyDuration > 0 && (
+                            <Tooltip title={`学習時間: ${progress.studyDuration}分`}>
+                              <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', ml: 1 }}>
+                                <AccessTimeIcon fontSize="small" color="action" />
+                                <Typography variant="caption" sx={{ ml: 0.5 }}>
+                                  {progress.studyDuration}分
+                                </Typography>
+                              </Box>
+                            </Tooltip>
+                          )}
+                          
+                          {/* レポート進捗があれば表示 */}
+                          {progress.reportProgress && (
+                            <Tooltip title="レポート進捗あり">
+                              <AssignmentIcon 
+                                fontSize="small" 
+                                color="secondary" 
+                                sx={{ ml: 1 }} 
+                              />
+                            </Tooltip>
+                          )}
+                          
+                          {/* 満足度があれば表示 */}
+                          {progress.satisfactionLevel && (
+                            <Tooltip title={
+                              progress.satisfactionLevel === 1 ? "不満" : 
+                              progress.satisfactionLevel === 2 ? "普通" : "満足"
+                            }>
+                              <Box component="span" sx={{ ml: 1 }}>
+                                {progress.satisfactionLevel === 1 && (
+                                  <SentimentDissatisfiedIcon fontSize="small" color="error" />
+                                )}
+                                {progress.satisfactionLevel === 2 && (
+                                  <SentimentSatisfiedIcon fontSize="small" color="warning" />
+                                )}
+                                {progress.satisfactionLevel === 3 && (
+                                  <SentimentVerySatisfiedIcon fontSize="small" color="success" />
+                                )}
+                              </Box>
+                            </Tooltip>
+                          )}
                         </Box>
                       }
                       secondary={
-                        progress.memo ? (
-                          <Typography 
-                            variant="caption" 
-                            color="text.secondary"
-                            sx={{
-                              display: '-webkit-box',
-                              WebkitLineClamp: 1,
-                              WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}
-                          >
-                            {progress.memo}
-                          </Typography>
-                        ) : null
+                        <Box>
+                          {progress.memo && (
+                            <Typography 
+                              variant="caption" 
+                              color="text.secondary"
+                              sx={{
+                                display: '-webkit-box',
+                                WebkitLineClamp: 1,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                            >
+                              学習メモ: {progress.memo}
+                            </Typography>
+                          )}
+                          {progress.reportProgress && (
+                            <Typography 
+                              variant="caption" 
+                              color="text.secondary"
+                              sx={{
+                                display: '-webkit-box',
+                                WebkitLineClamp: 1,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                mt: progress.memo ? 0.5 : 0
+                              }}
+                            >
+                              レポート: {progress.reportProgress}
+                            </Typography>
+                          )}
+                        </Box>
                       }
                     />
                   </ListItem>

@@ -13,6 +13,9 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Progress } from '../../../../domain/models/ProgressModel';
+import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
+import SentimentSatisfiedIcon from '@mui/icons-material/SentimentSatisfied';
+import SentimentVerySatisfiedIcon from '@mui/icons-material/SentimentVerySatisfied';
 
 interface ProgressDetailDialogProps {
   open: boolean;
@@ -115,12 +118,53 @@ export const ProgressDetailDialog: React.FC<ProgressDetailDialogProps> = ({
           {progress.memo && (
             <Grid item xs={12}>
               <Typography variant="subtitle2" color="text.secondary">
-                メモ
+                学習メモ
               </Typography>
               <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                   {progress.memo}
                 </Typography>
+              </Box>
+            </Grid>
+          )}
+          
+          {progress.reportProgress && (
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" color="text.secondary">
+                レポート進捗
+              </Typography>
+              <Box sx={{ p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {progress.reportProgress}
+                </Typography>
+              </Box>
+            </Grid>
+          )}
+          
+          {progress.satisfactionLevel && (
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" color="text.secondary">
+                満足度
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                {progress.satisfactionLevel === 1 && (
+                  <>
+                    <SentimentDissatisfiedIcon color="error" sx={{ mr: 1 }} />
+                    <Typography>不満</Typography>
+                  </>
+                )}
+                {progress.satisfactionLevel === 2 && (
+                  <>
+                    <SentimentSatisfiedIcon color="warning" sx={{ mr: 1 }} />
+                    <Typography>普通</Typography>
+                  </>
+                )}
+                {progress.satisfactionLevel === 3 && (
+                  <>
+                    <SentimentVerySatisfiedIcon color="success" sx={{ mr: 1 }} />
+                    <Typography>満足</Typography>
+                  </>
+                )}
               </Box>
             </Grid>
           )}

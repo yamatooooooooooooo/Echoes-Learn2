@@ -11,6 +11,8 @@ export interface Progress {
   recordDate: string | Date;
   studyDuration?: number; // 学習時間（分）
   memo?: string; // 学習メモ
+  reportProgress?: string; // レポート進捗
+  satisfactionLevel?: number; // 満足度（1-3の範囲、1:低、2:中、3:高）
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,6 +28,8 @@ export interface ProgressCreateInput {
   recordDate: string | Date;
   studyDuration?: number;
   memo?: string;
+  reportProgress?: string;
+  satisfactionLevel?: number;
 }
 
 /**
@@ -38,6 +42,8 @@ export interface ProgressUpdateInput {
   recordDate?: string | Date;
   studyDuration?: number;
   memo?: string;
+  reportProgress?: string;
+  satisfactionLevel?: number;
 }
 
 export interface ProgressFormData {

@@ -15,7 +15,10 @@ import {
   DialogActions,
   IconButton,
   FormControl,
-  LinearProgress
+  LinearProgress,
+  ToggleButtonGroup,
+  ToggleButton,
+  Tooltip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Subject } from '../../../../domain/models/SubjectModel';
@@ -27,6 +30,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { ja } from 'date-fns/locale';
 import InfoIcon from '@mui/icons-material/Info';
 import { calculateProgress } from '../utils/subjectUtils';
+import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
+import SentimentSatisfiedIcon from '@mui/icons-material/SentimentSatisfied';
+import SentimentVerySatisfiedIcon from '@mui/icons-material/SentimentVerySatisfied';
 
 interface ProgressFormProps {
   subject?: Subject;
@@ -279,22 +285,132 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
             
             <Grid item xs={12}>
               <TextField
-                label="メモ"
+                label="学習メモ"
                 name="memo"
                 multiline
-                rows={3}
+                rows={2}
                 fullWidth
                 variant="outlined"
                 value={formData.memo || ''}
                 onChange={handleChange}
-                placeholder="学習内容のメモを残しておくと後で振り返りに役立ちます"
+                error={!!fieldErrors.memo}
+                helperText={fieldErrors.memo}
                 disabled={isSubmitting}
               />
             </Grid>
             
             <Grid item xs={12}>
-              <Box sx={{ borderRadius: 1, p: 1, bgcolor: 'background.default', mb: 1 }}>
-                読んだページ数: {formData.pagesRead} ページ
+              <TextField
+                label="レポート進捗"
+                name="reportProgress"
+                multiline
+                rows={2}
+                fullWidth
+                variant="outlined"
+                value={formData.reportProgress || ''}
+                onChange={handleChange}
+                error={!!fieldErrors.reportProgress}
+                helperText={fieldErrors.reportProgress || 'どこまで進めたかなどのメモを残せます'}
+                disabled={isSubmitting}
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                label="学習時間 (分)"
+                name="studyDuration"
+                type="number"
+                fullWidth
+                variant="outlined"
+                value={formData.studyDuration || ''}
+                onChange={handleChange}
+                error={!!fieldErrors.studyDuration}
+                helperText={fieldErrors.studyDuration || '学習効率の分析に活用されます'}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">分</InputAdornment>,
+                  inputProps: { min: 0, max: 1440 }
+                }}
+                disabled={isSubmitting}
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                mb: 1,
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+                borderRadius: 1,
+                p: 2
+              }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  学習の満足度 (学習効率の分析に活用されます)
+                </Typography>
+                
+                <ToggleButtonGroup
+                  value={String(formData.satisfactionLevel || 2)}
+                  exclusive
+                  onChange={(e, newValue) => {
+                    if (newValue !== null) {
+                      handleChange({
+                        target: {
+                          name: 'satisfactionLevel',
+                          value: newValue,
+                          type: 'number'
+                        }
+                      } as React.ChangeEvent<HTMLInputElement>);
+                    }
+                  }}
+                  aria-label="満足度"
+                  sx={{ mt: 1, justifyContent: 'center' }}
+                  disabled={isSubmitting}
+                >
+                  <ToggleButton value="1" aria-label="不満">
+                    <Tooltip title="不満">
+                      <SentimentDissatisfiedIcon 
+                        fontSize="large"
+                        sx={{ 
+                          color: (theme) => 
+                            String(formData.satisfactionLevel) === "1" 
+                              ? theme.palette.error.main 
+                              : 'inherit' 
+                        }}
+                      />
+                    </Tooltip>
+                  </ToggleButton>
+                  <ToggleButton value="2" aria-label="普通">
+                    <Tooltip title="普通">
+                      <SentimentSatisfiedIcon 
+                        fontSize="large"
+                        sx={{ 
+                          color: (theme) => 
+                            String(formData.satisfactionLevel) === "2" 
+                              ? theme.palette.warning.main 
+                              : 'inherit' 
+                        }}
+                      />
+                    </Tooltip>
+                  </ToggleButton>
+                  <ToggleButton value="3" aria-label="満足">
+                    <Tooltip title="満足">
+                      <SentimentVerySatisfiedIcon 
+                        fontSize="large"
+                        sx={{ 
+                          color: (theme) => 
+                            String(formData.satisfactionLevel) === "3" 
+                              ? theme.palette.success.main 
+                              : 'inherit' 
+                        }}
+                      />
+                    </Tooltip>
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                
+                {fieldErrors.satisfactionLevel && (
+                  <Typography variant="caption" color="error.main" sx={{ mt: 1 }}>
+                    {fieldErrors.satisfactionLevel}
+                  </Typography>
+                )}
               </Box>
             </Grid>
           </Grid>
