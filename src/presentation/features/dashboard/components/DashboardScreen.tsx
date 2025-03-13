@@ -565,7 +565,9 @@ const DashboardScreen: React.FC = () => {
           <DataCleanupButton size="small" />
         </Box>
     </Box>
+  </Box>
   );
+};
 /**
  * 統合されたデータ可視化コントロールコンポーネント
  */
