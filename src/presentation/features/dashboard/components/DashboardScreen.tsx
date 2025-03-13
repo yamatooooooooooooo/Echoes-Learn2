@@ -529,17 +529,20 @@ const IntegratedVisualizationControls = React.memo(() => {
 const IntegratedVisualizationSection = React.memo(() => {
   const { data, isLoading, lastUpdated, handleRefresh } = useVisualizationData();
 
-  // アクティブな科目のみをフィルタリング（試験日が過去でない科目）
+  // アクティブな科目のみをフィルタリング
+  // 1. 試験日が過去でない科目
+  // 2. 進行中の科目（currentPage < totalPages）のみ - ノルマ計算対象
   const activeSubjects = useMemo(() => {
     if (!data.subjects) return [];
     const today = new Date();
     return data.subjects.filter(subject => {
       const examDate = new Date(subject.examDate);
-      return examDate >= today;
+      // 試験日が今日以降かつ、完了していない科目（ノルマ計算対象の科目）
+      return examDate >= today && subject.currentPage < subject.totalPages;
     });
   }, [data.subjects]);
 
-  // レーダーチャートのデータをフィルタリング
+  // レーダーチャートのデータをフィルタリング - ノルマ計算対象の科目のみ表示
   const filteredRadarData = useMemo(() => {
     return data.radarChartData.filter(item => {
       // 対応する科目がアクティブかどうかを確認
