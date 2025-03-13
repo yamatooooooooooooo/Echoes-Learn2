@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Box, Alert, Collapse, SelectChangeEvent, ToggleButtonGroup, ToggleButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Typography, FormControl, InputLabel, Select, MenuItem, FormControlLabel, Switch, Tooltip, CircularProgress, Grid, Snackbar, Paper, IconButton, List, ListItem, ListItemButton, ListItemText, Chip, LinearProgress, useMediaQuery, useTheme } from '@mui/material';
 import { 
   ViewModule as ViewModuleIcon, 
@@ -81,7 +81,7 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   /**
-   * 科目の優先順位を計算する関数
+   * 科目の優先順位を計算する関数 - メモ化
    */
   const calculateSubjectPriority = useCallback((subject: Subject): number => {
     // 優先順位計算ロジック（仮実装）
@@ -99,7 +99,7 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
     }
   }, []);
   
-  // 科目の優先順位を一括更新
+  // 科目の優先順位を一括更新 - メモ化
   const updatePriorities = useCallback(async (subjectList: Subject[]) => {
     setPriorityUpdating(true);
     
@@ -137,7 +137,7 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
     }
   }, [auth, subjectRepository, calculateSubjectPriority]);
 
-  // 科目一覧の取得
+  // 科目一覧の取得 - メモ化
   const loadSubjects = useCallback(async () => {
     setIsLoading(true);
     setLoadError(null);
@@ -173,8 +173,8 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
     }
   }, [auth, subjectRepository, autoPriority, updatePriorities]);
   
-  // 科目の更新処理
-  const handleUpdateSubject = async (updatedSubject: Subject) => {
+  // 科目の更新処理 - メモ化
+  const handleUpdateSubject = useCallback(async (updatedSubject: Subject) => {
     try {
       // 優先順位を自動計算する場合は、更新時に再計算
       if (autoPriority) {
@@ -201,34 +201,34 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
       console.error('科目の更新に失敗しました:', error);
       setLoadError('科目の更新に失敗しました');
     }
-  };
+  }, [auth, autoPriority, calculateSubjectPriority, subjectRepository]);
 
-  // 科目追加ボタンクリック時の処理
-  const handleAddSubject = () => {
+  // 科目追加ボタンクリック時の処理 - メモ化
+  const handleAddSubject = useCallback(() => {
     setEditingSubject(null);
     setIsFormOpen(true);
-  };
+  }, []);
   
-  // 科目編集ボタンクリック時の処理
-  const handleEditSubject = (subject: Subject) => {
+  // 科目編集ボタンクリック時の処理 - メモ化
+  const handleEditSubject = useCallback((subject: Subject) => {
     setEditingSubject(subject);
     setIsFormOpen(true);
-  };
+  }, []);
   
-  // 科目削除確認ダイアログを表示する処理
-  const handleDeleteConfirm = (subject: Subject) => {
+  // 科目削除確認ダイアログを表示する処理 - メモ化
+  const handleDeleteConfirm = useCallback((subject: Subject) => {
     setSubjectToDelete(subject);
     setIsDeleteConfirming(true);
-  };
+  }, []);
   
-  // 削除のキャンセル
-  const handleCancelDelete = () => {
+  // 削除のキャンセル - メモ化
+  const handleCancelDelete = useCallback(() => {
     setSubjectToDelete(null);
     setIsDeleteConfirming(false);
-  };
+  }, []);
 
-  // 削除の確認
-  const handleConfirmDelete = async () => {
+  // 削除の確認 - メモ化
+  const handleConfirmDelete = useCallback(async () => {
     if (!subjectToDelete) return;
     
     setIsDeleting(true);
@@ -260,30 +260,30 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
       setIsDeleteConfirming(false);
       setIsDeleting(false);
     }
-  };
+  }, [auth, subjectRepository, subjectToDelete]);
 
-  // 手動で優先順位を更新する
-  const handleManualPriorityUpdate = async () => {
+  // 手動で優先順位を更新する - メモ化
+  const handleManualPriorityUpdate = useCallback(async () => {
     await updatePriorities(subjects);
-  };
+  }, [subjects, updatePriorities]);
 
-  // 自動優先順位設定のトグル
-  const handleAutoPriorityToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // 自動優先順位設定のトグル - メモ化
+  const handleAutoPriorityToggle = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setAutoPriority(event.target.checked);
     
     // オンにした場合、即座に優先順位を更新
     if (event.target.checked && subjects.length > 0) {
       updatePriorities(subjects);
     }
-  };
+  }, [subjects, updatePriorities]);
 
-  // 並び替え方法の変更
-  const handleSortChange = (event: SelectChangeEvent<SortOption>) => {
+  // 並び替え方法の変更 - メモ化
+  const handleSortChange = useCallback((event: SelectChangeEvent<SortOption>) => {
     setSortBy(event.target.value as SortOption);
-  };
+  }, []);
 
-  // 新しい科目の登録または更新
-  const handleFormSubmit = async (formData: SubjectCreateInput | SubjectUpdateInput) => {
+  // 新しい科目の登録または更新 - メモ化
+  const handleFormSubmit = useCallback(async (formData: SubjectCreateInput | SubjectUpdateInput) => {
     try {
       const userId = auth.currentUser?.uid || 'current-user';
       
@@ -326,23 +326,22 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
       console.error('科目の保存に失敗しました:', error);
       setSubmitError('科目の保存に失敗しました');
     }
-  };
+  }, [auth, autoPriority, calculateSubjectPriority, editingSubject, loadSubjects, subjectRepository]);
 
-  // ビュータイプの変更ハンドラ
-  const handleViewTypeChange = (_event: React.MouseEvent<HTMLElement>, newViewType: ViewType | null) => {
+  // ビュータイプの変更ハンドラ - メモ化
+  const handleViewTypeChange = useCallback((_event: React.MouseEvent<HTMLElement>, newViewType: ViewType | null) => {
     if (newViewType !== null) {
       setViewType(newViewType);
     }
-  };
+  }, []);
 
-  // 並び替え処理
-  useEffect(() => {
+  // 並び替え処理をuseMemoでメモ化して不要な再計算を防止
+  const sortedSubjectsList = useMemo(() => {
     if (subjects.length === 0) {
-      setSortedSubjects([]);
-      return;
+      return [];
     }
     
-    const sortedList = [...subjects].sort((a, b) => {
+    return [...subjects].sort((a, b) => {
       const priorityMap = { high: 3, medium: 2, low: 1 };
       
       switch (sortBy) {
@@ -353,36 +352,55 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
           return (priorityMap[a.priority || 'low'] || 0) - (priorityMap[b.priority || 'low'] || 0);
           
         case 'exam-date':
+        case 'exam-date-asc':
           if (!a.examDate && !b.examDate) return 0;
           if (!a.examDate) return 1;
           if (!b.examDate) return -1;
           return new Date(a.examDate).getTime() - new Date(b.examDate).getTime();
           
+        case 'exam-date-desc':
+          if (!a.examDate && !b.examDate) return 0;
+          if (!a.examDate) return -1;
+          if (!b.examDate) return 1;
+          return new Date(b.examDate).getTime() - new Date(a.examDate).getTime();
+          
         case 'name':
+        case 'name-asc':
           return (a.name || '').localeCompare(b.name || '');
           
+        case 'name-desc':
+          return (b.name || '').localeCompare(a.name || '');
+          
         case 'progress':
+        case 'progress-asc':
           const progressA = a.totalPages > 0 ? (a.currentPage || 0) / a.totalPages : 0;
           const progressB = b.totalPages > 0 ? (b.currentPage || 0) / b.totalPages : 0;
           return progressA - progressB;
+          
+        case 'progress-desc':
+          const progressADesc = a.totalPages > 0 ? (a.currentPage || 0) / a.totalPages : 0;
+          const progressBDesc = b.totalPages > 0 ? (b.currentPage || 0) / b.totalPages : 0;
+          return progressBDesc - progressADesc;
           
         default:
           return 0;
       }
     });
-    
-    setSortedSubjects(sortedList);
   }, [subjects, sortBy]);
 
-  // Android用のタッチイベント対策
+  // 以前のeffectを削除し、sortedSubjectsを直接useMemoの結果で更新
   useEffect(() => {
-    // ダブルタップによるズームを防止
-    const preventDoubleTapZoom = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
-    };
-    
+    setSortedSubjects(sortedSubjectsList);
+  }, [sortedSubjectsList]);
+
+  // Android用のタッチイベント対策 - メモ化した関数を使用
+  const preventDoubleTapZoom = useCallback((e: TouchEvent) => {
+    if (e.touches.length > 1) {
+      e.preventDefault();
+    }
+  }, []);
+
+  useEffect(() => {
     // イベントリスナーを追加
     document.addEventListener('touchstart', preventDoubleTapZoom, { passive: false });
     
@@ -390,38 +408,38 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
       // コンポーネントのアンマウント時にリスナーを削除
       document.removeEventListener('touchstart', preventDoubleTapZoom);
     };
-  }, []);
+  }, [preventDoubleTapZoom]);
 
   // 初回レンダリング時に科目一覧を取得
   useEffect(() => {
     loadSubjects();
   }, [loadSubjects]);
 
-  // 進捗記録モーダルを開く処理を改善
-  const handleOpenProgressModal = (subject: Subject) => {
+  // 進捗記録モーダルを開く処理を改善 - メモ化
+  const handleOpenProgressModal = useCallback((subject: Subject) => {
     setSelectedSubjectForProgress(subject);
     setIsProgressModalOpen(true);
     // スクロールを最上部に
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
   
-  // 進捗記録モーダルを閉じる
-  const handleCloseProgressModal = () => {
+  // 進捗記録モーダルを閉じる - メモ化
+  const handleCloseProgressModal = useCallback(() => {
     setIsProgressModalOpen(false);
     setSelectedSubjectForProgress(null);
     setProgressSubmitError(null);
-  };
+  }, []);
 
-  // 進捗記録成功時の処理
-  const handleProgressSuccess = (progressId: string) => {
+  // 進捗記録成功時の処理 - メモ化
+  const handleProgressSuccess = useCallback((progressId: string) => {
     // 科目一覧を再取得して表示を更新
     loadSubjects();
     // 成功メッセージを表示
     setSnackbarMessage('進捗を記録しました');
     setSnackbarOpen(true);
-  };
+  }, [loadSubjects]);
 
-  // 初期レンダリング時にスクロール位置を最上部に設定
+  // 初期レンダリング時のスクロール処理 - コールバックの依存関係を修正
   useEffect(() => {
     const scrollTimeout = setTimeout(() => {
       window.scrollTo(0, 0);

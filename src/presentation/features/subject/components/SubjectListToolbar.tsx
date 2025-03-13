@@ -17,7 +17,18 @@ import {
 } from '@mui/icons-material';
 
 // 並び替えの種類
-export type SortOption = 'priority-high' | 'priority-low' | 'exam-date' | 'name' | 'progress';
+export type SortOption = 
+  | 'priority-high' 
+  | 'priority-low' 
+  | 'exam-date' 
+  | 'exam-date-asc' 
+  | 'exam-date-desc' 
+  | 'name' 
+  | 'name-asc' 
+  | 'name-desc' 
+  | 'progress' 
+  | 'progress-asc' 
+  | 'progress-desc';
 
 interface SubjectListToolbarProps {
   sortBy: SortOption;

@@ -158,7 +158,7 @@ const cardStyles = {
  * Notion風の科目カードコンポーネント
  * 科目の詳細情報と進捗記録機能を提供する
  */
-export const SubjectCard: React.FC<SubjectCardProps> = ({
+const SubjectCardComponent: React.FC<SubjectCardProps> = ({
   subject,
   onProgressAdded,
   onSubjectUpdated,
@@ -545,4 +545,7 @@ export const SubjectCard: React.FC<SubjectCardProps> = ({
       )}
     </Paper>
   );
-}; 
+};
+
+// React.memoでコンポーネントをラップしてパフォーマンスを最適化
+export const SubjectCard = React.memo(SubjectCardComponent); 
