@@ -28,7 +28,7 @@ import { useDashboardSettings } from '../hooks/useDashboardSettings';
 
 // 各モジュールコンポーネントのインポート
 import { StatsOverviewCard } from './StatsOverviewCard';
-// import { DailyQuotaCard } from './DailyQuotaCard';
+import { SimpleDailyQuotaCard } from './SimpleDailyQuotaCard';
 import { UpcomingExamsCard } from './UpcomingExamsCard';
 import { RecentProgressCard } from './RecentProgressCard';
 import { LearningAnalyticsCard } from './LearningAnalyticsCard';
@@ -146,15 +146,12 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
           />
         );
       case 'dailyQuota':
-        // エラー回避のためにQuotaCardを一時的に無効化
+        // SimpleDailyQuotaCardコンポーネントを使用するように修正
         return (
-          <NotionStyleCard title="今日のノルマ">
-            <Box sx={{ p: 2, textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                現在メンテナンス中です
-              </Typography>
-            </Box>
-          </NotionStyleCard>
+          <SimpleDailyQuotaCard
+            subjects={dashboardData.subjects || []}
+            isLoading={isLoading}
+          />
         );
       case 'exams':
         return (

@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext, useEffect } from 'react';
+import React, { useState, createContext, useContext, useEffect, useMemo, useCallback } from 'react';
 import { Box, CssBaseline, Typography, Button, useMediaQuery, useTheme } from '@mui/material';
 import { SubjectList } from './presentation/features/subject/components/SubjectList';
 import DashboardScreen, { DashboardScreenComponent } from './presentation/features/dashboard/components/DashboardScreen';
@@ -54,11 +54,13 @@ const App: React.FC = () => {
     setDrawerOpen(!isMobile);
   }, [isMobile]);
 
-  const handleDrawerToggle = () => {
-    setDrawerOpen(!drawerOpen);
-  };
+  // メモ化したドロワートグル処理
+  const handleDrawerToggle = useCallback(() => {
+    setDrawerOpen(prevState => !prevState);
+  }, []);
 
-  const handleMenuSelect = (menu: string) => {
+  // メモ化したメニュー選択処理
+  const handleMenuSelect = useCallback((menu: string) => {
     // 現在は「ダッシュボード」と「科目管理」のみ有効
     if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings') {
       setSelectedMenu(menu);
@@ -70,10 +72,10 @@ const App: React.FC = () => {
     if (isMobile) {
       setDrawerOpen(false);
     }
-  };
+  }, [isMobile]);
 
-  // ナビゲーション関数
-  const navigateTo = (menu: string) => {
+  // ナビゲーション関数（メモ化）
+  const navigateTo = useCallback((menu: string) => {
     // 現在は「ダッシュボード」と「科目管理」のみ有効
     if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings') {
       setSelectedMenu(menu);
@@ -85,21 +87,23 @@ const App: React.FC = () => {
     if (isMobile) {
       setDrawerOpen(false);
     }
-  };
+  }, [isMobile]);
 
-  const formatDate = (date: Date | string | undefined): string => {
+  // 日付フォーマット関数（メモ化して一貫性を保つ）
+  const formatDate = useCallback((date: Date | string | undefined): string => {
     if (!date) return '未設定';
     return new Date(date).toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-  };
+  }, []);
 
   // サイドバーが開いているときのコンテンツのマージン
   const drawerWidth = 240;
 
-  const renderContent = () => {
+  // コンテンツレンダリング処理（メモ化）
+  const renderContent = useMemo(() => {
     switch (selectedMenu) {
       case 'dashboard':
         return <DashboardScreenComponent />;
@@ -113,7 +117,48 @@ const App: React.FC = () => {
       default:
         return <DashboardScreenComponent />;
     }
-  };
+  }, [selectedMenu, formatDate]);
+
+  // メモ化されたフッターコンポーネント
+  const footerContent = useMemo(() => {
+    return (
+      <Box 
+        component="footer" 
+        sx={{ 
+          padding: 2, 
+          textAlign: 'center',
+          borderTop: '1px solid',
+          borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+          bgcolor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(8px)',
+          position: 'fixed',
+          bottom: 0,
+          left: { xs: 0, sm: drawerOpen ? drawerWidth : 0 },
+          right: 0,
+          width: { xs: '100%', sm: drawerOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
+          transition: theme.transitions.create(['left', 'width'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
+          zIndex: 10
+        }}
+      >
+        <Typography 
+          variant="body2" 
+          color="text.secondary" 
+          sx={{ 
+            fontSize: '0.75rem',
+            opacity: 0.8
+          }}
+        >
+          &copy; 2024 Echoes Learn
+        </Typography>
+      </Box>
+    );
+  }, [theme.palette.mode, drawerOpen, drawerWidth, theme.transitions]);
+
+  // NavigationContextのメモ化
+  const navigationContextValue = useMemo(() => ({ navigateTo }), [navigateTo]);
 
   return (
     <ErrorBoundary
@@ -182,7 +227,7 @@ const App: React.FC = () => {
                 overflow: 'visible' // 内部コンテナではスクロールを無効化
               }}
             >
-              <NavigationContext.Provider value={{ navigateTo }}>
+              <NavigationContext.Provider value={navigationContextValue}>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/signup" element={<SignupPage />} />
@@ -190,11 +235,14 @@ const App: React.FC = () => {
                     path="/"
                     element={<PrivateRoute />}
                   >
-                    <Route index element={<>{renderContent()}</>} />
+                    <Route index element={<>{renderContent}</>} />
                   </Route>
                 </Routes>
               </NavigationContext.Provider>
             </Box>
+            
+            {/* グローバルフッター */}
+            {footerContent}
           </Box>
         </Box>
       </AuthProvider>

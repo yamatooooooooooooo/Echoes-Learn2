@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    :root {
+      --logo-primary: #08A29E;
+      --logo-secondary: #ffffff;
+      --logo-background: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --logo-primary: #08A29E;
+        --logo-secondary: #ffffff;
+        --logo-background: #333333;
+      }
+    }
+    .background {
+      fill: var(--logo-background);
+    }
+    .primary {
+      fill: var(--logo-primary);
+    }
+    .secondary {
+      fill: var(--logo-secondary);
+    }
+  </style>
+  
+  <!-- 背景円 -->
+  <circle class="background" cx="256" cy="256" r="256" />
+  
+  <!-- E字形 -->
+  <path class="primary" d="
+    M 150 130
+    L 150 382
+    L 300 382
+    L 300 322
+    L 210 322
+    L 210 286
+    L 280 286
+    L 280 226
+    L 210 226
+    L 210 190
+    L 300 190
+    L 300 130
+    Z" />
+    
+  <!-- L字形 -->
+  <path class="primary" d="
+    M 320 130
+    L 320 382
+    L 390 382
+    L 390 190
+    L 362 190
+    L 362 322
+    L 320 322
+    Z" />
+    
+  <!-- 音符のような装飾 -->
+  <circle class="secondary" cx="362" cy="160" r="25" />
+  <rect class="secondary" x="352" y="160" width="20" height="100" rx="10" />
+</svg> 

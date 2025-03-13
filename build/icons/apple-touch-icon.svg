@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="180" height="180" rx="40" fill="#08A29E"/>
+  
+  <!-- E字形 - パディングを考慮 -->
+  <path d="M50 50L50 130L100 130L100 110L70 110L70 95L95 95L95 75L70 75L70 60L100 60L100 40L50 50Z" fill="white"/>
+  
+  <!-- L字形 - パディングを考慮 -->
+  <path d="M110 50L110 130L130 130L130 60L120 60L120 110L110 110L110 50Z" fill="white"/>
+  
+  <!-- 音符のような装飾 -->
+  <circle cx="120" cy="50" r="8" fill="white"/>
+  <rect x="116" y="50" width="8" height="30" rx="4" fill="white"/>
+</svg> 

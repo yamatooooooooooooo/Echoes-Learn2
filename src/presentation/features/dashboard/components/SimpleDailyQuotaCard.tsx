@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   Box, 
   Typography, 
@@ -34,35 +34,69 @@ export const SimpleDailyQuotaCard: React.FC<{
   const [dailyQuota, setDailyQuota] = useState<{ [key: string]: number }>({});
   const [totalQuota, setTotalQuota] = useState(0);
   
+  // 有効な科目のみをメモ化
+  const validSubjects = useMemo(() => {
+    return subjects.filter(subject => 
+      subject && 
+      subject.id && 
+      subject.totalPages > 0 && 
+      subject.examDate
+    );
+  }, [subjects]);
+  
   // ユーザー設定に基づいてクォータを計算
   useEffect(() => {
-    if (subjects.length === 0 || isLoadingSettings) return;
+    if (validSubjects.length === 0 || isLoadingSettings) {
+      console.log('SimpleDailyQuotaCard: 有効な科目がないか、設定読み込み中のためクォータ計算をスキップ', {
+        validSubjectsLength: validSubjects.length,
+        isLoadingSettings
+      });
+      return;
+    }
     
-    const calculatedQuota = calculateDailyQuota(subjects, userSettings);
-    
-    // クォータアイテムからサブジェクトIDごとのページ数を集計
-    const subjectQuotas: { [key: string]: number } = {};
-    calculatedQuota.quotaItems.forEach(item => {
-      subjectQuotas[item.subjectId] = item.pages;
+    console.log('SimpleDailyQuotaCard: クォータ計算開始', {
+      subjectsCount: validSubjects.length,
+      userSettings
     });
     
-    setDailyQuota(subjectQuotas);
-    setTotalQuota(calculatedQuota.totalPages);
-  }, [subjects, userSettings, isLoadingSettings]);
+    try {
+      const calculatedQuota = calculateDailyQuota(validSubjects, userSettings);
+      
+      // クォータアイテムからサブジェクトIDごとのページ数を集計
+      const subjectQuotas: { [key: string]: number } = {};
+      calculatedQuota.quotaItems.forEach(item => {
+        subjectQuotas[item.subjectId] = item.pages;
+      });
+      
+      console.log('SimpleDailyQuotaCard: クォータ計算完了', {
+        quotaItems: calculatedQuota.quotaItems,
+        totalPages: calculatedQuota.totalPages
+      });
+      
+      setDailyQuota(subjectQuotas);
+      setTotalQuota(calculatedQuota.totalPages);
+    } catch (error) {
+      console.error('SimpleDailyQuotaCard: クォータ計算エラー', error);
+    }
+  }, [validSubjects, userSettings, isLoadingSettings]);
   
   // 表示されるトップN科目を制限
   const topSubjectsCount = isMobile ? 3 : 4;
-  const subjectsToShow = subjects
-    .filter(subject => dailyQuota[subject.id] > 0)
-    .sort((a, b) => dailyQuota[b.id] - dailyQuota[a.id])
-    .slice(0, topSubjectsCount);
+  const subjectsToShow = useMemo(() => {
+    return validSubjects
+      .filter(subject => dailyQuota[subject.id] > 0)
+      .sort((a, b) => dailyQuota[b.id] - dailyQuota[a.id])
+      .slice(0, topSubjectsCount);
+  }, [validSubjects, dailyQuota, topSubjectsCount]);
   
   // その他の科目のクォータ合計
-  const otherSubjectsQuota = subjects
-    .filter(subject => dailyQuota[subject.id] > 0)
-    .sort((a, b) => dailyQuota[b.id] - dailyQuota[a.id])
-    .slice(topSubjectsCount)
-    .reduce((total, subject) => total + dailyQuota[subject.id], 0);
+  const otherSubjectsQuota = useMemo(() => {
+    return validSubjects
+      .filter(subject => dailyQuota[subject.id] > 0)
+      .sort((a, b) => dailyQuota[b.id] - dailyQuota[a.id])
+      .slice(topSubjectsCount)
+      .reduce((total, subject) => total + dailyQuota[subject.id], 0);
+  }, [validSubjects, dailyQuota, topSubjectsCount]);
   
   // クォータの達成状況アイコンを選択
   const getStatusIcon = (quota: number) => {
@@ -285,4 +319,4 @@ export const SimpleDailyQuotaCard: React.FC<{
       </Box>
     </Paper>
   );
-}; 
+};

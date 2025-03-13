@@ -362,19 +362,115 @@ const commonOptions = {
       fontSize: '1.125rem',
       fontWeight: 500,
     },
-    h6: {
-      fontSize: '1rem',
-      fontWeight: 500,
+パフォーマンス最適化の状態
+    divider: '#2D3748',
+  },
+  typography: lightThemeOptions.typography,
+  spacing: lightThemeOptions.spacing,
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: '#121212',
+          margin: 0,
+          padding: 0,
+          WebkitTapHighlightColor: 'transparent',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          touchAction: 'manipulation',
+        },
+        'html, body': {
+          height: '100%',
+          width: '100%',
+        },
+        '@media (max-width:600px)': {
+          html: {
+            fontSize: '14px',
+          }
+        }
+      },
     },
-    body1: {
-      fontSize: '1rem',
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: 'none',
+          fontWeight: 500,
+          boxShadow: 'none',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-1px)',
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+            backgroundColor: (theme: any) => `${theme.palette.primary.light}30`,
+          },
+        },
+        contained: {
+          '&:hover': {
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+          },
+        },
+        outlined: {
+          borderColor: '#2D3748',
+          '&:hover': {
+            borderColor: '#4A5568',
+            backgroundColor: (theme: any) => `${theme.palette.primary.light}20`,
+          },
+        },
+      },
     },
-    body2: {
-      fontSize: '0.875rem',
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          boxShadow: 'none',
+          border: '1px solid #2D3748',
+          transition: 'all 0.25s ease-in-out',
+          backgroundColor: '#1E1E1E',
+          '&:hover': {
+            borderColor: '#4A5568',
+            transform: 'translateY(-2px)',
+            boxShadow: '0 3px 8px rgba(0, 0, 0, 0.2)',
+          }
+        },
+      },
     },
-    button: {
-      textTransform: 'none' as const,
-      fontWeight: 500,
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          boxShadow: 'none',
+          backgroundColor: '#1E1E1E',
+        },
+        elevation1: {
+          boxShadow: 'none',
+          border: '1px solid #2D3748',
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: 'none',
+          borderBottom: '1px solid #2D3748',
+          backgroundColor: '#1E1E1E',
+          color: '#E2E8F0',
+        },
+      },
+    },
+    MuiToolbar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#1E1E1E',
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          borderColor: '#2D3748',
+        },
+      },
+main
     },
   },
   shape: {
@@ -388,6 +484,52 @@ const commonOptions = {
       },
       '@media (min-width:600px)': {
         minHeight: 64,
+      },
+    },
+    MuiCardHeader: {
+      styleOverrides: {
+        root: {
+          padding: '1.25rem 1.5rem',
+          borderBottom: '1px solid #2D3748',
+          backgroundColor: '#1E1E1E',
+        },
+        title: {
+          fontSize: '1.125rem',
+          fontWeight: 500,
+          color: '#E2E8F0',
+        },
+        subheader: {
+          fontSize: '0.875rem',
+          color: '#94A3B8',
+        },
+      },
+    },
+    MuiCardContent: {
+      styleOverrides: {
+        root: {
+          padding: '1.5rem',
+          backgroundColor: '#1E1E1E',
+          '@media (max-width:600px)': {
+            padding: '1rem',
+          },
+          '&:last-child': {
+            paddingBottom: '1.5rem',
+            '@media (max-width:600px)': {
+              paddingBottom: '1rem',
+            },
+          },
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          transition: 'all 0.2s ease',
+          '&:hover': {
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            transform: 'scale(1.05)',
+          },
+        },
       },
     },
   },
