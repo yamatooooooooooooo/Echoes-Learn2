@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -6,8 +6,6 @@ import {
   TextField,
   Button,
   Slider,
-  FormControl,
-  FormHelperText,
   Grid,
   Divider,
   Alert,
@@ -24,6 +22,66 @@ import {
   DEFAULT_USER_SETTINGS 
 } from '../../../../domain/models/UserSettingsModel';
 import InfoIcon from '@mui/icons-material/Info';
+
+// 設定項目の型定義
+interface SettingItemProps {
+  title: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  disabled: boolean;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSliderChange: (event: Event, newValue: number | number[]) => void;
+  helpText: string;
+}
+
+// メモ化された設定項目コンポーネント
+const SettingItem = React.memo<SettingItemProps>(({ 
+  title, 
+  value, 
+  min, 
+  max, 
+  step, 
+  disabled, 
+  onChange, 
+  onSliderChange,
+  helpText 
+}) => {
+  return (
+    <Box sx={{ bgcolor: 'background.default', p: 2, borderRadius: 1, height: '100%' }}>
+      <Typography variant="body1" gutterBottom fontWeight="medium">
+        {title}
+      </Typography>
+      <Box display="flex" alignItems="center">
+        <Slider
+          value={value}
+          onChange={onSliderChange}
+          step={step}
+          marks
+          min={min}
+          max={max}
+          valueLabelDisplay="auto"
+          disabled={disabled}
+          sx={{ flexGrow: 1, mr: 2 }}
+        />
+        <TextField
+          value={value}
+          onChange={onChange}
+          type="number"
+          InputProps={{ inputProps: { min, max, step } }}
+          disabled={disabled}
+          sx={{ width: 80 }}
+        />
+      </Box>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontSize: '0.8rem' }}>
+        {helpText}
+      </Typography>
+    </Box>
+  );
+});
+
+SettingItem.displayName = 'SettingItem';
 
 /**
  * ユーザー設定フォームコンポーネント
@@ -59,19 +117,19 @@ export const UserSettingsForm: React.FC = () => {
     loadSettings();
   }, [userSettingsRepository]);
   
-  // フォーム入力処理
-  const handleChange = (name: keyof UserSettingsUpdateInput) => (
+  // フォーム入力処理 - メモ化して最適化
+  const handleChange = useCallback((name: keyof UserSettingsUpdateInput) => (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = parseInt(event.target.value) || 0;
+    const value = parseFloat(event.target.value) || 0;
     setSettings(prev => ({
       ...prev,
       [name]: value
     }));
-  };
+  }, []);
   
-  // スライダー入力処理
-  const handleSliderChange = (name: keyof UserSettingsUpdateInput) => (
+  // スライダー入力処理 - メモ化して最適化
+  const handleSliderChange = useCallback((name: keyof UserSettingsUpdateInput) => (
     _: Event,
     newValue: number | number[]
   ) => {
@@ -80,10 +138,10 @@ export const UserSettingsForm: React.FC = () => {
       ...prev,
       [name]: value
     }));
-  };
+  }, []);
   
   // フォーム送信処理
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = useCallback(async (event: React.FormEvent) => {
     event.preventDefault();
     setSaving(true);
     setError(null);
@@ -105,10 +163,10 @@ export const UserSettingsForm: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [settings, userSettingsRepository]);
   
   // デフォルト設定に戻す
-  const handleReset = async () => {
+  const handleReset = useCallback(async () => {
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -123,7 +181,73 @@ export const UserSettingsForm: React.FC = () => {
     } finally {
       setSaving(false);
     }
-  };
+  }, [userSettingsRepository]);
+
+  // メモ化された科目学習設定項目
+  const subjectSettingsItems = useMemo(() => (
+    <Grid container spacing={3}>
+      <Grid item xs={12} sm={6}>
+        <SettingItem
+          title="同時学習科目数上限"
+          value={settings.maxConcurrentSubjects}
+          min={1}
+          max={10}
+          step={1}
+          disabled={saving}
+          onChange={handleChange('maxConcurrentSubjects')}
+          onSliderChange={handleSliderChange('maxConcurrentSubjects')}
+          helpText="一度に並行して学習する科目の数です。同時に多くの科目を学習すると1科目あたりの時間が減ります。"
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <SettingItem
+          title="1日の目標学習時間（時間）"
+          value={settings.dailyStudyHours}
+          min={0.5}
+          max={8}
+          step={0.5}
+          disabled={saving}
+          onChange={handleChange('dailyStudyHours')}
+          onSliderChange={handleSliderChange('dailyStudyHours')}
+          helpText="1日に確保できる学習時間の合計です。現実的な時間を設定することで計画が立てやすくなります。"
+        />
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <SettingItem
+          title="週あたりの学習日数"
+          value={settings.studyDaysPerWeek}
+          min={1}
+          max={7}
+          step={1}
+          disabled={saving}
+          onChange={handleChange('studyDaysPerWeek')}
+          onSliderChange={handleSliderChange('studyDaysPerWeek')}
+          helpText="1週間のうち、何日学習に充てられるかを設定します。これにより週ごとのノルマが計算されます。"
+        />
+      </Grid>
+    </Grid>
+  ), [settings, saving, handleChange, handleSliderChange]);
+
+  // メモ化された学習進捗設定項目
+  const progressSettingsItems = useMemo(() => (
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <SettingItem
+          title="1ページあたりの平均学習時間（分）"
+          value={settings.averagePageReadingTime}
+          min={1}
+          max={15}
+          step={1}
+          disabled={saving}
+          onChange={handleChange('averagePageReadingTime')}
+          onSliderChange={handleSliderChange('averagePageReadingTime')}
+          helpText="教科書や参考書の1ページあたりの平均学習時間です。この値は予想学習時間の計算に使用されます。科目の難易度によって調整することをおすすめします。"
+        />
+      </Grid>
+    </Grid>
+  ), [settings, saving, handleChange, handleSliderChange]);
   
   if (loading) {
     return (
@@ -134,7 +258,7 @@ export const UserSettingsForm: React.FC = () => {
   }
   
   return (
-    <Paper elevation={2} sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
+    <Box sx={{ maxWidth: '100%' }}>
       <Typography variant="h5" gutterBottom>
         学習設定
       </Typography>
@@ -162,106 +286,16 @@ export const UserSettingsForm: React.FC = () => {
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6" color="primary">
-                ノルマ計算に関する設定
+                科目学習に関する設定
               </Typography>
-              <Tooltip title="これらの設定は日々のノルマや週間ノルマの計算に直接影響します。実際の学習スタイルに合わせて調整することで、より現実的な計画が立てられます。">
-                <IconButton size="small" sx={{ ml: 1, color: 'info.main' }}>
+              <Tooltip title="同時に学習する科目数と1日の学習時間を設定します。これらの値はノルマ計算に影響します。">
+                <IconButton size="small" sx={{ ml: 1 }}>
                   <InfoIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             </Box>
             
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Typography variant="body1" gutterBottom>
-                  同時並行して学習する科目数
-                </Typography>
-                <Box display="flex" alignItems="center">
-                  <Slider
-                    value={settings.maxConcurrentSubjects}
-                    onChange={handleSliderChange('maxConcurrentSubjects')}
-                    step={1}
-                    marks
-                    min={1}
-                    max={10}
-                    valueLabelDisplay="auto"
-                    disabled={saving}
-                    sx={{ flexGrow: 1, mr: 2 }}
-                  />
-                  <TextField
-                    value={settings.maxConcurrentSubjects}
-                    onChange={handleChange('maxConcurrentSubjects')}
-                    type="number"
-                    InputProps={{ inputProps: { min: 1, max: 10 } }}
-                    disabled={saving}
-                    sx={{ width: 80 }}
-                  />
-                </Box>
-                <FormHelperText>
-                  同時に学習する科目の最大数です。優先度の高い科目から選択され、日々のノルマ計算対象になります。<strong>多すぎると分散してしまうため、3〜5科目程度をおすすめします。</strong>
-                </FormHelperText>
-              </Grid>
-              
-              <Grid item xs={12}>
-                <Typography variant="body1" gutterBottom>
-                  週に学習する日数
-                </Typography>
-                <Box display="flex" alignItems="center">
-                  <Slider
-                    value={settings.studyDaysPerWeek}
-                    onChange={handleSliderChange('studyDaysPerWeek')}
-                    step={1}
-                    marks
-                    min={1}
-                    max={7}
-                    valueLabelDisplay="auto"
-                    disabled={saving}
-                    sx={{ flexGrow: 1, mr: 2 }}
-                  />
-                  <TextField
-                    value={settings.studyDaysPerWeek}
-                    onChange={handleChange('studyDaysPerWeek')}
-                    type="number"
-                    InputProps={{ inputProps: { min: 1, max: 7 } }}
-                    disabled={saving}
-                    sx={{ width: 80 }}
-                  />
-                </Box>
-                <FormHelperText>
-                  週に何日学習するかを設定します。ウィークリーノルマの計算に使用され、<strong>1日あたりの負担を均等に分散</strong>するために重要です。現実的な日数を設定してください。
-                </FormHelperText>
-              </Grid>
-              
-              <Grid item xs={12}>
-                <Typography variant="body1" gutterBottom>
-                  1日の目標学習時間（時間）
-                </Typography>
-                <Box display="flex" alignItems="center">
-                  <Slider
-                    value={settings.dailyStudyHours}
-                    onChange={handleSliderChange('dailyStudyHours')}
-                    step={0.5}
-                    marks
-                    min={0.5}
-                    max={12}
-                    valueLabelDisplay="auto"
-                    disabled={saving}
-                    sx={{ flexGrow: 1, mr: 2 }}
-                  />
-                  <TextField
-                    value={settings.dailyStudyHours}
-                    onChange={handleChange('dailyStudyHours')}
-                    type="number"
-                    InputProps={{ inputProps: { min: 0.5, max: 12, step: 0.5 } }}
-                    disabled={saving}
-                    sx={{ width: 80 }}
-                  />
-                </Box>
-                <FormHelperText>
-                  1日あたりの最低学習時間です。この時間をもとにノルマが計算されます。<strong>科目ごとの学習時間配分は優先度に応じて調整</strong>されます。無理のない時間を設定してください。
-                </FormHelperText>
-              </Grid>
-            </Grid>
+            {subjectSettingsItems}
           </CardContent>
         </Card>
         
@@ -271,62 +305,37 @@ export const UserSettingsForm: React.FC = () => {
               <Typography variant="h6" color="primary">
                 学習進捗に関する設定
               </Typography>
+              <Tooltip title="読書や学習のペースに関する設定です。これにより学習時間の予測が計算されます。">
+                <IconButton size="small" sx={{ ml: 1 }}>
+                  <InfoIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
             
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Typography variant="body1" gutterBottom>
-                  1ページあたりの平均学習時間（分）
-                </Typography>
-                <Box display="flex" alignItems="center">
-                  <Slider
-                    value={settings.averagePageReadingTime}
-                    onChange={handleSliderChange('averagePageReadingTime')}
-                    step={1}
-                    marks
-                    min={1}
-                    max={15}
-                    valueLabelDisplay="auto"
-                    disabled={saving}
-                    sx={{ flexGrow: 1, mr: 2 }}
-                  />
-                  <TextField
-                    value={settings.averagePageReadingTime}
-                    onChange={handleChange('averagePageReadingTime')}
-                    type="number"
-                    InputProps={{ inputProps: { min: 1, max: 15 } }}
-                    disabled={saving}
-                    sx={{ width: 80 }}
-                  />
-                </Box>
-                <FormHelperText>
-                  教科書や参考書の1ページあたりの平均学習時間です。この値は予想学習時間の計算に使用されます。科目の難易度によって調整することをおすすめします。
-                </FormHelperText>
-              </Grid>
-            </Grid>
+            {progressSettingsItems}
           </CardContent>
         </Card>
         
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-          <Button
-            variant="outlined"
-            color="warning"
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+          <Button 
+            variant="outlined" 
+            color="secondary" 
             onClick={handleReset}
             disabled={saving}
           >
             デフォルトに戻す
           </Button>
           
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
+          <Button 
+            type="submit" 
+            variant="contained" 
+            color="primary" 
             disabled={saving}
           >
             {saving ? '保存中...' : '設定を保存'}
           </Button>
         </Box>
       </Box>
-    </Paper>
+    </Box>
   );
 }; 

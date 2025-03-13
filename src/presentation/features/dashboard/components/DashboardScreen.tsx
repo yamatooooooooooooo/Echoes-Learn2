@@ -171,17 +171,52 @@ const DashboardScreen: React.FC = () => {
   const subjectCount = dashboardData?.subjects?.length || 0;
   
   return (
-    <Box sx={{ overflowX: 'hidden' }}>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', px: isMobile ? 2 : 3, pt: 3, pb: 6 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1" sx={{ display: 'flex', alignItems: 'center' }}>
+    <Box sx={{ 
+      overflowX: 'hidden',
+      minHeight: '100vh',
+      bgcolor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 1)' : 'rgba(245, 245, 245, 1)',
+      pb: 4
+    }}>
+      <Box sx={{ 
+        maxWidth: 1200, 
+        mx: 'auto', 
+        px: isMobile ? 2 : 3, 
+        pt: 3, 
+        pb: 6,
+      }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 3,
+          px: 1
+        }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              fontSize: { xs: '1.75rem', sm: '2.25rem' },
+              fontWeight: 600,
+              color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.87)'
+            }}
+          >
             <DashboardIcon sx={{ mr: 1 }} />
             ダッシュボード
           </Typography>
           
           <Box>
             <Tooltip title="表示設定">
-              <IconButton onClick={handleOpenMenu}>
+              <IconButton 
+                onClick={handleOpenMenu}
+                sx={{
+                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                  '&:hover': {
+                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+                  }
+                }}
+              >
                 <SettingsIcon />
               </IconButton>
             </Tooltip>
@@ -192,6 +227,18 @@ const DashboardScreen: React.FC = () => {
               onClose={handleCloseMenu}
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  boxShadow: theme.palette.mode === 'dark' 
+                    ? '0 4px 20px rgba(0, 0, 0, 0.5)' 
+                    : '0 2px 10px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid',
+                  borderColor: theme.palette.mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(0, 0, 0, 0.05)',
+                }
+              }}
             >
               <MenuItem onClick={handleOpenSettingsDialog}>
                 <ListItemIcon>
@@ -203,11 +250,23 @@ const DashboardScreen: React.FC = () => {
           </Box>
         </Box>
         
-        <Grid container direction="column" spacing={isMobile ? 2 : 3} sx={{ mb: 2 }}>
+        <Grid container direction="column" spacing={isMobile ? 3 : 4} sx={{ mb: 2 }}>
           {/* データ可視化セクション - 最上部に移動 */}
           {settings.visualization && (
             <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
+              <Paper sx={{ 
+                boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0, 0, 0, 0.5)' : '0 2px 10px rgba(0, 0, 0, 0.1)',
+                borderRadius: 3,
+                overflow: 'hidden',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                border: '1px solid',
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: theme.palette.mode === 'dark' ? '0 6px 24px rgba(0, 0, 0, 0.6)' : '0 4px 16px rgba(0, 0, 0, 0.15)',
+                }
+              }}>
                 <CardHeader
                   title="データ可視化"
                   onToggleVisibility={() => toggleCard('visualization')}
@@ -223,14 +282,28 @@ const DashboardScreen: React.FC = () => {
           {/* 試験スケジュールカード */}
           {settings.upcomingExams && (
             <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
+              <Paper sx={{ 
+                boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0, 0, 0, 0.5)' : '0 2px 10px rgba(0, 0, 0, 0.1)',
+                borderRadius: 3,
+                overflow: 'hidden',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(36, 36, 36, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid',
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: theme.palette.mode === 'dark' ? '0 6px 24px rgba(0, 0, 0, 0.6)' : '0 4px 16px rgba(0, 0, 0, 0.15)',
+                }
+              }}>
                 <CardHeader
                   title="試験スケジュール"
                   isVisible={settings.upcomingExams}
                   onToggleVisibility={() => toggleCard('upcomingExams')}
                   helpText="今後の試験日程を時系列順に表示します。日付が近い順に並べられ、赤色は7日以内、黄色は14日以内の試験を示します。"
                 />
-                <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
+                <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                  <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
+                </Box>
               </Paper>
             </Grid>
           )}
@@ -238,14 +311,28 @@ const DashboardScreen: React.FC = () => {
           {/* レポート締切カード */}
           {settings.deadlines && (
             <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
+              <Paper sx={{ 
+                boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0, 0, 0, 0.5)' : '0 2px 10px rgba(0, 0, 0, 0.1)',
+                borderRadius: 3,
+                overflow: 'hidden',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(36, 36, 36, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid',
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: theme.palette.mode === 'dark' ? '0 6px 24px rgba(0, 0, 0, 0.6)' : '0 4px 16px rgba(0, 0, 0, 0.15)',
+                }
+              }}>
                 <CardHeader
                   title="レポート締切"
                   isVisible={settings.deadlines}
                   onToggleVisibility={() => toggleCard('deadlines')}
                   helpText="レポート提出の締切日を時系列順に表示します。日付が近い順に並べられ、赤色は7日以内、黄色は14日以内の締切を示します。"
                 />
-                <DeadlinesCard subjects={dashboardData?.subjects || []} />
+                <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                  <DeadlinesCard subjects={dashboardData?.subjects || []} />
+                </Box>
               </Paper>
             </Grid>
           )}
@@ -256,7 +343,20 @@ const DashboardScreen: React.FC = () => {
               {/* 日次ノルマカード */}
               {settings.dailyQuota && (
                 <Grid item xs={12} md={6}>
-                  <Paper sx={{ /* existing styles */ }}>
+                  <Paper sx={{ 
+                    boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0, 0, 0, 0.5)' : '0 2px 10px rgba(0, 0, 0, 0.1)',
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    height: '100%',
+                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(36, 36, 36, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                    border: '1px solid',
+                    borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-3px)',
+                      boxShadow: theme.palette.mode === 'dark' ? '0 6px 24px rgba(0, 0, 0, 0.6)' : '0 4px 16px rgba(0, 0, 0, 0.15)',
+                    }
+                  }}>
                     <CardHeader
                       title="日次ノルマ"
                       isVisible={settings.dailyQuota}
@@ -274,7 +374,20 @@ const DashboardScreen: React.FC = () => {
               {/* 週次ノルマカード */}
               {settings.weeklyQuota && (
                 <Grid item xs={12} md={6}>
-                  <Paper sx={{ /* existing styles */ }}>
+                  <Paper sx={{ 
+                    boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0, 0, 0, 0.5)' : '0 2px 10px rgba(0, 0, 0, 0.1)',
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    height: '100%',
+                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(36, 36, 36, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                    border: '1px solid',
+                    borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-3px)',
+                      boxShadow: theme.palette.mode === 'dark' ? '0 6px 24px rgba(0, 0, 0, 0.6)' : '0 4px 16px rgba(0, 0, 0, 0.15)',
+                    }
+                  }}>
                     <CardHeader
                       title="週次ノルマ"
                       isVisible={settings.weeklyQuota}
@@ -293,17 +406,31 @@ const DashboardScreen: React.FC = () => {
           
           {settings.progressBar && (
             <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
+              <Paper sx={{ 
+                boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0, 0, 0, 0.5)' : '0 2px 10px rgba(0, 0, 0, 0.1)',
+                borderRadius: 3,
+                overflow: 'hidden',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(36, 36, 36, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid',
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: theme.palette.mode === 'dark' ? '0 6px 24px rgba(0, 0, 0, 0.6)' : '0 4px 16px rgba(0, 0, 0, 0.15)',
+                }
+              }}>
                 <CardHeader
                   title="進捗状況"
                   isVisible={settings.progressBar}
                   onToggleVisibility={() => toggleCard('progressBar')}
                   helpText="各科目の全体的な進捗状況をプログレスバーで表示します。現在のページ数と総ページ数の比率を視覚的に確認できます。"
                 />
-                <SimpleProgressBarCard 
-                  subjects={dashboardData?.subjects || []} 
-                  isLoading={isLoading}
-                />
+                <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                  <SimpleProgressBarCard 
+                    subjects={dashboardData?.subjects || []} 
+                    isLoading={isLoading}
+                  />
+                </Box>
               </Paper>
             </Grid>
           )}
@@ -311,18 +438,32 @@ const DashboardScreen: React.FC = () => {
           {/* 最近の進捗 */}
           {settings.recentProgress && dashboardData?.recentProgress && dashboardData.recentProgress.length > 0 && (
             <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
+              <Paper sx={{ 
+                boxShadow: theme.palette.mode === 'dark' ? '0 4px 20px rgba(0, 0, 0, 0.5)' : '0 2px 10px rgba(0, 0, 0, 0.1)',
+                borderRadius: 3,
+                overflow: 'hidden',
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(36, 36, 36, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid',
+                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: theme.palette.mode === 'dark' ? '0 6px 24px rgba(0, 0, 0, 0.6)' : '0 4px 16px rgba(0, 0, 0, 0.15)',
+                }
+              }}>
                 <CardHeader
                   title="最近の進捗"
                   isVisible={settings.recentProgress}
                   onToggleVisibility={() => toggleCard('recentProgress')}
                   helpText="最近記録した学習進捗を時系列で表示します。各科目の学習記録を確認でき、いつどの科目をどれだけ学習したかが一目でわかります。"
                 />
-                <RecentProgressCard 
-                  recentProgress={dashboardData.recentProgress} 
-                  formatDate={formatDate}
-                  isLoading={isLoading}
-                />
+                <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                  <RecentProgressCard 
+                    recentProgress={dashboardData.recentProgress} 
+                    formatDate={formatDate}
+                    isLoading={isLoading}
+                  />
+                </Box>
               </Paper>
             </Grid>
           )}
@@ -531,6 +672,7 @@ const IntegratedVisualizationControls = React.memo(() => {
  */
 const IntegratedVisualizationSection = React.memo(() => {
   const { data, isLoading, lastUpdated, handleRefresh } = useVisualizationData();
+  const theme = useTheme();
 
   // アクティブな科目のみをフィルタリング
   // 1. 試験日が過去でない科目
@@ -558,55 +700,98 @@ const IntegratedVisualizationSection = React.memo(() => {
     return lastUpdated ? `最終更新: ${format(new Date(lastUpdated), 'yyyy/MM/dd HH:mm')}` : '';
   }, [lastUpdated]);
 
-  // ヘッダー部分
-  const Header = useMemo(() => (
-    <Box sx={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center',
-      mb: 2
-    }}>
-      <Typography variant="h5" component="h2">
-      </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <IconButton 
-          onClick={handleRefresh} 
-          disabled={isLoading}
-          size="small"
-          sx={{ mr: 1 }}
-        >
-          <RefreshIcon />
-        </IconButton>
-      </Box>
-    </Box>
-  ), [handleRefresh, isLoading]);
-
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        {Header}
-      </Grid>
+    <Box sx={{ 
+      p: { xs: 2, sm: 3 },
+      width: '100%',
+      overflow: 'hidden'
+    }}>
+      <Grid container direction="column" spacing={3}>
+        {/* レーダーチャートカード */}
+        <Grid item xs={12}>
+          <Box sx={{ 
+            p: { xs: 2, sm: 3 },
+            borderRadius: 2,
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.6)',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.1)',
+            border: '1px solid',
+            borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'
+          }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: 2,
+                fontWeight: 600,
+                color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.85)',
+              }}
+            >
+              科目進捗レーダーチャート
+            </Typography>
+            <Box sx={{ 
+              flexGrow: 1, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              minHeight: 250,
+              position: 'relative'
+            }}>
+              <ProgressRadarChart data={filteredRadarData} />
+              {formattedLastUpdated && (
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    opacity: 0.7,
+                    fontSize: '0.7rem',
+                    px: 1
+                  }}
+                >
+                  {formattedLastUpdated}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        </Grid>
 
-      <Grid item xs={12}>
-        <Card sx={{ height: '100%' }}>
-          <CardContent>
-            <ProgressRadarChart data={filteredRadarData} />
-          </CardContent>
-        </Card>
+        {/* カウントダウンコンテナカード */}
+        <Grid item xs={12}>
+          <Box sx={{ 
+            p: { xs: 2, sm: 3 },
+            borderRadius: 2,
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.6)',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.1)',
+            border: '1px solid',
+            borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'
+          }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: 2,
+                fontWeight: 600,
+                color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(0, 0, 0, 0.85)',
+              }}
+            >
+              締切カウントダウン
+            </Typography>
+            <Box sx={{ flexGrow: 1 }}>
+              <CountdownContainer 
+                data={data.countdownData} 
+                includeReportDeadlines={true}
+                subjects={activeSubjects}
+              />
+            </Box>
+          </Box>
+        </Grid>
       </Grid>
-
-      <Grid item xs={12}>
-        <Card sx={{ height: '100%' }}>
-          <CardContent>
-            <CountdownContainer 
-              data={data.countdownData} 
-              includeReportDeadlines={true}
-              subjects={activeSubjects}
-            />
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
+    </Box>
   );
 });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -16,7 +16,8 @@ import {
   CardContent,
   Switch,
   useTheme,
-  CircularProgress
+  CircularProgress,
+  Grid
 } from '@mui/material';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -26,9 +27,6 @@ import InfoIcon from '@mui/icons-material/Info';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTheme as useAppTheme } from '../../../../contexts/ThemeContext';
 import { useServices } from '../../../../hooks/useServices';
-
-// 直接ThemeModeの型を定義
-type ThemeMode = 'light' | 'dark' | 'system';
 
 /**
  * テーマ設定コンポーネント
@@ -45,19 +43,21 @@ export const ThemeSettings: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   // モードの変更を処理
-  const handleModeChange = async (newMode: ThemeMode) => {
+  const handleModeChange = async (newMode: any) => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    
     try {
-      setLoading(true);
-      setError(null);
-      setSuccess(null);
-      
       // ローカルの状態を先に更新して即時反映
       setMode(newMode);
       
       // ユーザー設定にも保存
-      await userSettingsRepository.updateUserSettings({
-        themeMode: newMode
-      });
+      if (userSettingsRepository) {
+        await userSettingsRepository.updateUserSettings({
+          themeMode: newMode
+        });
+      }
       
       setSuccess('テーマ設定を保存しました');
       
@@ -95,6 +95,103 @@ export const ThemeSettings: React.FC = () => {
     loadSettings();
   }, [setMode]); // userSettingsRepositoryを依存配列から除外（意図的）
 
+  // テーマカードをメモ化
+  const themeCards = useMemo(() => {
+    return (
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {/* ライトモードカード */}
+        <Grid item xs={12} sm={6}>
+          <Card 
+            variant="outlined" 
+            sx={{ 
+              borderColor: mode === 'light' ? 'primary.main' : 'divider',
+              boxShadow: mode === 'light' ? 2 : 0,
+              height: '100%',
+              transition: theme => theme.transitions.create(['box-shadow', 'transform', 'border-color'], {
+                duration: theme.transitions.duration.standard,
+              }),
+              '&:hover': {
+                boxShadow: 4,
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            <CardActionArea 
+              onClick={() => handleModeChange('light')} 
+              disabled={loading}
+              sx={{ height: '100%' }}
+            >
+              <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: { xs: 1.5, sm: 2 } }}>
+                <Box 
+                  sx={{ 
+                    bgcolor: '#FAFAFA', 
+                    color: '#333333', 
+                    width: '100%', 
+                    height: { xs: 80, sm: 100 }, 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    borderRadius: 1,
+                    mb: 1,
+                    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)'
+                  }}
+                >
+                  <LightModeIcon sx={{ fontSize: { xs: 28, sm: 36 } }} />
+                </Box>
+                <Typography variant="subtitle2" align="center">ライトモード</Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Grid>
+        
+        {/* ダークモードカード */}
+        <Grid item xs={12} sm={6}>
+          <Card 
+            variant="outlined" 
+            sx={{ 
+              borderColor: mode === 'dark' ? 'primary.main' : 'divider',
+              boxShadow: mode === 'dark' ? 2 : 0,
+              height: '100%',
+              transition: theme => theme.transitions.create(['box-shadow', 'transform', 'border-color'], {
+                duration: theme.transitions.duration.standard,
+              }),
+              '&:hover': {
+                boxShadow: 4,
+                transform: 'translateY(-2px)'
+              }
+            }}
+          >
+            <CardActionArea 
+              onClick={() => handleModeChange('dark')} 
+              disabled={loading}
+              sx={{ height: '100%' }}
+            >
+              <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: { xs: 1.5, sm: 2 } }}>
+                <Box 
+                  sx={{ 
+                    bgcolor: '#121212', 
+                    color: '#E2E8F0', 
+                    width: '100%', 
+                    height: { xs: 80, sm: 100 }, 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    borderRadius: 1,
+                    mb: 1,
+                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)'
+                  }}
+                >
+                  <DarkModeIcon sx={{ fontSize: { xs: 28, sm: 36 } }} />
+                </Box>
+                <Typography variant="subtitle2" align="center">ダークモード</Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Grid>
+      </Grid>
+    );
+  }, [mode, loading, handleModeChange]);
+
   if (loading && !mode) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -104,7 +201,7 @@ export const ThemeSettings: React.FC = () => {
   }
 
   return (
-    <Stack spacing={3}>
+    <Box sx={{ maxWidth: '100%' }}>
       {success && (
         <Alert 
           severity="success"
@@ -169,77 +266,17 @@ export const ThemeSettings: React.FC = () => {
           </Paper>
         )}
 
-        <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-          <Card 
-            variant="outlined" 
-            sx={{ 
-              flex: 1,
-              borderColor: mode === 'light' ? 'primary.main' : 'divider',
-              boxShadow: mode === 'light' ? 2 : 0
-            }}
-          >
-            <CardActionArea onClick={() => handleModeChange('light')} disabled={loading}>
-              <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
-                <Box 
-                  sx={{ 
-                    bgcolor: '#FAFAFA', 
-                    color: '#333333', 
-                    width: '100%', 
-                    height: 100, 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center',
-                    borderRadius: 1,
-                    mb: 1
-                  }}
-                >
-                  <LightModeIcon sx={{ fontSize: 32 }} />
-                </Box>
-                <Typography variant="subtitle2" align="center">ライトモード</Typography>
-              </CardContent>
-            </CardActionArea>
-          </Card>
-          
-          <Card 
-            variant="outlined" 
-            sx={{ 
-              flex: 1,
-              borderColor: mode === 'dark' ? 'primary.main' : 'divider',
-              boxShadow: mode === 'dark' ? 2 : 0
-            }}
-          >
-            <CardActionArea onClick={() => handleModeChange('dark')} disabled={loading}>
-              <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
-                <Box 
-                  sx={{ 
-                    bgcolor: '#121212', 
-                    color: '#E2E8F0', 
-                    width: '100%', 
-                    height: 100, 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center',
-                    borderRadius: 1,
-                    mb: 1
-                  }}
-                >
-                  <DarkModeIcon sx={{ fontSize: 32 }} />
-                </Box>
-                <Typography variant="subtitle2" align="center">ダークモード</Typography>
-              </CardContent>
-            </CardActionArea>
-          </Card>
-        </Stack>
+        {themeCards}
       </Box>
       
-      <Divider />
+      <Divider sx={{ my: 3 }} />
       
-      <FormControl component="fieldset">
+      <FormControl component="fieldset" sx={{ width: '100%' }}>
         <Typography variant="h6" sx={{ mb: 2 }}>自動設定</Typography>
         
         <RadioGroup 
           value={mode} 
-          onChange={(e) => handleModeChange(e.target.value as ThemeMode)}
+          onChange={(e) => handleModeChange(e.target.value)}
         >
           <Paper 
             elevation={0} 
@@ -307,6 +344,6 @@ export const ThemeSettings: React.FC = () => {
           </Paper>
         </RadioGroup>
       </FormControl>
-    </Stack>
+    </Box>
   );
 }; 
