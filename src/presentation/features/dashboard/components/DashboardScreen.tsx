@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { 
   Box, 
   Typography, 
@@ -10,7 +10,9 @@ import {
   Tooltip,
   useTheme,
   useMediaQuery,
-  Button
+  Button,
+  Card,
+  CardContent
 } from '@mui/material';
 import { 
   Dashboard as DashboardIcon,
@@ -29,6 +31,7 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../../../../contexts/AuthContext';
 import DataCleanupButton from '../../../components/common/DataCleanupButton';
 import { useVisualizationData } from '../hooks/useVisualizationData';
+import { format } from 'date-fns';
 
 /**
  * ダッシュボード画面 - モダンデザイン
@@ -72,11 +75,11 @@ const DashboardScreen: React.FC = () => {
   }, [isMobile]);
   
   // 手動更新
-  const handleRefreshWithLoading = async () => {
+  const handleRefreshWithLoading = useCallback(async () => {
     setRefreshing(true);
     await refreshData();
     setRefreshing(false);
-  };
+  }, [refreshData]);
   
   if (isLoading) {
     return (
@@ -115,6 +118,9 @@ const DashboardScreen: React.FC = () => {
       </Box>
     );
   }
+  
+  // 科目数の取得
+  const subjectCount = dashboardData?.subjects?.length || 0;
   
   return (
     <Box 
@@ -206,8 +212,8 @@ const DashboardScreen: React.FC = () => {
                   color="text.secondary"
                   sx={{ mt: 0.5 }}
                 >
-                  {dashboardData && dashboardData.subjects && dashboardData.subjects.length > 0 
-                    ? `${dashboardData.subjects.length}科目の進捗状況と学習計画を確認できます` 
+                  {subjectCount > 0 
+                    ? `${subjectCount}科目の進捗状況と学習計画を確認できます` 
                     : '科目を追加して学習を始めましょう'}
                 </Typography>
               </Box>
@@ -242,7 +248,7 @@ const DashboardScreen: React.FC = () => {
       >
         {/* カードコンテナ - 縦に並ぶように並び替え */}
         <Grid container direction="column" spacing={isMobile ? 2 : 3} sx={{ mb: 2 }}>
-          {/* 試験スケジュールカード - 必ず縦に配置されるように修正 */}
+          {/* 試験スケジュールカード */}
           <Grid item>
             <Paper 
               elevation={0} 
@@ -270,7 +276,7 @@ const DashboardScreen: React.FC = () => {
             </Paper>
           </Grid>
           
-          {/* レポート締切カード - 必ず縦に配置されるように修正 */}
+          {/* レポート締切カード */}
           <Grid item>
             <Paper 
               elevation={0} 
@@ -382,7 +388,7 @@ const DashboardScreen: React.FC = () => {
             </Grid>
           )}
 
-          {/* データ可視化セクション - 改良版 */}
+          {/* データ可視化セクション */}
           <Grid item>
             <Paper 
               elevation={0} 
@@ -434,20 +440,20 @@ const DashboardScreen: React.FC = () => {
 /**
  * 統合されたデータ可視化コントロールコンポーネント
  */
-const IntegratedVisualizationControls: React.FC = () => {
+const IntegratedVisualizationControls = React.memo(() => {
   const { lastUpdated, refreshData } = useVisualizationData();
   const [refreshing, setRefreshing] = useState(false);
   const theme = useTheme();
 
   // 手動更新処理
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await refreshData();
     setRefreshing(false);
-  };
+  }, [refreshData]);
 
   // 最終更新時刻のフォーマット
-  const formatLastUpdated = () => {
+  const formattedUpdateTime = useMemo(() => {
     if (!lastUpdated) return '未更新';
     
     // 時刻のフォーマット
@@ -456,12 +462,12 @@ const IntegratedVisualizationControls: React.FC = () => {
     const seconds = lastUpdated.getSeconds().toString().padStart(2, '0');
     
     return `${hours}:${minutes}:${seconds}`;
-  };
+  }, [lastUpdated]);
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center' }}>
       <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-        最終更新: {formatLastUpdated()}
+        最終更新: {formattedUpdateTime}
       </Typography>
       <Tooltip title="データを更新">
         <IconButton 
@@ -480,186 +486,91 @@ const IntegratedVisualizationControls: React.FC = () => {
       </Tooltip>
     </Box>
   );
-};
+});
 
 /**
  * 統合されたデータ可視化セクションコンポーネント
  */
-const IntegratedVisualizationSection: React.FC = () => {
-  const { loading, error, radarChartData, countdownData, subjects } = useVisualizationData();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+const IntegratedVisualizationSection = React.memo(() => {
+  const { data, isLoading, lastUpdated, handleRefresh } = useVisualizationData();
 
-  // 統計情報の計算
-  const stats = useMemo(() => {
-    if (!subjects || subjects.length === 0) return {
-      averageProgress: 0,
-      completedSubjects: 0,
-      totalSubjects: 0,
-      upcomingExams: 0
-    };
-
-    const totalSubjects = subjects.length;
-    const totalProgress = subjects.reduce((sum, subj) => {
-      if (subj.totalPages <= 0) return sum;
-      return sum + Math.round((subj.currentPage / subj.totalPages) * 100);
-    }, 0);
-    
-    const averageProgress = totalSubjects > 0 ? Math.round(totalProgress / totalSubjects) : 0;
-    const completedSubjects = subjects.filter(s => s.currentPage >= s.totalPages).length;
-    
+  // アクティブな科目のみをフィルタリング（試験日が過去でない科目）
+  const activeSubjects = useMemo(() => {
+    if (!data.subjects) return [];
     const today = new Date();
-    const upcomingExams = subjects.filter(s => {
-      if (!s.examDate) return false;
-      const diffDays = Math.ceil((new Date(s.examDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      return diffDays >= 0 && diffDays <= 14;
-    }).length;
-    
-    return {
-      averageProgress,
-      completedSubjects,
-      totalSubjects,
-      upcomingExams
-    };
-  }, [subjects]);
+    return data.subjects.filter(subject => {
+      const examDate = new Date(subject.examDate);
+      return examDate >= today;
+    });
+  }, [data.subjects]);
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-        <CircularProgress />
+  // レーダーチャートのデータをフィルタリング
+  const filteredRadarData = useMemo(() => {
+    return data.radarChartData.filter(item => {
+      // 対応する科目がアクティブかどうかを確認
+      return activeSubjects.some(subject => subject.name === item.subject);
+    });
+  }, [data.radarChartData, activeSubjects]);
+
+  // フォーマットされた最終更新時間
+  const formattedLastUpdated = useMemo(() => {
+    return lastUpdated ? `最終更新: ${format(new Date(lastUpdated), 'yyyy/MM/dd HH:mm')}` : '';
+  }, [lastUpdated]);
+
+  // ヘッダー部分
+  const Header = useMemo(() => (
+    <Box sx={{ 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'center',
+      mb: 2
+    }}>
+      <Typography variant="h5" component="h2">
+        学習状況
+      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <IconButton 
+          onClick={handleRefresh} 
+          disabled={isLoading}
+          size="small"
+          sx={{ mr: 1 }}
+        >
+          <RefreshIcon />
+        </IconButton>
+        <Typography variant="caption" color="text.secondary">
+          {formattedLastUpdated}
+        </Typography>
       </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 2 }}>
-        データの取得中にエラーが発生しました: {error.message}
-      </Alert>
-    );
-  }
+    </Box>
+  ), [handleRefresh, isLoading, formattedLastUpdated]);
 
   return (
-    <>
-      {/* 統計情報カード */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid item xs={6} sm={3}>
-          <Box sx={{ 
-            p: 2, 
-            borderRadius: 2, 
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.15)' : 'rgba(25, 118, 210, 0.08)',
-            border: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.3)' : 'rgba(25, 118, 210, 0.2)',
-          }}>
-            <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>
-              {stats.averageProgress}%
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              平均進捗率
-            </Typography>
-          </Box>
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <Box sx={{ 
-            p: 2, 
-            borderRadius: 2, 
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(76, 175, 80, 0.15)' : 'rgba(76, 175, 80, 0.08)',
-            border: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(76, 175, 80, 0.3)' : 'rgba(76, 175, 80, 0.2)',
-          }}>
-            <Typography variant="h5" color="success.main" sx={{ fontWeight: 'bold' }}>
-              {stats.completedSubjects}/{stats.totalSubjects}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              完了科目
-            </Typography>
-          </Box>
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <Box sx={{ 
-            p: 2, 
-            borderRadius: 2, 
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(156, 39, 176, 0.15)' : 'rgba(156, 39, 176, 0.08)',
-            border: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(156, 39, 176, 0.3)' : 'rgba(156, 39, 176, 0.2)',
-          }}>
-            <Typography variant="h5" color="secondary.main" sx={{ fontWeight: 'bold' }}>
-              {stats.totalSubjects}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              登録科目数
-            </Typography>
-          </Box>
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <Box sx={{ 
-            p: 2, 
-            borderRadius: 2, 
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 152, 0, 0.15)' : 'rgba(255, 152, 0, 0.08)',
-            border: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 152, 0, 0.3)' : 'rgba(255, 152, 0, 0.2)',
-            ...(stats.upcomingExams > 0 && {
-              bgcolor: theme.palette.mode === 'dark' ? 'rgba(244, 67, 54, 0.15)' : 'rgba(244, 67, 54, 0.08)',
-              borderColor: theme.palette.mode === 'dark' ? 'rgba(244, 67, 54, 0.3)' : 'rgba(244, 67, 54, 0.2)',
-            })
-          }}>
-            <Typography 
-              variant="h5" 
-              color={stats.upcomingExams > 0 ? "error.main" : "warning.main"} 
-              sx={{ fontWeight: 'bold' }}
-            >
-              {stats.upcomingExams}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              近日中の試験
-            </Typography>
-          </Box>
-        </Grid>
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        {Header}
       </Grid>
 
-      <Grid container spacing={isMobile ? 3 : 4}>
-        {/* 左側: 学習進捗レーダーチャート */}
-        <Grid item xs={12} md={6}>
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              borderRadius: 3,
-              overflow: 'hidden',
-              border: '1px solid',
-              borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              backdropFilter: 'blur(10px)',
-              bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
-            }}
-          >
-            <ProgressRadarChart data={radarChartData} />
-          </Paper>
-        </Grid>
-        
-        {/* 右側: 試験準備カウントダウン */}
-        <Grid item xs={12} md={6}>
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              borderRadius: 3,
-              overflow: 'hidden',
-              border: '1px solid',
-              borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              backdropFilter: 'blur(10px)',
-              bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
-            }}
-          >
-            <CountdownContainer data={countdownData} />
-          </Paper>
-        </Grid>
+      <Grid item xs={12} md={6}>
+        <Card sx={{ height: '100%' }}>
+          <CardContent>
+            <ProgressRadarChart data={filteredRadarData} />
+          </CardContent>
+        </Card>
       </Grid>
-    </>
+
+      <Grid item xs={12} md={6}>
+        <Card sx={{ height: '100%' }}>
+          <CardContent>
+            <CountdownContainer 
+              data={data.countdownData} 
+              includeReportDeadlines={true}
+              subjects={activeSubjects}
+            />
+          </CardContent>
+        </Card>
+      </Grid>
+    </Grid>
   );
-};
+});
 
 export default DashboardScreen; 

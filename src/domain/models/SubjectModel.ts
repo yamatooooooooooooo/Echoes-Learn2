@@ -8,6 +8,7 @@ export interface Subject {
   reportDeadline?: Date;
   deadlineType?: 'report' | 'assignment' | 'other';
   reportDetails?: string;
+  reportSubmitted?: boolean;
   priority?: 'high' | 'medium' | 'low';
   importance?: 'high' | 'medium' | 'low';
   bufferDays?: number;

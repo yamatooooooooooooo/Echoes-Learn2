@@ -73,7 +73,7 @@ export const useVisualizationData = () => {
   }, [fetchData]);
 
   // メモ化されたデータを返す
-  const processedData = useMemo(() => {
+  const data = useMemo(() => {
     return { subjects, radarChartData, countdownData };
   }, [subjects, radarChartData, countdownData]);
 
@@ -84,6 +84,10 @@ export const useVisualizationData = () => {
     radarChartData,
     countdownData,
     lastUpdated,
-    refreshData: fetchData  // 手動更新のための関数をエクスポート
+    refreshData: fetchData,  // 手動更新のための関数をエクスポート
+    // 新しいインターフェース（DashboardScreenで使用）
+    data,
+    isLoading: loading,
+    handleRefresh: fetchData
   };
 }; 

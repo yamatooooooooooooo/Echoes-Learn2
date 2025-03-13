@@ -20,6 +20,7 @@ export interface CountdownData {
     name: string;
     value: number;
   }[];
+  isReport?: boolean;
 }
 
 /**
