@@ -50,7 +50,10 @@ const DashboardScreen: React.FC = () => {
   useEffect(() => {
     const scrollToTop = () => {
       // グローバルwindowのスクロールをリセット
-      window.scrollTo(0, 0);
+      window.scrollTo({
+        top: 0,
+        behavior: 'auto'
+      });
       document.body.scrollTop = 0;
       document.documentElement.scrollTop = 0;
       
@@ -69,11 +72,22 @@ const DashboardScreen: React.FC = () => {
               inline: 'start'
             });
             
-            // iOS Safari対応のために追加のスクロール調整
+            // iOS Safari対応のために追加のスクロール調整と十分な待機時間
             setTimeout(() => {
-              window.scrollTo(0, 0);
+              window.scrollTo({
+                top: 0,
+                behavior: 'auto'
+              });
               dashboardContainer.scrollTop = 0;
-            }, 100);
+              
+              // 一定時間後に追加の調整を行う（アニメーション完了後）
+              setTimeout(() => {
+                window.scrollTo({
+                  top: 0,
+                  behavior: 'auto'
+                });
+              }, 100);
+            }, 200);
           }
         }
       }
@@ -85,10 +99,12 @@ const DashboardScreen: React.FC = () => {
     // わずかな遅延の後に再度スクロールして位置を確実に調整（非同期レンダリング対応）
     const timeoutId = setTimeout(scrollToTop, 150);
     const secondTimeoutId = setTimeout(scrollToTop, 500);
+    const finalTimeoutId = setTimeout(scrollToTop, 1000); // さらに長い遅延でも確認
     
     return () => {
       clearTimeout(timeoutId);
       clearTimeout(secondTimeoutId);
+      clearTimeout(finalTimeoutId);
     };
   }, [isMobile]);
   
@@ -146,7 +162,7 @@ const DashboardScreen: React.FC = () => {
         maxWidth: { xs: '100%', sm: '95%', md: '1400px' },
         mx: 'auto', 
         p: { xs: 1, sm: 2, md: 3 },
-        pt: { xs: 2, sm: 3, md: 4 },
+        pt: { xs: 6, sm: 7, md: 8 }, // 上部のパディングを増やして内容が見切れないようにする
         pb: { xs: 8, sm: 6 }, // 下部にスペースを追加してスクロールを確保
         display: 'flex',
         flexDirection: 'column',
@@ -159,7 +175,7 @@ const DashboardScreen: React.FC = () => {
         overflowY: 'visible', // 下部が見切れないように修正
         overflowX: 'hidden',
         ...(isMobile && {
-          paddingTop: 16, // モバイルでの上部スペースを確保
+          paddingTop: 24, // モバイルでの上部スペースをさらに確保
           paddingBottom: 200, // モバイルでの下部スペースをさらに増やす
         })
       }}
@@ -170,13 +186,14 @@ const DashboardScreen: React.FC = () => {
           width: '100%',
           mb: { xs: 2, sm: 3 },
           position: 'sticky', // スクロールしても上部に固定
-          top: 0,
+          top: { xs: 8, sm: 8, md: 8 }, // トップ位置を調整し、上部バーの下に表示
           zIndex: 10,
           backgroundColor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(8px)',
           borderRadius: 2,
           boxShadow: 1,
-          py: 1
+          py: 1,
+          marginTop: { xs: 4, sm: 4, md: 4 } // 上部にマージンを追加
         }}
       >
         {/* ダッシュボードヘッダー */}
