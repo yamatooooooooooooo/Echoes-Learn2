@@ -17,7 +17,7 @@ import {
 } from '@mui/icons-material';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { useUserSettings } from '../../../../hooks/useUserSettings';
-import { calculateDailyQuota } from '../../../../application/utils/quotaCalculator';
+import { calculateDailyQuota } from '../../../../domain/utils/quotaCalculator';
 
 /**
  * シンプルな1日のノルマ表示カード
@@ -38,14 +38,15 @@ export const SimpleDailyQuotaCard: React.FC<{
   useEffect(() => {
     if (subjects.length === 0 || isLoadingSettings) return;
     
-    const { dailyStudyHours, maxConcurrentSubjects } = userSettings;
-    const calculatedQuota = calculateDailyQuota(
-      subjects, 
-      maxConcurrentSubjects, 
-      dailyStudyHours
-    );
+    const calculatedQuota = calculateDailyQuota(subjects, userSettings);
     
-    setDailyQuota(calculatedQuota.subjectQuotas);
+    // クォータアイテムからサブジェクトIDごとのページ数を集計
+    const subjectQuotas: { [key: string]: number } = {};
+    calculatedQuota.quotaItems.forEach(item => {
+      subjectQuotas[item.subjectId] = item.pages;
+    });
+    
+    setDailyQuota(subjectQuotas);
     setTotalQuota(calculatedQuota.totalPages);
   }, [subjects, userSettings, isLoadingSettings]);
   
