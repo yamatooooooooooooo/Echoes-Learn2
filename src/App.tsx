@@ -173,7 +173,7 @@ const App: React.FC = () => {
             <Box 
               sx={{ 
                 padding: { xs: 1, sm: 2, md: 3 },
-                paddingTop: { xs: 8, sm: 8, md: 8 },
+                paddingTop: { xs: 16, sm: 16, md: 16 },
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column'

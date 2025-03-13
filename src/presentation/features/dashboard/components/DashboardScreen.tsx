@@ -54,6 +54,9 @@ const DashboardScreen: React.FC = () => {
         top: 0,
         behavior: 'auto'
       });
+      
+      // 明示的に0にリセット
+      window.scrollY = 0;
       document.body.scrollTop = 0;
       document.documentElement.scrollTop = 0;
       
@@ -61,34 +64,36 @@ const DashboardScreen: React.FC = () => {
       if (containerRef.current) {
         containerRef.current.scrollTop = 0;
         
-        if (isMobile) {
-          // モバイル向けの追加調整
-          const dashboardContainer = document.getElementById('dashboard-root-container');
-          if (dashboardContainer) {
-            dashboardContainer.scrollTop = 0;
-            dashboardContainer.scrollIntoView({ 
-              behavior: 'auto', 
-              block: 'start',
-              inline: 'start'
+        // モバイルデバイスでの追加調整
+        const dashboardContainer = document.getElementById('dashboard-root-container');
+        if (dashboardContainer) {
+          dashboardContainer.scrollTop = 0;
+          dashboardContainer.scrollIntoView({ 
+            behavior: 'auto', 
+            block: 'start',
+            inline: 'start'
+          });
+          
+          // iOS Safariに対する特別な調整
+          setTimeout(() => {
+            window.scrollTo({
+              top: 0,
+              behavior: 'auto'
             });
+            dashboardContainer.scrollTop = 0;
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
             
-            // iOS Safari対応のために追加のスクロール調整と十分な待機時間
+            // さらに追加の調整を行う
             setTimeout(() => {
               window.scrollTo({
                 top: 0,
                 behavior: 'auto'
               });
-              dashboardContainer.scrollTop = 0;
-              
-              // 一定時間後に追加の調整を行う（アニメーション完了後）
-              setTimeout(() => {
-                window.scrollTo({
-                  top: 0,
-                  behavior: 'auto'
-                });
-              }, 100);
+              document.body.scrollTop = 0;
+              document.documentElement.scrollTop = 0;
             }, 200);
-          }
+          }, 300);
         }
       }
     };
@@ -96,14 +101,16 @@ const DashboardScreen: React.FC = () => {
     // 初回レンダリング時にスクロール
     scrollToTop();
     
-    // わずかな遅延の後に再度スクロールして位置を確実に調整（非同期レンダリング対応）
+    // 複数のタイムアウトで確実にスクロール位置を調整
     const timeoutId = setTimeout(scrollToTop, 150);
     const secondTimeoutId = setTimeout(scrollToTop, 500);
-    const finalTimeoutId = setTimeout(scrollToTop, 1000); // さらに長い遅延でも確認
+    const thirdTimeoutId = setTimeout(scrollToTop, 1000);
+    const finalTimeoutId = setTimeout(scrollToTop, 2000); // より長いタイムアウトも追加
     
     return () => {
       clearTimeout(timeoutId);
       clearTimeout(secondTimeoutId);
+      clearTimeout(thirdTimeoutId);
       clearTimeout(finalTimeoutId);
     };
   }, [isMobile]);
@@ -162,7 +169,7 @@ const DashboardScreen: React.FC = () => {
         maxWidth: { xs: '100%', sm: '95%', md: '1400px' },
         mx: 'auto', 
         p: { xs: 1, sm: 2, md: 3 },
-        pt: { xs: 6, sm: 7, md: 8 }, // 上部のパディングを増やして内容が見切れないようにする
+        pt: { xs: 20, sm: 20, md: 20 }, // 上部のパディングを大幅に増やす
         pb: { xs: 8, sm: 6 }, // 下部にスペースを追加してスクロールを確保
         display: 'flex',
         flexDirection: 'column',
@@ -175,7 +182,7 @@ const DashboardScreen: React.FC = () => {
         overflowY: 'visible', // 下部が見切れないように修正
         overflowX: 'hidden',
         ...(isMobile && {
-          paddingTop: 24, // モバイルでの上部スペースをさらに確保
+          paddingTop: 60, // モバイルでの上部スペースをさらに大幅に確保
           paddingBottom: 200, // モバイルでの下部スペースをさらに増やす
         })
       }}
@@ -185,8 +192,7 @@ const DashboardScreen: React.FC = () => {
         sx={{ 
           width: '100%',
           mb: { xs: 2, sm: 3 },
-          position: 'sticky', // スクロールしても上部に固定
-          top: { xs: 8, sm: 8, md: 8 }, // トップ位置を調整し、上部バーの下に表示
+          position: 'relative', // sticky から relative に変更してトップ固定を解除
           zIndex: 10,
           backgroundColor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(8px)',
