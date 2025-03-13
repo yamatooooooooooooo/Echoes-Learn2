@@ -566,7 +566,6 @@ const DashboardScreen: React.FC = () => {
         </Box>
     </Box>
   );
-};
 /**
  * 統合されたデータ可視化コントロールコンポーネント
  */
