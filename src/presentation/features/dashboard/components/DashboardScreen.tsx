@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -9,11 +9,13 @@ import {
   IconButton,
   Tooltip,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Button
 } from '@mui/material';
 import { 
   Dashboard as DashboardIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  Update as UpdateIcon
 } from '@mui/icons-material';
 import { SimpleDailyQuotaCard } from './SimpleDailyQuotaCard';
 import { SimpleWeeklyQuotaCard } from './SimpleWeeklyQuotaCard';
@@ -24,6 +26,11 @@ import { DeadlinesCard } from './DeadlinesCard';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../../../../contexts/AuthContext';
 import DataCleanupButton from '../../../components/common/DataCleanupButton';
+import { useDashboardState } from '../hooks/useDashboardState';
+import { useDashboardSettings } from '../hooks/useDashboardSettings';
+import { ModuleVisibility } from '../../../../domain/models/UserSettingsModel';
+import { LoadingScreen } from '../../../components/LoadingScreen';
+import { ErrorScreen } from '../../../components/ErrorScreen';
 
 /**
  * ダッシュボード画面 - モダンデザイン
@@ -33,8 +40,11 @@ const DashboardScreen: React.FC = () => {
   const { dashboardData, isLoading, error, formatDate, refreshData } = useDashboardData();
   const { currentUser } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const containerRef = useRef<HTMLDivElement>(null);
+  const { dashboardState, isLoading: dashboardStateLoading, error: dashboardStateError, handleRefresh } = useDashboardState();
+  const { settings, isVisibleModule } = useDashboardSettings();
+  const [refreshing, setRefreshing] = useState(false);
   
   // マウント時に最上部にスクロール
   useEffect(() => {
@@ -83,10 +93,10 @@ const DashboardScreen: React.FC = () => {
   }, [isMobile]);
   
   // 手動更新
-  const handleRefresh = () => {
-    if (refreshData) {
-      refreshData();
-    }
+  const handleRefreshWithLoading = async () => {
+    setRefreshing(true);
+    await handleRefresh();
+    setRefreshing(false);
   };
   
   if (isLoading) {
@@ -138,20 +148,19 @@ const DashboardScreen: React.FC = () => {
         p: { xs: 1, sm: 2, md: 3 },
         pt: { xs: 2, sm: 3, md: 4 },
         pb: { xs: 8, sm: 6 }, // 下部にスペースを追加してスクロールを確保
-        overflow: 'auto',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        height: isMobile ? 'auto' : 'calc(100vh - 64px)',
-        minHeight: isMobile ? '100vh' : 'auto',
+        height: 'auto', // 高さを自動に設定し、コンテンツに合わせて伸縮
+        minHeight: isMobile ? '100%' : '100vh',
         backgroundColor: 'background.default',
         scrollBehavior: 'smooth',
         WebkitOverflowScrolling: 'touch', // iOS向けスムーススクロール
-        scrollbarWidth: 'thin',
-        msOverflowStyle: '-ms-autohiding-scrollbar',
+        overflowY: 'visible', // 下部が見切れないように修正
+        overflowX: 'hidden',
         ...(isMobile && {
           paddingTop: 16, // モバイルでの上部スペースを確保
-          paddingBottom: 100, // モバイルでの下部スペースを十分に確保
+          paddingBottom: 200, // モバイルでの下部スペースをさらに増やす
         })
       }}
     >
@@ -225,7 +234,7 @@ const DashboardScreen: React.FC = () => {
             
             <Tooltip title="データを更新">
               <IconButton 
-                onClick={handleRefresh} 
+                onClick={handleRefreshWithLoading} 
                 size="small"
                 sx={{
                   bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
@@ -234,7 +243,7 @@ const DashboardScreen: React.FC = () => {
                   }
                 }}
               >
-                <RefreshIcon />
+                {refreshing ? <CircularProgress size={24} color="inherit" /> : <UpdateIcon />}
               </IconButton>
             </Tooltip>
           </Box>
@@ -252,8 +261,8 @@ const DashboardScreen: React.FC = () => {
       >
         {/* カードコンテナ */}
         <Grid container spacing={isMobile ? 2 : 3} sx={{ mb: 2 }}>
-          {/* 試験スケジュールカード */}
-          <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+          {/* 試験スケジュールカード - 縦に配置するためにxs:12に変更 */}
+          <Grid item xs={12} sx={{ display: 'flex' }}>
             <Paper 
               elevation={0} 
               sx={{ 
@@ -280,8 +289,8 @@ const DashboardScreen: React.FC = () => {
             </Paper>
           </Grid>
           
-          {/* レポート締切カード */}
-          <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+          {/* レポート締切カード - 縦に配置するためにxs:12に変更 */}
+          <Grid item xs={12} sx={{ display: 'flex' }}>
             <Paper 
               elevation={0} 
               sx={{ 
@@ -307,12 +316,12 @@ const DashboardScreen: React.FC = () => {
               <DeadlinesCard subjects={dashboardData?.subjects || []} />
             </Paper>
           </Grid>
-        
+          
           {/* ノルマカード */}
           <Grid item xs={12} md={6}>
             <SimpleDailyQuotaCard 
               subjects={dashboardData?.subjects || []} 
-              isLoading={isLoading} 
+              isLoading={isLoading}
             />
           </Grid>
           
@@ -320,10 +329,10 @@ const DashboardScreen: React.FC = () => {
           <Grid item xs={12} md={6}>
             <SimpleWeeklyQuotaCard 
               subjects={dashboardData?.subjects || []} 
-              isLoading={isLoading} 
+              isLoading={isLoading}
             />
           </Grid>
-        
+          
           {/* 進捗バー */}
           <Grid item xs={12}>
             <Paper 
@@ -349,7 +358,7 @@ const DashboardScreen: React.FC = () => {
             >
               <SimpleProgressBarCard 
                 subjects={dashboardData?.subjects || []} 
-                isLoading={isLoading} 
+                isLoading={isLoading}
               />
             </Paper>
           </Grid>
@@ -381,7 +390,7 @@ const DashboardScreen: React.FC = () => {
                 <RecentProgressCard 
                   recentProgress={dashboardData.recentProgress} 
                   formatDate={formatDate}
-                  isLoading={isLoading} 
+                  isLoading={isLoading}
                 />
               </Paper>
             </Grid>
