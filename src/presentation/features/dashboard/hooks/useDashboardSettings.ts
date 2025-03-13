@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { UserSettingsRepository } from '../../../../infrastructure/repositories/userSettingsRepository';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
 import { DASHBOARD_MODULES } from '../../../../config/dashboardModules';
+import { FirebaseUserSettingsRepository } from '../../../../infrastructure/repositories/userSettingsRepository';
 
 // モジュール設定の型定義
 export interface ModuleSettings {
@@ -40,6 +40,17 @@ export const useDashboardSettings = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   
+  // ユーザー設定
+  const [settings, setSettings] = useState<any>({});
+
+  /**
+   * モジュールが表示可能かチェックする
+   * @param moduleId モジュールID
+   */
+  const isVisibleModule = useCallback((moduleId: string): boolean => {
+    return moduleSettings[moduleId]?.enabled ?? false;
+  }, [moduleSettings]);
+
   /**
    * 保存された設定を読み込む
    */
@@ -53,7 +64,7 @@ export const useDashboardSettings = () => {
       }
       
       // LocalStorageになければFirestoreから読み込む試行
-      const userSettingsRepo = new UserSettingsRepository(firestore, auth);
+      const userSettingsRepo = new FirebaseUserSettingsRepository(firestore, auth);
       const settings = await userSettingsRepo.getDashboardSettings();
       
       if (settings && settings.moduleSettings) {
@@ -84,7 +95,7 @@ export const useDashboardSettings = () => {
       localStorage.setItem('dashboardModuleSettings', JSON.stringify(moduleSettings));
       
       // Firestoreにも保存
-      const userSettingsRepo = new UserSettingsRepository(firestore, auth);
+      const userSettingsRepo = new FirebaseUserSettingsRepository(firestore, auth);
       await userSettingsRepo.saveDashboardSettings({ moduleSettings });
       
       setSnackbarMessage('設定が保存されました');
@@ -183,6 +194,8 @@ export const useDashboardSettings = () => {
     toggleModuleEnabled,
     toggleModuleCollapsed,
     updateModulesOrder,
-    resetToDefaults
+    resetToDefaults,
+    settings,
+    isVisibleModule
   };
 }; 

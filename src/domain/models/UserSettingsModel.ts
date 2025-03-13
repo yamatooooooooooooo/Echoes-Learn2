@@ -15,6 +15,15 @@ export interface UserSettings {
 }
 
 /**
+ * モジュール表示設定の型定義
+ */
+export enum ModuleVisibility {
+  VISIBLE = 'visible',
+  HIDDEN = 'hidden',
+  COLLAPSED = 'collapsed'
+}
+
+/**
  * ユーザー設定の新規作成用インターフェース
  */
 export interface UserSettingsCreateInput {
