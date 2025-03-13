@@ -92,7 +92,19 @@ const SignupPage: React.FC = () => {
       navigate('/');
     } catch (err: any) {
       console.error('Google新規登録エラー:', err);
-      setError(`Google新規登録に失敗しました: ${err.message}`);
+      
+      // エラーメッセージの日本語化
+      if (err.code === 'auth/operation-not-allowed') {
+        setError('この認証方法は現在無効になっています。Firebase Consoleで設定を確認してください。');
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setError('認証ポップアップが閉じられました。もう一度お試しください。');
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        setError('認証リクエストがキャンセルされました。もう一度お試しください。');
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('認証ポップアップがブラウザによってブロックされました。ポップアップを許可してください。');
+      } else {
+        setError(`Google新規登録に失敗しました: ${err.message}`);
+      }
     } finally {
       setLoading(false);
     }

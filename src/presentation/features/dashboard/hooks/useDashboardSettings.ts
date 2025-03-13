@@ -34,6 +34,8 @@ export interface DashboardCardSettings {
   progressBar: boolean;
   recentProgress: boolean;
   visualization: boolean;
+  navigation: boolean;
+  progressRadar: boolean;
 }
 
 const DEFAULT_SETTINGS: DashboardCardSettings = {
@@ -44,6 +46,8 @@ const DEFAULT_SETTINGS: DashboardCardSettings = {
   progressBar: true,
   recentProgress: true,
   visualization: true,
+  navigation: true,
+  progressRadar: true,
 };
 
 /**
@@ -210,12 +214,12 @@ export const useDashboardSettings = () => {
     setSnackbarOpen(true);
   };
   
-  const toggleCard = (cardKey: keyof DashboardCardSettings) => {
-    setSettings({
-      ...settings,
-      [cardKey]: !settings[cardKey],
-    });
-  };
+  // カードの表示/非表示を切り替える
+  const toggleCard = useCallback((cardName: keyof DashboardCardSettings) => {
+    const newSettings = { ...settings };
+    newSettings[cardName] = !settings[cardName];
+    setSettings(newSettings);
+  }, [settings, setSettings]);
 
   return {
     moduleSettings,

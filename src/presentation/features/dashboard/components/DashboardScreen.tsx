@@ -1,562 +1,58 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { 
-  Box, 
-  Typography, 
-  CircularProgress, 
-  Alert, 
-  Grid, 
+import React, { useState, useMemo, useCallback } from 'react';
+import {
+  Box,
+  Grid,
   Paper,
   IconButton,
-  Tooltip,
-  useTheme,
-  useMediaQuery,
-  Button,
-  Card,
-  CardContent,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
+  Typography,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormControlLabel,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
   Switch,
   Divider
 } from '@mui/material';
-import { 
-  Dashboard as DashboardIcon,
-  Refresh as RefreshIcon,
-  Update as UpdateIcon,
-  Settings as SettingsIcon,
-  Visibility as VisibilityIcon,
-  Assignment as AssignmentIcon,
-  Event as EventIcon,
-  Timeline as TimelineIcon,
-  CalendarToday as CalendarTodayIcon,
-  Assessment as AssessmentIcon,
-  CheckCircle as CheckCircleIcon,
-  BarChart as BarChartIcon
-} from '@mui/icons-material';
-import { SimpleDailyQuotaCard } from './SimpleDailyQuotaCard';
-import { SimpleWeeklyQuotaCard } from './SimpleWeeklyQuotaCard';
-import { SimpleProgressBarCard } from './SimpleProgressBarCard';
-import { RecentProgressCard } from './RecentProgressCard';
-import { UpcomingExamsCard } from './UpcomingExamsCard';
-import { DeadlinesCard } from './DeadlinesCard';
-import ProgressRadarChart from './ProgressRadarChart';
-import CountdownContainer from './CountdownContainer';
+import { Settings as SettingsIcon } from '@mui/icons-material';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../../../../contexts/AuthContext';
-import DataCleanupButton from '../../../components/common/DataCleanupButton';
-import { useVisualizationData } from '../hooks/useVisualizationData';
-import { format } from 'date-fns';
-import { CardHeader } from '../../../components/common/CardHeader';
 import { useDashboardSettings } from '../hooks/useDashboardSettings';
+import { CardHeader } from '../../../components/common/CardHeader';
+import { RecentProgressCard } from './RecentProgressCard';
+import { NavigationCard } from './NavigationCard';
+import ProgressRadarChart from './ProgressRadarChart';
+import { format } from 'date-fns';
+import { ja } from 'date-fns/locale';
+// import { UpcomingExamsCard } from './UpcomingExamsCard';
 
 /**
- * ダッシュボード画面 - モダンデザイン
- * 学習進捗と予定を視覚的に表示
+ * ダッシュボードスクリーンコンポーネント
  */
 const DashboardScreen: React.FC = () => {
-  const { dashboardData, isLoading, error, formatDate, refreshData } = useDashboardData();
+  const { dashboardData, isLoading, error } = useDashboardData();
   const { currentUser } = useAuth();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { settings, toggleCard } = useDashboardSettings();
-  
-  // カード表示設定メニュー用のステート
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
-  
-  // 表示設定メニューを開く
-  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  
-  // 表示設定メニューを閉じる
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-  };
-  
+
+  // 日付フォーマット関数
+  const formatDate = useCallback((date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return format(dateObj, 'yyyy年M月d日（E）', { locale: ja });
+  }, []);
+
   // 設定ダイアログを開く
-  const handleOpenSettingsDialog = () => {
-    setSettingsDialogOpen(true);
-    handleCloseMenu();
+  const handleOpenSettings = () => {
+    setSettingsOpen(true);
   };
-  
+
   // 設定ダイアログを閉じる
-  const handleCloseSettingsDialog = () => {
-    setSettingsDialogOpen(false);
+  const handleCloseSettings = () => {
+    setSettingsOpen(false);
   };
-  
-  // マウント時に最上部にスクロール
-  useEffect(() => {
-    const scrollToTop = () => {
-      try {
-        // シンプルなスクロールリセット - 一つだけの方法を使用
-        window.scrollTo(0, 0);
-        
-        // モバイルの場合のみ、遅延して再度スクロール位置を確認
-        if (isMobile) {
-          setTimeout(() => {
-            window.scrollTo(0, 0);
-          }, 300);
-        }
-      } catch (error) {
-        console.error('スクロール処理中にエラーが発生しました:', error);
-      }
-    };
-    
-    // 初回レンダリング時に実行
-    scrollToTop();
-    
-    // 一度だけ遅延実行
-    const timeoutId = setTimeout(scrollToTop, 300);
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [isMobile]);
-  
-  // 手動更新
-  const handleRefreshWithLoading = useCallback(async () => {
-    setRefreshing(true);
-    await refreshData();
-    setRefreshing(false);
-  }, [refreshData]);
-  
-  if (isLoading) {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '50vh',
-        flexDirection: 'column',
-        gap: 2
-      }}>
-        <CircularProgress size={40} thickness={4} />
-        <Typography variant="body2" color="text.secondary">
-          学習データを読み込み中...
-        </Typography>
-      </Box>
-    );
-  }
-  
-  if (error) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Alert severity="info">
-          ログインしてください。
-        </Alert>
-      </Box>
-    );
-  }
-  
-  // 科目数の取得
-  const subjectCount = dashboardData?.subjects?.length || 0;
-  
-  return (
-    <Box sx={{ overflowX: 'hidden' }}>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', px: isMobile ? 2 : 3, pt: 3, pb: 6 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1" sx={{ display: 'flex', alignItems: 'center' }}>
-            <DashboardIcon sx={{ mr: 1 }} />
-            ダッシュボード
-          </Typography>
-          
-          <Box>
-            <Tooltip title="表示設定">
-              <IconButton onClick={handleOpenMenu}>
-                <SettingsIcon />
-              </IconButton>
-            </Tooltip>
-            
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleCloseMenu}
-              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-            >
-              <MenuItem onClick={handleOpenSettingsDialog}>
-                <ListItemIcon>
-                  <VisibilityIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>カード表示設定</ListItemText>
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Box>
-        
-        <Grid container direction="column" spacing={isMobile ? 2 : 3} sx={{ mb: 2 }}>
-          {/* データ可視化セクション - 最上部に移動 */}
-          {settings.visualization && (
-            <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
-                <CardHeader
-                  title="データ可視化"
-                  onToggleVisibility={() => toggleCard('visualization')}
-                  isVisible={settings.visualization}
-                  action={<IntegratedVisualizationControls />}
-                  helpText="このカードでは科目ごとの進捗率をレーダーチャートで可視化します。外側に近いほど進捗率が高いことを示します。また、各科目の試験日までの残り日数もカウントダウン表示します。"
-                />
-                <IntegratedVisualizationSection />
-              </Paper>
-            </Grid>
-          )}
-          
-          {/* 試験スケジュールカード */}
-          {settings.upcomingExams && (
-            <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
-                <CardHeader
-                  title="試験スケジュール"
-                  isVisible={settings.upcomingExams}
-                  onToggleVisibility={() => toggleCard('upcomingExams')}
-                  helpText="今後の試験日程を時系列順に表示します。日付が近い順に並べられ、赤色は7日以内、黄色は14日以内の試験を示します。"
-                />
-                <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
-              </Paper>
-            </Grid>
-          )}
-          
-          {/* レポート締切カード */}
-          {settings.deadlines && (
-            <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
-                <CardHeader
-                  title="レポート締切"
-                  isVisible={settings.deadlines}
-                  onToggleVisibility={() => toggleCard('deadlines')}
-                  helpText="レポート提出の締切日を時系列順に表示します。日付が近い順に並べられ、赤色は7日以内、黄色は14日以内の締切を示します。"
-                />
-                <DeadlinesCard subjects={dashboardData?.subjects || []} />
-              </Paper>
-            </Grid>
-          )}
-          
-          {/* ノルマカードのコンテナ */}
-          <Grid item>
-            <Grid container spacing={2}>
-              {/* 日次ノルマカード */}
-              {settings.dailyQuota && (
-                <Grid item xs={12} md={6}>
-                  <Paper sx={{ /* existing styles */ }}>
-                    <CardHeader
-                      title="日次ノルマ"
-                      isVisible={settings.dailyQuota}
-                      onToggleVisibility={() => toggleCard('dailyQuota')}
-                      helpText="各科目の1日あたりの学習ページ数目標を表示します。試験日までの残り日数と総ページ数から自動計算されます。設定画面で学習日数を調整できます。"
-                    />
-                    <SimpleDailyQuotaCard 
-                      subjects={dashboardData?.subjects || []} 
-                      isLoading={isLoading}
-                    />
-                  </Paper>
-                </Grid>
-              )}
-              
-              {/* 週次ノルマカード */}
-              {settings.weeklyQuota && (
-                <Grid item xs={12} md={6}>
-                  <Paper sx={{ /* existing styles */ }}>
-                    <CardHeader
-                      title="週次ノルマ"
-                      isVisible={settings.weeklyQuota}
-                      onToggleVisibility={() => toggleCard('weeklyQuota')}
-                      helpText="各科目の1週間あたりの学習ページ数目標を表示します。試験日までの残り週数と総ページ数から自動計算されます。設定画面で週あたりの学習日数を調整できます。"
-                    />
-                    <SimpleWeeklyQuotaCard 
-                      subjects={dashboardData?.subjects || []} 
-                      isLoading={isLoading}
-                    />
-                  </Paper>
-                </Grid>
-              )}
-            </Grid>
-          </Grid>
-          
-          {settings.progressBar && (
-            <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
-                <CardHeader
-                  title="進捗状況"
-                  isVisible={settings.progressBar}
-                  onToggleVisibility={() => toggleCard('progressBar')}
-                  helpText="各科目の全体的な進捗状況をプログレスバーで表示します。現在のページ数と総ページ数の比率を視覚的に確認できます。"
-                />
-                <SimpleProgressBarCard 
-                  subjects={dashboardData?.subjects || []} 
-                  isLoading={isLoading}
-                />
-              </Paper>
-            </Grid>
-          )}
-          
-          {/* 最近の進捗 */}
-          {settings.recentProgress && dashboardData?.recentProgress && dashboardData.recentProgress.length > 0 && (
-            <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
-                <CardHeader
-                  title="最近の進捗"
-                  isVisible={settings.recentProgress}
-                  onToggleVisibility={() => toggleCard('recentProgress')}
-                  helpText="最近記録した学習進捗を時系列で表示します。各科目の学習記録を確認でき、いつどの科目をどれだけ学習したかが一目でわかります。"
-                />
-                <RecentProgressCard 
-                  recentProgress={dashboardData.recentProgress} 
-                  formatDate={formatDate}
-                  isLoading={isLoading}
-                />
-              </Paper>
-            </Grid>
-          )}
-        </Grid>
-        
-        {/* カード表示設定ダイアログ */}
-        <Dialog
-          open={settingsDialogOpen}
-          onClose={handleCloseSettingsDialog}
-          aria-labelledby="card-settings-dialog-title"
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle id="card-settings-dialog-title">
-            カード表示設定
-          </DialogTitle>
-          <DialogContent>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              ダッシュボードに表示するカードを選択してください。
-            </Typography>
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.visualization}
-                  onChange={() => toggleCard('visualization')}
-                  color="primary"
-                />
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <BarChartIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography>データ可視化</Typography>
-                </Box>
-              }
-            />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.upcomingExams}
-                  onChange={() => toggleCard('upcomingExams')}
-                  color="primary"
-                />
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <EventIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography>試験スケジュール</Typography>
-                </Box>
-              }
-            />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.deadlines}
-                  onChange={() => toggleCard('deadlines')}
-                  color="primary"
-                />
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <AssignmentIcon sx={{ mr: 1, color: 'secondary.main' }} />
-                  <Typography>レポート締切</Typography>
-                </Box>
-              }
-            />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.dailyQuota}
-                  onChange={() => toggleCard('dailyQuota')}
-                  color="primary"
-                />
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CalendarTodayIcon sx={{ mr: 1, color: 'success.main' }} />
-                  <Typography>日次ノルマ</Typography>
-                </Box>
-              }
-            />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.weeklyQuota}
-                  onChange={() => toggleCard('weeklyQuota')}
-                  color="primary"
-                />
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <TimelineIcon sx={{ mr: 1, color: 'info.main' }} />
-                  <Typography>週次ノルマ</Typography>
-                </Box>
-              }
-            />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.progressBar}
-                  onChange={() => toggleCard('progressBar')}
-                  color="primary"
-                />
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <CheckCircleIcon sx={{ mr: 1, color: 'warning.main' }} />
-                  <Typography>進捗状況</Typography>
-                </Box>
-              }
-            />
-            <Divider sx={{ my: 1 }} />
-            
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.recentProgress}
-                  onChange={() => toggleCard('recentProgress')}
-                  color="primary"
-                />
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <AssessmentIcon sx={{ mr: 1, color: 'error.main' }} />
-                  <Typography>最近の進捗</Typography>
-                </Box>
-              }
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseSettingsDialog} color="primary">
-              閉じる
-            </Button>
-          </DialogActions>
-        </Dialog>
-        
-        {/* データクリーンアップボタン */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 2, width: '100%' }}>
-          <DataCleanupButton size="small" />
-        </Box>
-      </Box>
-    </Box>
-  );
-};
-
-/**
- * 統合されたデータ可視化コントロールコンポーネント
- */
-const IntegratedVisualizationControls = React.memo(() => {
-  const { lastUpdated, refreshData } = useVisualizationData();
-  const [refreshing, setRefreshing] = useState(false);
-  const theme = useTheme();
-
-  // 手動更新処理
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await refreshData();
-    setRefreshing(false);
-  }, [refreshData]);
-
-  // 最終更新時刻のフォーマット
-  const formattedUpdateTime = useMemo(() => {
-    if (!lastUpdated) return '未更新';
-    
-    // 時刻のフォーマット
-    const hours = lastUpdated.getHours().toString().padStart(2, '0');
-    const minutes = lastUpdated.getMinutes().toString().padStart(2, '0');
-    const seconds = lastUpdated.getSeconds().toString().padStart(2, '0');
-    
-    return `${hours}:${minutes}:${seconds}`;
-  }, [lastUpdated]);
-
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      <Tooltip title="データを更新">
-        <IconButton 
-          onClick={handleRefresh} 
-          size="small"
-          disabled={refreshing}
-          sx={{
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-            '&:hover': {
-              bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
-            }
-          }}
-        >
-          {refreshing ? <CircularProgress size={24} color="inherit" /> : <RefreshIcon />}
-        </IconButton>
-      </Tooltip>
-    </Box>
-  );
-});
-
-/**
- * 統合されたデータ可視化セクションコンポーネント
- */
-const IntegratedVisualizationSection = React.memo(() => {
-  const { data, isLoading, lastUpdated, handleRefresh } = useVisualizationData();
-
-  // アクティブな科目のみをフィルタリング
-  // 1. 試験日が過去でない科目
-  // 2. 進行中の科目（currentPage < totalPages）のみ - ノルマ計算対象
-  const activeSubjects = useMemo(() => {
-    if (!data.subjects) return [];
-    const today = new Date();
-    return data.subjects.filter(subject => {
-      const examDate = new Date(subject.examDate);
-      // 試験日が今日以降かつ、完了していない科目（ノルマ計算対象の科目）
-      return examDate >= today && subject.currentPage < subject.totalPages;
-    });
-  }, [data.subjects]);
-
-  // レーダーチャートのデータをフィルタリング - ノルマ計算対象の科目のみ表示
-  const filteredRadarData = useMemo(() => {
-    return data.radarChartData.filter(item => {
-      // 対応する科目がアクティブかどうかを確認
-      return activeSubjects.some(subject => subject.name === item.subject);
-    });
-  }, [data.radarChartData, activeSubjects]);
-
-  // フォーマットされた最終更新時間
-  const formattedLastUpdated = useMemo(() => {
-    return lastUpdated ? `最終更新: ${format(new Date(lastUpdated), 'yyyy/MM/dd HH:mm')}` : '';
-  }, [lastUpdated]);
 
   // ヘッダー部分
   const Header = useMemo(() => (
@@ -564,50 +60,147 @@ const IntegratedVisualizationSection = React.memo(() => {
       display: 'flex', 
       justifyContent: 'space-between', 
       alignItems: 'center',
-      mb: 2
+      mb: 3
     }}>
-      <Typography variant="h5" component="h2">
+      <Typography variant="h5" component="h1">
+        ダッシュボード
       </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <IconButton 
-          onClick={handleRefresh} 
-          disabled={isLoading}
-          size="small"
-          sx={{ mr: 1 }}
-        >
-          <RefreshIcon />
-        </IconButton>
-      </Box>
+      <IconButton onClick={handleOpenSettings} size="large">
+        <SettingsIcon />
+      </IconButton>
     </Box>
-  ), [handleRefresh, isLoading]);
+  ), []);
+
+  // エラー表示
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Typography color="error">
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        {Header}
+    <Box sx={{ p: 3 }}>
+      {Header}
+
+      <Grid container spacing={3}>
+        {/* レーダーチャート */}
+        {settings.progressRadar && (
+          <Grid item xs={12}>
+            <Paper>
+              <CardHeader
+                title="学習進捗レーダーチャート"
+                isVisible={settings.progressRadar}
+                onToggleVisibility={() => toggleCard('progressRadar')}
+                helpText="試験日が設定されており、かつ完了していない科目の進捗状況をレーダーチャートで表示します。同時並行で学習している科目の進捗バランスを確認できます。"
+              />
+              <Box sx={{ p: 2 }}>
+                <ProgressRadarChart data={dashboardData?.radarChartData || []} />
+              </Box>
+            </Paper>
+          </Grid>
+        )}
+
+        {/* ナビゲーションカード */}
+        {settings.navigation && (
+          <Grid item xs={12} md={6}>
+            <Paper>
+              <CardHeader
+                title="クイックナビゲーション"
+                isVisible={settings.navigation}
+                onToggleVisibility={() => toggleCard('navigation')}
+                helpText="よく使う機能へのクイックアクセスを提供します。科目の追加や進捗の記録など、主要な操作をすぐに実行できます。"
+              />
+              <NavigationCard onNavigate={() => {}} />
+            </Paper>
+          </Grid>
+        )}
+
+        {/* 最近の進捗 */}
+        {settings.recentProgress && dashboardData?.recentProgress && dashboardData.recentProgress.length > 0 && (
+          <Grid item xs={12} md={6}>
+            <Paper>
+              <CardHeader
+                title="最近の進捗"
+                isVisible={settings.recentProgress}
+                onToggleVisibility={() => toggleCard('recentProgress')}
+                helpText="最近記録した学習進捗を時系列で表示します。各科目の学習記録を確認でき、いつどの科目をどれだけ学習したかが一目でわかります。"
+              />
+              <RecentProgressCard 
+                recentProgress={dashboardData.recentProgress} 
+                formatDate={formatDate}
+                isLoading={isLoading}
+              />
+            </Paper>
+          </Grid>
+        )}
       </Grid>
 
-      <Grid item xs={12}>
-        <Card sx={{ height: '100%' }}>
-          <CardContent>
-            <ProgressRadarChart data={filteredRadarData} />
-          </CardContent>
-        </Card>
-      </Grid>
-
-      <Grid item xs={12}>
-        <Card sx={{ height: '100%' }}>
-          <CardContent>
-            <CountdownContainer 
-              data={data.countdownData} 
-              includeReportDeadlines={true}
-              subjects={activeSubjects}
-            />
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
+      {/* カード表示設定ダイアログ */}
+      <Dialog
+        open={settingsOpen}
+        onClose={handleCloseSettings}
+        aria-labelledby="dashboard-settings-dialog"
+      >
+        <DialogTitle id="dashboard-settings-dialog">
+          ダッシュボード設定
+        </DialogTitle>
+        <DialogContent>
+          <List>
+            <ListItem>
+              <ListItemText 
+                primary="レーダーチャート"
+                secondary="学習進捗のバランスを可視化"
+              />
+              <ListItemSecondaryAction>
+                <Switch
+                  edge="end"
+                  checked={settings.progressRadar}
+                  onChange={() => toggleCard('progressRadar')}
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+            <Divider />
+            <ListItem>
+              <ListItemText 
+                primary="クイックナビゲーション"
+                secondary="よく使う機能へのショートカット"
+              />
+              <ListItemSecondaryAction>
+                <Switch
+                  edge="end"
+                  checked={settings.navigation}
+                  onChange={() => toggleCard('navigation')}
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+            <Divider />
+            <ListItem>
+              <ListItemText 
+                primary="最近の進捗"
+                secondary="最近の学習記録を表示"
+              />
+              <ListItemSecondaryAction>
+                <Switch
+                  edge="end"
+                  checked={settings.recentProgress}
+                  onChange={() => toggleCard('recentProgress')}
+                />
+              </ListItemSecondaryAction>
+            </ListItem>
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSettings} color="primary">
+            閉じる
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
-});
+};
 
 export default DashboardScreen; 
