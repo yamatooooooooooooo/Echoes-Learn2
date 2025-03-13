@@ -47,8 +47,7 @@ const CustomTooltip = React.memo(({ active, payload }: any) => {
  * カスタム凡例コンポーネント
  */
 const CustomLegend = React.memo((props: any) => {
-  const { payload } = props;
-  const theme = useTheme();
+  const { payload, theme } = props;
   
   return (
     <Box 
@@ -121,13 +120,8 @@ const ProgressRadarChart: React.FC<ProgressRadarChartProps> = React.memo(({
 }) => {
   const theme = useTheme();
 
-  // データがない場合のメッセージを表示
-  if (!data || data.length === 0) {
-    return <EmptyChartMessage />;
-  }
-
   // データの件数を表示する文字列
-  const dataCountText = useMemo(() => `${data.length}科目の進捗を表示`, [data.length]);
+  const dataCountText = useMemo(() => `${data?.length || 0}科目の進捗を表示`, [data]);
 
   // ヘッダー部分をメモ化
   const HeaderSection = useMemo(() => (
@@ -170,11 +164,16 @@ const ProgressRadarChart: React.FC<ProgressRadarChartProps> = React.memo(({
             animationEasing="ease-out"
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend content={<CustomLegend />} />
+          <Legend content={<CustomLegend theme={theme} />} />
         </RadarChart>
       </ResponsiveContainer>
     </Box>
-  ), [data, theme.palette]);
+  ), [data, theme]);
+
+  // データがない場合のメッセージを表示
+  if (!data || data.length === 0) {
+    return <EmptyChartMessage />;
+  }
 
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
