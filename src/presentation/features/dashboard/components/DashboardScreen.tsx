@@ -122,7 +122,6 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <Box sx={{ 
-パフォーマンス最適化の状態
       overflowX: 'hidden',
       minHeight: '100vh',
       bgcolor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 1)' : 'rgba(245, 245, 245, 1)',
@@ -564,14 +563,11 @@ const DashboardScreen: React.FC = () => {
         {/* データクリーンアップボタン */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 2, width: '100%' }}>
           <DataCleanupButton size="small" />
-main
         </Box>
       )}
     </Box>
   );
 };
-
-パフォーマンス最適化の状態
 /**
  * 統合されたデータ可視化コントロールコンポーネント
  */
@@ -747,6 +743,5 @@ const IntegratedVisualizationSection = React.memo(() => {
     </Box>
   );
 });
-main
 
 export default DashboardScreen; 
