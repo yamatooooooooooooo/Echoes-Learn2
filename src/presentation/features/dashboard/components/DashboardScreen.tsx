@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { 
   Box, 
   Typography, 
@@ -34,23 +34,52 @@ const DashboardScreen: React.FC = () => {
   const { currentUser } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // マウント時に最上部にスクロール
   useEffect(() => {
-    const scrollTimeout = setTimeout(() => {
+    const scrollToTop = () => {
+      // グローバルwindowのスクロールをリセット
       window.scrollTo(0, 0);
       document.body.scrollTop = 0;
       document.documentElement.scrollTop = 0;
       
-      if (isMobile) {
-        const dashboardContainer = document.getElementById('dashboard-root-container');
-        if (dashboardContainer) {
-          dashboardContainer.scrollIntoView({ behavior: 'auto', block: 'start' });
+      // ダッシュボードのコンテナ要素をトップにスクロール
+      if (containerRef.current) {
+        containerRef.current.scrollTop = 0;
+        
+        if (isMobile) {
+          // モバイル向けの追加調整
+          const dashboardContainer = document.getElementById('dashboard-root-container');
+          if (dashboardContainer) {
+            dashboardContainer.scrollTop = 0;
+            dashboardContainer.scrollIntoView({ 
+              behavior: 'auto', 
+              block: 'start',
+              inline: 'start'
+            });
+            
+            // iOS Safari対応のために追加のスクロール調整
+            setTimeout(() => {
+              window.scrollTo(0, 0);
+              dashboardContainer.scrollTop = 0;
+            }, 100);
+          }
         }
       }
-    }, 100);
+    };
     
-    return () => clearTimeout(scrollTimeout);
+    // 初回レンダリング時にスクロール
+    scrollToTop();
+    
+    // わずかな遅延の後に再度スクロールして位置を確実に調整（非同期レンダリング対応）
+    const timeoutId = setTimeout(scrollToTop, 150);
+    const secondTimeoutId = setTimeout(scrollToTop, 500);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(secondTimeoutId);
+    };
   }, [isMobile]);
   
   // 手動更新
@@ -101,49 +130,44 @@ const DashboardScreen: React.FC = () => {
   return (
     <Box 
       id="dashboard-root-container"
+      ref={containerRef}
       sx={{ 
         width: '100%', 
         maxWidth: { xs: '100%', sm: '95%', md: '1400px' },
         mx: 'auto', 
         p: { xs: 1, sm: 2, md: 3 },
         pt: { xs: 2, sm: 3, md: 4 },
-        pb: { xs: 4, sm: 5, md: 6 },
-        bgcolor: 'background.default',
+        pb: { xs: 8, sm: 6 }, // 下部にスペースを追加してスクロールを確保
+        overflow: 'auto',
         display: 'flex',
         flexDirection: 'column',
-        height: 'auto',
-        minHeight: isMobile ? '100%' : 'calc(100vh - 64px)',
-        marginTop: 0,
-        paddingTop: { xs: 2, sm: 3, md: 4 },
-        position: isMobile ? 'relative' : 'static',
-        top: 0,
-        left: 0,
-        overflowX: 'hidden',
-        overflowY: 'auto',
-        scrollMarginTop: 0,
-        scrollPaddingTop: 0,
-        willChange: 'transform',
-        zIndex: 1,
+        position: 'relative',
+        height: isMobile ? 'auto' : 'calc(100vh - 64px)',
+        minHeight: isMobile ? '100vh' : 'auto',
+        backgroundColor: 'background.default',
+        scrollBehavior: 'smooth',
+        WebkitOverflowScrolling: 'touch', // iOS向けスムーススクロール
+        scrollbarWidth: 'thin',
+        msOverflowStyle: '-ms-autohiding-scrollbar',
         ...(isMobile && {
-          WebkitOverflowScrolling: 'touch',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { 
-            display: 'none' 
-          },
+          paddingTop: 16, // モバイルでの上部スペースを確保
+          paddingBottom: 100, // モバイルでの下部スペースを十分に確保
         })
       }}
     >
       {/* ヘッダー部分 - 固定表示 */}
       <Box 
         sx={{ 
-          flexShrink: 0, 
-          mb: { xs: 2, sm: 3 },
           width: '100%',
-          zIndex: 2,
-          position: 'relative',
+          mb: { xs: 2, sm: 3 },
+          position: 'sticky', // スクロールしても上部に固定
           top: 0,
-          left: 0
+          zIndex: 10,
+          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(8px)',
+          borderRadius: 2,
+          boxShadow: 1,
+          py: 1
         }}
       >
         {/* ダッシュボードヘッダー */}
@@ -217,21 +241,13 @@ const DashboardScreen: React.FC = () => {
         </Paper>
       </Box>
       
-      {/* スクロール可能なコンテンツエリア */}
+      {/* メインコンテンツエリア */}
       <Box 
         sx={{ 
           flexGrow: 1, 
-          display: 'block',
           width: '100%',
-          position: 'relative',
-          overflowY: 'auto',
-          overflowX: 'hidden',
           pb: 4,
-          scrollBehavior: 'smooth',
-          ...(isMobile && {
-            WebkitOverflowScrolling: 'touch',
-            height: 'auto'
-          })
+          mt: 2,
         }}
       >
         {/* カードコンテナ */}
