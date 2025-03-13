@@ -15,7 +15,9 @@ import {
   Divider,
   Tooltip,
   ButtonBase,
-  Badge
+  Badge,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   MenuBook as MenuBookIcon,
@@ -26,7 +28,12 @@ import {
   PriorityHigh as PriorityHighIcon,
   Warning as WarningIcon,
   Flag as FlagIcon,
-  ErrorOutline as ErrorOutlineIcon
+  ErrorOutline as ErrorOutlineIcon,
+  School as SchoolIcon,
+  Assignment as AssignmentIcon,
+  TrendingUp as TrendingUpIcon,
+  Check as CheckIcon,
+  AssignmentTurnedIn as AssignmentTurnedInIcon
 } from '@mui/icons-material';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { calculateDaysRemaining, calculateProgress, getPriorityColor } from '../utils/subjectUtils';
@@ -38,6 +45,7 @@ interface SubjectListViewProps {
   onSubjectUpdated: (subject: Subject) => void;
   onSubjectEdit: (subject: Subject) => void;
   onSubjectDelete: (subject: Subject) => void;
+  onRecordProgress?: (subject: Subject) => void;
 }
 
 /**
@@ -49,8 +57,13 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
   formatDate,
   onSubjectUpdated,
   onSubjectEdit,
-  onSubjectDelete
+  onSubjectDelete,
+  onRecordProgress
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
@@ -165,41 +178,72 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
         }}
       >
         {subjects.map((subject, index) => {
-          const progress = calculateProgress(subject.currentPage || 0, subject.totalPages);
+          const progress = calculateProgress(subject.currentPage || 0, subject.totalPages || 0);
           const daysRemaining = calculateDaysRemaining(subject.examDate);
           
           return (
             <React.Fragment key={subject.id}>
               <ListItem 
-                component={ButtonBase}
-                onClick={() => onSubjectEdit(subject)}
+                disablePadding 
+                onClick={() => onSubjectEdit && onSubjectEdit(subject)}
                 sx={{ 
-                  py: 1.5,
-                  px: 2,
-                  display: 'flex',
-                  width: '100%',
-                  textAlign: 'left',
-                  '&:hover': { 
-                    bgcolor: 'rgba(0, 0, 0, 0.03)' 
+                  py: { xs: 1.5, sm: 2 }, 
+                  px: { xs: 1.5, sm: 2, md: 3 }, 
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: theme.palette.mode === 'dark' 
+                      ? 'rgba(255, 255, 255, 0.05)' 
+                      : 'rgba(0, 0, 0, 0.03)'
                   },
-                  transition: 'background-color 0.2s',
                   borderLeft: '3px solid',
-                  borderColor: `${getPriorityColor(subject.priority)}.main`
+                  borderColor: `${getPriorityColor(subject.priority)}.main`,
+                  transition: 'background-color 0.2s'
                 }}
               >
-                <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
-                  {/* 科目名 */}
-                  <Box sx={{ width: '40%', display: 'flex', alignItems: 'center' }}>
-                    <ListItemIcon sx={{ minWidth: 36 }}>
-                      <MenuBookIcon color="primary" />
-                    </ListItemIcon>
-                    <Typography variant="body1" component="div" fontWeight={500} noWrap>
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    width: '100%',
+                    gap: { xs: 1, sm: 0 }
+                  }}
+                >
+                  {/* 科目名 (モバイル向けに最適化) */}
+                  <Box sx={{ 
+                    width: { xs: '100%', sm: '40%' }, 
+                    mb: { xs: 1, sm: 0 },
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <SchoolIcon 
+                      color="primary" 
+                      sx={{ 
+                        mr: 1.5, 
+                        fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                        color: theme.palette.mode === 'dark' ? getPriorityColor(subject.priority) : undefined
+                      }}
+                    />
+                    <Typography 
+                      variant={isMobile ? "body1" : "subtitle1"}
+                      sx={{ 
+                        fontWeight: subject.priority === 'high' ? 600 : 400,
+                        color: subject.priority === 'high' 
+                          ? 'error.main' 
+                          : 'text.primary'
+                      }}
+                    >
                       {subject.name}
                     </Typography>
                   </Box>
                   
-                  {/* 優先度 */}
-                  <Box sx={{ width: '15%', textAlign: 'center' }}>
+                  {/* 優先度 (モバイル向けに非表示または縮小) */}
+                  <Box sx={{ 
+                    width: { xs: '50%', sm: '15%' }, 
+                    textAlign: 'center',
+                    display: { xs: 'inline-flex', sm: 'flex' },
+                    justifyContent: { xs: 'flex-start', sm: 'center' }
+                  }}>
                     <Tooltip 
                       title={`優先度: ${getPriorityLabel(subject.priority)}${daysRemaining && daysRemaining <= 7 ? ' (試験日が近いです!)' : ''}`} 
                       placement="top"
@@ -223,9 +267,18 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
                     </Tooltip>
                   </Box>
                   
-                  {/* 試験日 */}
-                  <Box sx={{ width: '15%', textAlign: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {/* 試験日 (モバイル向けに最適化) */}
+                  <Box sx={{ 
+                    width: { xs: '50%', sm: '15%' }, 
+                    textAlign: 'center',
+                    display: { xs: 'inline-flex', sm: 'flex' },
+                    justifyContent: { xs: 'flex-end', sm: 'center' }
+                  }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: { xs: 'flex-end', sm: 'center' } 
+                    }}>
                       <Tooltip title="試験日" placement="top">
                         <EventIcon 
                           fontSize="small" 
@@ -250,10 +303,19 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
                     </Box>
                   </Box>
                   
-                  {/* 進捗 */}
-                  <Box sx={{ width: '20%', textAlign: 'center' }}>
-                    <Box sx={{ px: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5 }}>
+                  {/* 進捗 (モバイル向けに再配置) */}
+                  <Box sx={{ 
+                    width: { xs: '100%', sm: '20%' }, 
+                    textAlign: 'center',
+                    mt: { xs: 0.5, sm: 0 }
+                  }}>
+                    <Box sx={{ px: { xs: 0, sm: 2 } }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: { xs: 'space-between', sm: 'center' }, 
+                        mb: 0.5 
+                      }}>
                         <Typography 
                           variant="body2" 
                           component="span"
@@ -286,13 +348,29 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
                     </Box>
                   </Box>
                   
-                  {/* 操作ボタン */}
+                  {/* 操作ボタン (進捗記録ボタン追加) */}
                   <Box sx={{ 
-                    width: '10%', 
-                    textAlign: 'center',
+                    width: { xs: '100%', sm: '10%' }, 
                     display: 'flex',
-                    justifyContent: 'center'
+                    justifyContent: { xs: 'flex-end', sm: 'center' },
+                    mt: { xs: 1, sm: 0 }
                   }}>
+                    {/* 進捗記録ボタン */}
+                    {onRecordProgress && (
+                      <IconButton 
+                        size="small" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRecordProgress(subject);
+                        }}
+                        sx={{ mr: 1 }}
+                        color="primary"
+                      >
+                        <Tooltip title="進捗を記録">
+                          <AssignmentTurnedInIcon fontSize="small" />
+                        </Tooltip>
+                      </IconButton>
+                    )}
                     <IconButton 
                       size="small" 
                       onClick={(e) => {
@@ -301,7 +379,9 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
                       }}
                       sx={{ mr: 1 }}
                     >
-                      <EditIcon fontSize="small" />
+                      <Tooltip title="編集">
+                        <EditIcon fontSize="small" />
+                      </Tooltip>
                     </IconButton>
                     <IconButton 
                       size="small" 
@@ -310,7 +390,9 @@ export const SubjectListView: React.FC<SubjectListViewProps> = ({
                         onSubjectDelete(subject);
                       }}
                     >
-                      <DeleteIcon fontSize="small" />
+                      <Tooltip title="削除">
+                        <DeleteIcon fontSize="small" />
+                      </Tooltip>
                     </IconButton>
                   </Box>
                 </Box>

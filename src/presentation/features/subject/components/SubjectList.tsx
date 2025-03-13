@@ -777,6 +777,7 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
                   onSubjectUpdated={handleUpdateSubject}
                   onSubjectEdit={handleEditSubject}
                   onSubjectDelete={handleDeleteConfirm}
+                  onRecordProgress={handleOpenProgressModal}
                 />
               </Paper>
             )}
