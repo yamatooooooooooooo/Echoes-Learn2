@@ -1,363 +1,288 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
-  Card,
-  CardHeader,
-  CardContent,
-  Typography,
-  Box,
+  Box, 
+  Typography, 
+  Paper, 
+  Skeleton, 
+  Divider, 
   LinearProgress,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  Chip,
-  Paper,
-  IconButton,
-  Tooltip,
-  Grid,
-  Badge
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
-import { 
-  Timer as TimerIcon, 
-  MenuBook as BookIcon,
-  Refresh as RefreshIcon,
-  CalendarMonth as CalendarIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon
+import {
+  CheckCircleOutline as CheckCircleOutlineIcon,
+  Warning as WarningIcon,
+  ErrorOutline as ErrorOutlineIcon,
+  TrendingUp as TrendingUpIcon
 } from '@mui/icons-material';
 import { Subject } from '../../../../domain/models/SubjectModel';
-import { WeeklyQuota } from '../../../../domain/models/QuotaModel';
-import { calculateWeeklyQuota } from '../../../../domain/utils/quotaCalculator';
-import { useMaintenanceMessage } from '../../../../hooks/useMaintenanceMessage';
 import { useUserSettings } from '../../../../hooks/useUserSettings';
-
-interface SimpleWeeklyQuotaCardProps {
-  subjects: Subject[];
-  isLoading?: boolean;
-}
+import { calculateWeeklyQuota } from '../../../../domain/utils/quotaCalculator';
 
 /**
- * シンプルな週間ノルマ表示カード
+ * シンプルな週間のノルマ表示カード
  */
-const SimpleWeeklyQuotaCard: React.FC<SimpleWeeklyQuotaCardProps> = ({ 
-  subjects, 
-  isLoading = false
-}) => {
-  const [weeklyQuota, setWeeklyQuota] = useState<WeeklyQuota | null>(null);
+export const SimpleWeeklyQuotaCard: React.FC<{
+  subjects: Subject[];
+  isLoading?: boolean;
+}> = ({ subjects, isLoading = false }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   // ユーザー設定を取得
-  const { userSettings, isLoading: isSettingsLoading } = useUserSettings();
-
-  // メンテナンスメッセージフックを使用
-  const { wrapWithMaintenanceMessage, MaintenanceMessageComponent } = useMaintenanceMessage({
-    message: '週間ノルマの再計算機能は現在メンテナンス中です。近日中に実装予定です。'
-  });
+  const { userSettings, isLoading: isLoadingSettings } = useUserSettings();
+  const [weeklyQuota, setWeeklyQuota] = useState<{ [key: string]: number }>({});
+  const [totalQuota, setTotalQuota] = useState(0);
   
-  // 科目リストが変更されたらノルマを再計算
+  // ユーザー設定に基づいてクォータを計算
   useEffect(() => {
-    // 関数をuseEffect内部で定義して依存関係の問題を解決
-    const calculateQuota = () => {
-      // 現在のuserSettingsを使用してノルマを計算
-      const quota = calculateWeeklyQuota(subjects, userSettings);
-      setWeeklyQuota(quota);
-    };
+    if (subjects.length === 0 || isLoadingSettings) return;
     
-    if (subjects.length > 0 && !isSettingsLoading) {
-      calculateQuota();
-    } else {
-      setWeeklyQuota(null);
-    }
-  }, [subjects, userSettings, isSettingsLoading]);
-  
-  // 手動更新用関数
-  const handleRefresh = () => {
-    // 現在のuserSettingsを使用してノルマを再計算
-    const quota = calculateWeeklyQuota(subjects, userSettings);
-    setWeeklyQuota(quota);
-  };
-  
-  // メンテナンスメッセージを表示するラッパー関数
-  const handleRefreshWithMaintenance = wrapWithMaintenanceMessage(handleRefresh);
-  
-  // 優先度に応じた色を返す
-  const getPriorityColor = (priority: string): string => {
-    switch (priority) {
-      case 'high':
-        return '#f44336';  // 赤
-      case 'medium':
-        return '#ff9800';  // オレンジ
-      case 'low':
-        return '#4caf50';  // 緑
-      default:
-        return '#9e9e9e';  // グレー
-    }
-  };
-  
-  // 日付をフォーマット
-  const formatDate = (date: Date | string): string => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleDateString('ja-JP', {
-      month: 'short',
-      day: 'numeric',
-      weekday: 'short'
+    const calculatedQuota = calculateWeeklyQuota(subjects, userSettings);
+    
+    // クォータアイテムからサブジェクトIDごとのページ数を集計
+    const subjectQuotas: { [key: string]: number } = {};
+    calculatedQuota.quotaItems.forEach(item => {
+      subjectQuotas[item.subjectId] = item.pages;
     });
+    
+    setWeeklyQuota(subjectQuotas);
+    setTotalQuota(calculatedQuota.totalPages);
+  }, [subjects, userSettings, isLoadingSettings]);
+  
+  // 表示されるトップN科目を制限
+  const topSubjectsCount = isMobile ? 3 : 4;
+  const subjectsToShow = subjects
+    .filter(subject => weeklyQuota[subject.id] > 0)
+    .sort((a, b) => weeklyQuota[b.id] - weeklyQuota[a.id])
+    .slice(0, topSubjectsCount);
+  
+  // その他の科目のクォータ合計
+  const otherSubjectsQuota = subjects
+    .filter(subject => weeklyQuota[subject.id] > 0)
+    .sort((a, b) => weeklyQuota[b.id] - weeklyQuota[a.id])
+    .slice(topSubjectsCount)
+    .reduce((total, subject) => total + weeklyQuota[subject.id], 0);
+  
+  // クォータの達成状況アイコンを選択
+  const getStatusIcon = (quota: number) => {
+    if (quota <= 20) {
+      return <CheckCircleOutlineIcon sx={{ color: 'success.main', fontSize: '1.25rem' }} />;
+    } else if (quota <= 50) {
+      return <TrendingUpIcon sx={{ color: 'info.main', fontSize: '1.25rem' }} />;
+    } else if (quota <= 100) {
+      return <WarningIcon sx={{ color: 'warning.main', fontSize: '1.25rem' }} />;
+    } else {
+      return <ErrorOutlineIcon sx={{ color: 'error.main', fontSize: '1.25rem' }} />;
+    }
   };
   
-  // 曜日に応じた色を返す
-  const getDayColor = (dateString: string): string => {
-    const date = new Date(dateString);
-    const day = date.getDay();
-    if (day === 0) return '#f44336';  // 日曜日 - 赤
-    if (day === 6) return '#3f51b5';  // 土曜日 - 青
-    return '#757575';  // 平日 - グレー
-  };
-  
-  // 週次ノルマの達成状況を判定する関数
-  const getWeeklyCompletionStatus = (item: any) => {
-    // 科目のIDを使って、対応する科目のデータを取得
-    const subjectData = subjects.find(subject => subject.id === item.subjectId);
-    
-    if (!subjectData) return { progress: 0, isCompleted: false };
-    
-    // 週の進捗を計算（ここでは単純化のため、当週の進捗ページ数がノルマを超えているか確認）
-    // weeklyProgressPagesプロパティは実際のアプリでは実装されている想定
-    const weeklyProgressPages = 0; // 仮の実装（実際のアプリではsubjectDataから適切な値を取得）
-    const progress = Math.min(100, Math.round((weeklyProgressPages / (item.pages || 1)) * 100));
-    
-    return {
-      progress,
-      isCompleted: progress >= 100
-    };
-  };
-  
-  // 日付の進捗状況を判定する関数
-  const getDailyProgress = (dateStr: string) => {
-    // この日付の全科目の進捗状況を確認
-    const totalTargetPages = weeklyQuota?.dailyDistribution[dateStr] || 0;
-    const date = new Date(dateStr);
-    
-    // 日付が今日より前か判定
-    const isPastDay = date < new Date();
-    
-    // 仮の進捗率（実際のアプリでは日次の進捗データを確認する必要あり）
-    // ここでは例として、過去の日付は80%の確率で達成済みとする
-    const isCompleted = isPastDay && Math.random() > 0.2;
-    
-    return {
-      totalTargetPages,
-      isCompleted,
-      isPastDay
-    };
-  };
-  
-  // ローディング中
-  if (isLoading || isSettingsLoading) {
+  if (isLoading || isLoadingSettings) {
     return (
-      <Card elevation={2} sx={{ mb: 3 }}>
-        <CardHeader 
-          title="今週のノルマ" 
-          titleTypographyProps={{ variant: 'h6' }}
-        />
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <LinearProgress sx={{ width: '100%', height: 10, borderRadius: 5 }} />
-          </Box>
-        </CardContent>
-      </Card>
+      <Paper 
+        elevation={0}
+        sx={{ 
+          height: '100%', 
+          p: { xs: 2, sm: 3 }, 
+          borderRadius: 3,
+          overflow: 'hidden',
+          border: '1px solid',
+          borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+          bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <Box sx={{ mb: 2 }}>
+          <Skeleton variant="text" width="60%" height={32} />
+          <Skeleton variant="text" width="90%" height={24} sx={{ mb: 1 }} />
+        </Box>
+        <Divider sx={{ my: 1.5 }} />
+        <Box sx={{ flexGrow: 1 }}>
+          <Skeleton variant="rectangular" height={24} sx={{ mb: 2, mt: 1, borderRadius: 1 }} />
+          <Skeleton variant="rectangular" height={24} sx={{ mb: 2, borderRadius: 1 }} />
+          <Skeleton variant="rectangular" height={24} sx={{ mb: 2, borderRadius: 1 }} />
+          <Skeleton variant="rectangular" height={24} sx={{ mb: 1, borderRadius: 1 }} />
+        </Box>
+      </Paper>
     );
   }
   
-  if (!weeklyQuota || weeklyQuota.quotaItems.length === 0) {
-    return (
-      <Card elevation={2} sx={{ mb: 3 }}>
-        <CardHeader 
-          title="今週のノルマ" 
-          titleTypographyProps={{ variant: 'h6' }}
-          action={
-            <Tooltip title="再計算">
-              <IconButton onClick={handleRefreshWithMaintenance} size="small">
-                <RefreshIcon />
-              </IconButton>
-            </Tooltip>
-          }
-        />
-        <CardContent>
-          <Typography variant="body2" color="text.secondary" align="center">
-            今週のノルマはありません
-          </Typography>
-          <Typography variant="body2" color="text.secondary" align="center">
-            科目を登録してください
-          </Typography>
-        </CardContent>
-        <MaintenanceMessageComponent />
-      </Card>
-    );
-  }
-  
-  // 日付の配列を作成
-  const dailyDates = Object.keys(weeklyQuota.dailyDistribution).sort();
+  const noQuota = totalQuota === 0 || subjectsToShow.length === 0;
   
   return (
-    <Card elevation={2} sx={{ mb: 3, maxWidth: '100%', width: '100%' }}>
-      <CardHeader 
-        title="今週のノルマ" 
-        titleTypographyProps={{ variant: 'h6' }}
-        subheader={
-          <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-            <CalendarIcon sx={{ mr: 0.5, fontSize: 18 }} />
-            <Typography variant="body2">
-              {formatDate(weeklyQuota.startDate)} - {formatDate(weeklyQuota.endDate)}
+    <Paper 
+      elevation={0}
+      sx={{ 
+        height: '100%',
+        p: { xs: 2, sm: 3 }, 
+        borderRadius: 3,
+        overflow: 'hidden',
+        border: '1px solid',
+        borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+        bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(10px)',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme.palette.mode === 'dark' 
+            ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
+            : '0 8px 24px rgba(0, 0, 0, 0.08)'
+        }
+      }}
+    >
+      <Box>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            mb: 0.5, 
+            fontWeight: 600,
+            fontSize: { xs: '1.1rem', sm: '1.25rem' } 
+          }}
+        >
+          今週のノルマ
+        </Typography>
+        <Typography 
+          variant="body2" 
+          color="text.secondary"
+          sx={{ mb: 1 }}
+        >
+          {noQuota 
+            ? '進行中の科目がありません'
+            : `今週は合計 ${totalQuota} ページの学習が必要です`}
+        </Typography>
+      </Box>
+      
+      <Divider sx={{ 
+        my: 1.5, 
+        borderColor: theme.palette.mode === 'dark' 
+          ? 'rgba(255, 255, 255, 0.1)' 
+          : 'rgba(0, 0, 0, 0.08)' 
+      }} />
+      
+      <Box sx={{ flexGrow: 1, mt: 1 }}>
+        {noQuota ? (
+          <Box 
+            sx={{ 
+              height: '100%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              flexDirection: 'column',
+              py: 2,
+              opacity: 0.7
+            }}
+          >
+            <CheckCircleOutlineIcon 
+              color="success" 
+              sx={{ fontSize: '3rem', mb: 1.5, opacity: 0.7 }} 
+            />
+            <Typography 
+              variant="body1" 
+              color="text.secondary" 
+              align="center"
+            >
+              今週の学習ノルマはありません
             </Typography>
           </Box>
-        }
-        action={
-          <Tooltip title="再計算">
-            <IconButton onClick={handleRefreshWithMaintenance} size="small">
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-        }
-      />
-      <CardContent>
-        <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <BookIcon sx={{ mr: 0.5, fontSize: 18 }} />
-              <Typography variant="body2">合計: {isNaN(weeklyQuota.totalPages) ? 0 : weeklyQuota.totalPages} ページ</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <TimerIcon sx={{ mr: 0.5, fontSize: 18 }} />
-              <Typography variant="body2">推定時間: {isNaN(weeklyQuota.totalMinutes) ? 0 : Math.round(weeklyQuota.totalMinutes / 60 * 10) / 10} 時間</Typography>
-            </Box>
-          </Box>
-        </Box>
-        
-        <Typography variant="subtitle2" gutterBottom>日ごとの配分</Typography>
-        <Grid container spacing={1} sx={{ mb: 2 }}>
-          {dailyDates.map((dateStr) => {
-            const { totalTargetPages, isCompleted, isPastDay } = getDailyProgress(dateStr);
-            const today = new Date().toISOString().split('T')[0];
-            const isToday = dateStr === today;
-            
-            return (
-            <Grid item xs={4} sm={3} md={2} key={dateStr}>
-              <Paper 
-                elevation={1}
+        ) : (
+          <>
+            {subjectsToShow.map((subject) => (
+              <Box 
+                key={subject.id} 
                 sx={{ 
-                  p: 1, 
-                  textAlign: 'center',
-                  bgcolor: isCompleted ? 'rgba(76, 175, 80, 0.1)' : 
-                          isPastDay && !isCompleted ? 'rgba(244, 67, 54, 0.1)' : 
-                          isToday ? 'rgba(33, 150, 243, 0.1)' : 'background.paper',
-                  border: isToday ? '1px solid rgba(33, 150, 243, 0.5)' : 'none',
+                  mb: 2, 
+                  pb: 1,
+                  '&:last-child': { mb: 0, pb: 0 }
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Typography variant="caption" display="block">
-                    {new Date(dateStr).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}
-                  </Typography>
-                  {isPastDay && (
-                    isCompleted ? 
-                    <CheckCircleIcon color="success" sx={{ ml: 0.5, fontSize: 14 }} /> : 
-                    <ErrorIcon color="error" sx={{ ml: 0.5, fontSize: 14 }} />
-                  )}
-                </Box>
-                <Chip 
-                  label={`${weeklyQuota.dailyDistribution[dateStr]} ページ`}
-                  size="small"
+                <Box 
                   sx={{ 
-                    mt: 0.5,
-                    bgcolor: isCompleted ? 'rgba(76, 175, 80, 0.2)' : undefined
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 0.5
+                  }}
+                >
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 500,
+                      maxWidth: '75%',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {subject.name}
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    {getStatusIcon(weeklyQuota[subject.id])}
+                    <Typography 
+                      variant="body2" 
+                      fontWeight={600} 
+                      sx={{ ml: 0.5 }}
+                    >
+                      {weeklyQuota[subject.id]}ページ
+                    </Typography>
+                  </Box>
+                </Box>
+                
+                <LinearProgress 
+                  variant="determinate" 
+                  value={Math.min(100, (subject.currentPage / subject.totalPages) * 100)}
+                  sx={{ 
+                    height: 6, 
+                    borderRadius: 3,
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                    '& .MuiLinearProgress-bar': {
+                      backgroundColor: subject.priority === 'high' 
+                        ? theme.palette.error.main 
+                        : subject.priority === 'medium'
+                          ? theme.palette.warning.main
+                          : theme.palette.success.main
+                    }
                   }}
                 />
-              </Paper>
-            </Grid>
-          )})}
-        </Grid>
-        
-        <Divider sx={{ mb: 2 }} />
-        
-        <Typography variant="subtitle2" gutterBottom>科目ごとのノルマ</Typography>
-        <List disablePadding>
-          {weeklyQuota.quotaItems.map((item) => {
-            const { progress, isCompleted } = getWeeklyCompletionStatus(item);
-            return (
-            <Paper 
-              key={item.subjectId} 
-              elevation={1} 
-              sx={{ 
-                mb: 1,
-                p: 1,
-                borderLeft: `4px solid ${getPriorityColor(item.priority)}`,
-                background: isCompleted ? 'rgba(76, 175, 80, 0.1)' : undefined,
-              }}
-            >
-              <ListItem disablePadding sx={{ py: 0.5 }}>
-                <ListItemText
-                  primary={
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="body1">{item.subjectName}</Typography>
-                        {isCompleted && (
-                          <Tooltip title="今週のノルマ達成">
-                            <CheckCircleIcon 
-                              color="success" 
-                              fontSize="small" 
-                              sx={{ ml: 1 }} 
-                            />
-                          </Tooltip>
-                        )}
-                      </Box>
-                      <Chip 
-                        label={`${item.pages} ページ`} 
-                        size="small"
-                        sx={{ 
-                          bgcolor: 'background.paper',
-                          borderColor: getPriorityColor(item.priority),
-                          borderWidth: 1,
-                          borderStyle: 'solid'
-                        }}
-                      />
-                    </Box>
-                  }
-                  secondary={
-                    <Box sx={{ display: 'flex', flexDirection: 'column', mt: 0.5 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="caption" color="text.secondary">
-                          試験日: {item.examDate ? new Date(item.examDate).toLocaleDateString('ja-JP') : '未設定'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {item.estimatedMinutes} 分
-                        </Typography>
-                      </Box>
-                      <Box sx={{ width: '100%', mt: 1 }}>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={progress} 
-                          sx={{ 
-                            height: 6, 
-                            borderRadius: 3,
-                            backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                            '& .MuiLinearProgress-bar': {
-                              backgroundColor: isCompleted ? '#4caf50' : getPriorityColor(item.priority),
-                            }
-                          }}
-                        />
-                        <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', mt: 0.5 }}>
-                          {progress}% 完了
-                        </Typography>
-                      </Box>
-                    </Box>
-                  }
-                />
-              </ListItem>
-            </Paper>
-          )})}
-        </List>
-      </CardContent>
-      <MaintenanceMessageComponent />
-    </Card>
+              </Box>
+            ))}
+            
+            {otherSubjectsQuota > 0 && (
+              <Box 
+                sx={{ 
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mt: 2,
+                  pt: 1,
+                  borderTop: '1px dashed',
+                  borderColor: theme.palette.mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(0, 0, 0, 0.08)'
+                }}
+              >
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                >
+                  その他の科目
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  fontWeight={500}
+                >
+                  合計 {otherSubjectsQuota}ページ
+                </Typography>
+              </Box>
+            )}
+          </>
+        )}
+      </Box>
+    </Paper>
   );
-};
-
-export default SimpleWeeklyQuotaCard; 
+}; 

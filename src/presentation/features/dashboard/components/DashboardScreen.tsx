@@ -15,8 +15,8 @@ import {
   Dashboard as DashboardIcon,
   Refresh as RefreshIcon
 } from '@mui/icons-material';
-import SimpleDailyQuotaCard from './SimpleDailyQuotaCard';
-import SimpleWeeklyQuotaCard from './SimpleWeeklyQuotaCard';
+import { SimpleDailyQuotaCard } from './SimpleDailyQuotaCard';
+import { SimpleWeeklyQuotaCard } from './SimpleWeeklyQuotaCard';
 import SimpleProgressBarCard from './SimpleProgressBarCard';
 import { RecentProgressCard } from './RecentProgressCard';
 import { UpcomingExamsCard } from './UpcomingExamsCard';
