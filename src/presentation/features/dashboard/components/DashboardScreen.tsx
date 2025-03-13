@@ -23,11 +23,14 @@ import { SimpleProgressBarCard } from './SimpleProgressBarCard';
 import { RecentProgressCard } from './RecentProgressCard';
 import { UpcomingExamsCard } from './UpcomingExamsCard';
 import { DeadlinesCard } from './DeadlinesCard';
+import ProgressRadarChart from './ProgressRadarChart';
+import CountdownContainer from './CountdownContainer';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../../../../contexts/AuthContext';
 import DataCleanupButton from '../../../components/common/DataCleanupButton';
 import { useDashboardState } from '../hooks/useDashboardState';
 import { useDashboardSettings } from '../hooks/useDashboardSettings';
+import { useVisualizationData } from '../hooks/useVisualizationData';
 import { ModuleVisibility } from '../../../../domain/models/UserSettingsModel';
 import { LoadingScreen } from '../../../components/LoadingScreen';
 import { ErrorScreen } from '../../../components/ErrorScreen';
@@ -385,6 +388,19 @@ const DashboardScreen: React.FC = () => {
               </Paper>
             </Grid>
           )}
+
+          {/* データ可視化セクション - 新しく追加 */}
+          <Grid item>
+            <Typography variant="h6" component="h2" sx={{ mb: 2, mt: 2, fontWeight: 600 }}>
+              データ可視化
+            </Typography>
+            <Grid container spacing={isMobile ? 2 : 3}>
+              {/* 学習進捗レーダーチャート */}
+              <Grid item xs={12}>
+                <VisualizationSection />
+              </Grid>
+            </Grid>
+          </Grid>
         </Grid>
         
         {/* データクリーンアップボタン */}
@@ -399,6 +415,135 @@ const DashboardScreen: React.FC = () => {
         </Box>
       </Box>
     </Box>
+  );
+};
+
+/**
+ * データ可視化セクションコンポーネント
+ */
+const VisualizationSection: React.FC = () => {
+  const { loading, error, radarChartData, countdownData, lastUpdated, refreshData } = useVisualizationData();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [refreshing, setRefreshing] = useState(false);
+
+  // 手動更新処理
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshData();
+    setRefreshing(false);
+  };
+
+  // 最終更新時刻のフォーマット
+  const formatLastUpdated = () => {
+    if (!lastUpdated) return '未更新';
+    
+    // 時刻のフォーマット
+    const hours = lastUpdated.getHours().toString().padStart(2, '0');
+    const minutes = lastUpdated.getMinutes().toString().padStart(2, '0');
+    const seconds = lastUpdated.getSeconds().toString().padStart(2, '0');
+    
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
+  if (loading && !refreshing) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ mb: 2 }}>
+        データの取得中にエラーが発生しました: {error.message}
+      </Alert>
+    );
+  }
+
+  return (
+    <>
+      {/* 更新時刻と更新ボタン */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
+          最終更新: {formatLastUpdated()}
+        </Typography>
+        <Tooltip title="データを更新">
+          <IconButton 
+            onClick={handleRefresh} 
+            size="small"
+            disabled={refreshing}
+            sx={{
+              bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+              '&:hover': {
+                bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+              }
+            }}
+          >
+            {refreshing ? <CircularProgress size={24} color="inherit" /> : <RefreshIcon />}
+          </IconButton>
+        </Tooltip>
+      </Box>
+      
+      <Grid container spacing={isMobile ? 2 : 3}>
+        {/* 学習進捗レーダーチャート */}
+        <Grid item xs={12} md={6}>
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 3,
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              backdropFilter: 'blur(10px)',
+              bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: theme.palette.mode === 'dark' 
+                  ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
+                  : '0 8px 24px rgba(0, 0, 0, 0.08)'
+              }
+            }}
+          >
+            <ProgressRadarChart data={radarChartData} />
+          </Paper>
+        </Grid>
+        
+        {/* 試験準備カウントダウン */}
+        <Grid item xs={12} md={6}>
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderRadius: 3,
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              backdropFilter: 'blur(10px)',
+              bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: theme.palette.mode === 'dark' 
+                  ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
+                  : '0 8px 24px rgba(0, 0, 0, 0.08)'
+              }
+            }}
+          >
+            <CountdownContainer data={countdownData} />
+          </Paper>
+        </Grid>
+      </Grid>
+    </>
   );
 };
 

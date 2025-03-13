@@ -97,6 +97,12 @@ const CountdownContainer: React.FC<CountdownContainerProps> = React.memo(({
 }) => {
   const theme = useTheme();
 
+  // 試験日が近い順にソート
+  const sortedData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    return [...data].sort((a, b) => a.remainingDays - b.remainingDays);
+  }, [data]);
+
   // データがない場合のメッセージを表示
   if (!data || data.length === 0) {
     return (
@@ -110,11 +116,6 @@ const CountdownContainer: React.FC<CountdownContainerProps> = React.memo(({
       </Card>
     );
   }
-
-  // 試験日が近い順にソート
-  const sortedData = useMemo(() => {
-    return [...data].sort((a, b) => a.remainingDays - b.remainingDays);
-  }, [data]);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
