@@ -203,8 +203,22 @@ export const DashboardScreen: React.FC = () => {
           
           {/* ModularDashboardコンポーネント */}
           <ModularDashboard
-            dashboardData={dashboardData}
+            dashboardData={{
+              totalSubjects: dashboardData?.totalSubjects || 0,
+              completedSubjects: dashboardData?.completedSubjects || 0,
+              totalPages: dashboardData?.totalPages || 0,
+              completedPages: dashboardData?.completedPages || 0,
+              inProgressSubjects: dashboardData?.inProgressSubjects || 0,
+              notStartedSubjects: dashboardData?.notStartedSubjects || 0,
+              weeklyProgressData: dashboardData?.weeklyProgressData || [],
+              subjects: dashboardData?.subjects || [],
+              recentProgress: dashboardData?.recentProgress || [],
+              studySessions: dashboardData?.studySessions || [],
+              subjectPerformances: dashboardData?.subjectPerformances || []
+            }}
             isLoading={isLoading}
+            error={error}
+            refreshData={refreshData}
             formatDate={formatDate}
           />
         </>

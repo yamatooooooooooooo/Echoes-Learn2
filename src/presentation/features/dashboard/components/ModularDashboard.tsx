@@ -37,8 +37,22 @@ import { NotionStyleCard } from '../../../components/common/NotionStyleCard';
 
 interface ModularDashboardProps {
   formatDate: (date: Date | string | undefined) => string;
-  dashboardData: DashboardData;
+  dashboardData: {
+    totalSubjects: number;
+    completedSubjects: number;
+    totalPages: number;
+    completedPages: number;
+    inProgressSubjects: number;
+    notStartedSubjects: number;
+    weeklyProgressData: any[];
+    subjects: any[];
+    recentProgress: any[];
+    studySessions: any[];
+    subjectPerformances: any[];
+  };
   isLoading: boolean;
+  error: string | null;
+  refreshData: () => void;
 }
 
 /**
@@ -47,7 +61,9 @@ interface ModularDashboardProps {
 export const ModularDashboard: React.FC<ModularDashboardProps> = ({
   formatDate,
   dashboardData,
-  isLoading
+  isLoading,
+  error,
+  refreshData
 }) => {
   // ダッシュボード設定フックを使用
   const {
