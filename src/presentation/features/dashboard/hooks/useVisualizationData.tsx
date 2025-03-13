@@ -31,11 +31,6 @@ export const useVisualizationData = () => {
     return { radarData, countdown };
   }, []);
 
-  // メモ化されたデータ
-  const processedData = useMemo(() => {
-    return processData(subjects);
-  }, [subjects, processData]);
-
   // データ取得関数
   const fetchData = useCallback(async () => {
     if (!user) {
@@ -76,6 +71,11 @@ export const useVisualizationData = () => {
     
     return () => clearInterval(intervalId);
   }, [fetchData]);
+
+  // メモ化されたデータを返す
+  const processedData = useMemo(() => {
+    return { subjects, radarChartData, countdownData };
+  }, [subjects, radarChartData, countdownData]);
 
   return {
     loading,
