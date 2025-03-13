@@ -550,7 +550,7 @@ const IntegratedVisualizationSection = React.memo(() => {
         {Header}
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid item xs={12}>
         <Card sx={{ height: '100%' }}>
           <CardContent>
             <ProgressRadarChart data={filteredRadarData} />
@@ -558,7 +558,7 @@ const IntegratedVisualizationSection = React.memo(() => {
         </Card>
       </Grid>
 
-      <Grid item xs={12} md={6}>
+      <Grid item xs={12}>
         <Card sx={{ height: '100%' }}>
           <CardContent>
             <CountdownContainer 
