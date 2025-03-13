@@ -440,7 +440,7 @@ const CountdownContainer: React.FC<CountdownContainerProps> = React.memo(({
       <Box sx={{ flexGrow: 1, px: 2, pb: 2, maxHeight: '450px' }}>
         <Grid container spacing={2} sx={{ maxHeight: '420px', overflow: 'auto' }}>
           {groupedData.map((group, index) => (
-            <Grid item xs={12} sm={6} md={4} key={`countdown-group-${index}`}>
+            <Grid item xs={12} sm={12} md={6} key={`countdown-group-${index}`}>
               <GroupedCountdownItem date={group.date} items={group.items} />
             </Grid>
           ))}

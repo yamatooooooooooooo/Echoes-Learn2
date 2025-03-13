@@ -12,12 +12,32 @@ import {
   useMediaQuery,
   Button,
   Card,
-  CardContent
+  CardContent,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControlLabel,
+  Switch,
+  Divider
 } from '@mui/material';
 import { 
   Dashboard as DashboardIcon,
   Refresh as RefreshIcon,
-  Update as UpdateIcon
+  Update as UpdateIcon,
+  Settings as SettingsIcon,
+  Visibility as VisibilityIcon,
+  Assignment as AssignmentIcon,
+  Event as EventIcon,
+  Timeline as TimelineIcon,
+  CalendarToday as CalendarTodayIcon,
+  Assessment as AssessmentIcon,
+  CheckCircle as CheckCircleIcon,
+  BarChart as BarChartIcon
 } from '@mui/icons-material';
 import { SimpleDailyQuotaCard } from './SimpleDailyQuotaCard';
 import { SimpleWeeklyQuotaCard } from './SimpleWeeklyQuotaCard';
@@ -47,6 +67,31 @@ const DashboardScreen: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [refreshing, setRefreshing] = useState(false);
   const { settings, toggleCard } = useDashboardSettings();
+  
+  // カード表示設定メニュー用のステート
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  
+  // 表示設定メニューを開く
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  
+  // 表示設定メニューを閉じる
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+  
+  // 設定ダイアログを開く
+  const handleOpenSettingsDialog = () => {
+    setSettingsDialogOpen(true);
+    handleCloseMenu();
+  };
+  
+  // 設定ダイアログを閉じる
+  const handleCloseSettingsDialog = () => {
+    setSettingsDialogOpen(false);
+  };
   
   // マウント時に最上部にスクロール
   useEffect(() => {
@@ -126,123 +171,55 @@ const DashboardScreen: React.FC = () => {
   const subjectCount = dashboardData?.subjects?.length || 0;
   
   return (
-    <Box 
-      id="dashboard-root-container"
-      ref={containerRef}
-      sx={{ 
-        width: '100%', 
-        maxWidth: { xs: '100%', sm: '95%', md: '1400px' },
-        mx: 'auto', 
-        p: { xs: 2, sm: 3, md: 4 },
-        pt: { xs: 2, sm: 3, md: 4 }, // パディングを適正化
-        pb: { xs: 6, sm: 6, md: 6 }, // パディングを適正化
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        height: 'auto',
-        backgroundColor: 'background.default',
-        overflow: 'visible', // スクロールを無効化
-        WebkitOverflowScrolling: 'touch',
-        marginTop: { xs: 2, sm: 3, md: 4 }, // マージンを適正化
-        ...(isMobile && {
-          paddingTop: 3, // モバイルでのパディングを調整
-          paddingBottom: 20,
-          marginTop: 2 // モバイルでのマージンを調整
-        })
-      }}
-    >
-      {/* ヘッダー部分 */}
-      <Box 
-        sx={{ 
-          width: '100%',
-          mb: { xs: 3, sm: 3, md: 3 }, // マージンを統一
-          position: 'relative',
-          zIndex: 10,
-          backgroundColor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderRadius: 2,
-          boxShadow: 1,
-          py: 1.5, // パディングを調整
-          px: { xs: 2, sm: 2, md: 2 }, // パディングを統一
-          marginTop: { xs: 2, sm: 2, md: 2 }, // マージンを適正化
-          border: '1px solid',
-          borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-        }}
-      >
-        {/* ダッシュボードヘッダー */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: { xs: 2, sm: 2.5 }, 
-            borderRadius: 3,
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
-            border: '1px solid',
-            borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-            backdropFilter: 'blur(10px)',
-            boxShadow: theme.palette.mode === 'dark' 
-              ? '0 4px 20px rgba(0, 0, 0, 0.25)' 
-              : '0 4px 20px rgba(0, 0, 0, 0.05)'
-          }}
-        >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <DashboardIcon 
-                sx={{ 
-                  mr: 1.5, 
-                  color: 'primary.main',
-                  fontSize: { xs: '1.8rem', sm: '2rem' }
-                }} 
-              />
-              <Box>
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    fontWeight: 600,
-                    fontSize: { xs: '1.5rem', sm: '1.8rem' },
-                    background: theme.palette.mode === 'dark' 
-                      ? 'linear-gradient(to right, #9c27b0, #3f51b5)'
-                      : 'linear-gradient(to right, #2E77EE, #1a237e)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    textFillColor: 'transparent'
-                  }}
-                >
-                  ダッシュボード
-                </Typography>
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary"
-                  sx={{ mt: 0.5 }}
-                >
-                  {subjectCount > 0 
-                    ? `${subjectCount}科目の進捗状況と学習計画を確認できます` 
-                    : '科目を追加して学習を始めましょう'}
-                </Typography>
-              </Box>
-            </Box>
-            
-            <Tooltip title="データを更新">
-              <IconButton 
-                onClick={handleRefreshWithLoading} 
-                size="small"
-                sx={{
-                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                  '&:hover': {
-                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
-                  }
-                }}
-              >
-                {refreshing ? <CircularProgress size={24} color="inherit" /> : <UpdateIcon />}
+    <Box sx={{ overflowX: 'hidden' }}>
+      <Box sx={{ maxWidth: 1200, mx: 'auto', px: isMobile ? 2 : 3, pt: 3, pb: 6 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1" sx={{ display: 'flex', alignItems: 'center' }}>
+            <DashboardIcon sx={{ mr: 1 }} />
+            ダッシュボード
+          </Typography>
+          
+          <Box>
+            <Tooltip title="表示設定">
+              <IconButton onClick={handleOpenMenu}>
+                <SettingsIcon />
               </IconButton>
             </Tooltip>
+            
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleCloseMenu}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+              <MenuItem onClick={handleOpenSettingsDialog}>
+                <ListItemIcon>
+                  <VisibilityIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>カード表示設定</ListItemText>
+              </MenuItem>
+            </Menu>
           </Box>
-        </Paper>
-      </Box>
-      
-      {/* メインコンテンツエリア */}
-      <Box sx={{ flexGrow: 1, width: '100%', pb: 4, mt: 2 }}>
+        </Box>
+        
         <Grid container direction="column" spacing={isMobile ? 2 : 3} sx={{ mb: 2 }}>
+          {/* データ可視化セクション - 最上部に移動 */}
+          {settings.visualization && (
+            <Grid item>
+              <Paper sx={{ /* existing styles */ }}>
+                <CardHeader
+                  title="データ可視化"
+                  subtitle="学習進捗と試験準備の状況を視覚的に確認できます"
+                  isVisible={settings.visualization}
+                  onToggleVisibility={() => toggleCard('visualization')}
+                  action={<IntegratedVisualizationControls />}
+                />
+                <IntegratedVisualizationSection />
+              </Paper>
+            </Grid>
+          )}
+          
           {/* 試験スケジュールカード */}
           {settings.upcomingExams && (
             <Grid item>
@@ -272,47 +249,44 @@ const DashboardScreen: React.FC = () => {
           )}
           
           {/* ノルマカードのコンテナ */}
-          {(settings.dailyQuota || settings.weeklyQuota) && (
-            <Grid item>
-              <Grid container spacing={isMobile ? 2 : 3}>
-                {/* 今日のノルマ */}
-                {settings.dailyQuota && (
-                  <Grid item xs={12} md={6}>
-                    <Paper sx={{ /* existing styles */ }}>
-                      <CardHeader
-                        title="今日のノルマ"
-                        isVisible={settings.dailyQuota}
-                        onToggleVisibility={() => toggleCard('dailyQuota')}
-                      />
-                      <SimpleDailyQuotaCard 
-                        subjects={dashboardData?.subjects || []} 
-                        isLoading={isLoading}
-                      />
-                    </Paper>
-                  </Grid>
-                )}
-                
-                {/* 今週のノルマ */}
-                {settings.weeklyQuota && (
-                  <Grid item xs={12} md={6}>
-                    <Paper sx={{ /* existing styles */ }}>
-                      <CardHeader
-                        title="今週のノルマ"
-                        isVisible={settings.weeklyQuota}
-                        onToggleVisibility={() => toggleCard('weeklyQuota')}
-                      />
-                      <SimpleWeeklyQuotaCard 
-                        subjects={dashboardData?.subjects || []} 
-                        isLoading={isLoading}
-                      />
-                    </Paper>
-                  </Grid>
-                )}
-              </Grid>
+          <Grid item>
+            <Grid container spacing={2}>
+              {/* 日次ノルマカード */}
+              {settings.dailyQuota && (
+                <Grid item xs={12} md={6}>
+                  <Paper sx={{ /* existing styles */ }}>
+                    <CardHeader
+                      title="日次ノルマ"
+                      isVisible={settings.dailyQuota}
+                      onToggleVisibility={() => toggleCard('dailyQuota')}
+                    />
+                    <SimpleDailyQuotaCard 
+                      subjects={dashboardData?.subjects || []} 
+                      isLoading={isLoading}
+                    />
+                  </Paper>
+                </Grid>
+              )}
+              
+              {/* 週次ノルマカード */}
+              {settings.weeklyQuota && (
+                <Grid item xs={12} md={6}>
+                  <Paper sx={{ /* existing styles */ }}>
+                    <CardHeader
+                      title="週次ノルマ"
+                      isVisible={settings.weeklyQuota}
+                      onToggleVisibility={() => toggleCard('weeklyQuota')}
+                    />
+                    <SimpleWeeklyQuotaCard 
+                      subjects={dashboardData?.subjects || []} 
+                      isLoading={isLoading}
+                    />
+                  </Paper>
+                </Grid>
+              )}
             </Grid>
-          )}
+          </Grid>
           
-          {/* 進捗バー */}
           {settings.progressBar && (
             <Grid item>
               <Paper sx={{ /* existing styles */ }}>
@@ -346,23 +320,148 @@ const DashboardScreen: React.FC = () => {
               </Paper>
             </Grid>
           )}
-
-          {/* データ可視化セクション */}
-          {settings.visualization && (
-            <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
-                <CardHeader
-                  title="データ可視化"
-                  subtitle="学習進捗と試験準備の状況を視覚的に確認できます"
-                  isVisible={settings.visualization}
-                  onToggleVisibility={() => toggleCard('visualization')}
-                  action={<IntegratedVisualizationControls />}
-                />
-                <IntegratedVisualizationSection />
-              </Paper>
-            </Grid>
-          )}
         </Grid>
+        
+        {/* カード表示設定ダイアログ */}
+        <Dialog
+          open={settingsDialogOpen}
+          onClose={handleCloseSettingsDialog}
+          aria-labelledby="card-settings-dialog-title"
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle id="card-settings-dialog-title">
+            カード表示設定
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              ダッシュボードに表示するカードを選択してください。
+            </Typography>
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.visualization}
+                  onChange={() => toggleCard('visualization')}
+                  color="primary"
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <BarChartIcon sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography>データ可視化</Typography>
+                </Box>
+              }
+            />
+            <Divider sx={{ my: 1 }} />
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.upcomingExams}
+                  onChange={() => toggleCard('upcomingExams')}
+                  color="primary"
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <EventIcon sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography>試験スケジュール</Typography>
+                </Box>
+              }
+            />
+            <Divider sx={{ my: 1 }} />
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.deadlines}
+                  onChange={() => toggleCard('deadlines')}
+                  color="primary"
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <AssignmentIcon sx={{ mr: 1, color: 'secondary.main' }} />
+                  <Typography>レポート締切</Typography>
+                </Box>
+              }
+            />
+            <Divider sx={{ my: 1 }} />
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.dailyQuota}
+                  onChange={() => toggleCard('dailyQuota')}
+                  color="primary"
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <CalendarTodayIcon sx={{ mr: 1, color: 'success.main' }} />
+                  <Typography>日次ノルマ</Typography>
+                </Box>
+              }
+            />
+            <Divider sx={{ my: 1 }} />
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.weeklyQuota}
+                  onChange={() => toggleCard('weeklyQuota')}
+                  color="primary"
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <TimelineIcon sx={{ mr: 1, color: 'info.main' }} />
+                  <Typography>週次ノルマ</Typography>
+                </Box>
+              }
+            />
+            <Divider sx={{ my: 1 }} />
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.progressBar}
+                  onChange={() => toggleCard('progressBar')}
+                  color="primary"
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <CheckCircleIcon sx={{ mr: 1, color: 'warning.main' }} />
+                  <Typography>進捗状況</Typography>
+                </Box>
+              }
+            />
+            <Divider sx={{ my: 1 }} />
+            
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.recentProgress}
+                  onChange={() => toggleCard('recentProgress')}
+                  color="primary"
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <AssessmentIcon sx={{ mr: 1, color: 'error.main' }} />
+                  <Typography>最近の進捗</Typography>
+                </Box>
+              }
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseSettingsDialog} color="primary">
+              閉じる
+            </Button>
+          </DialogActions>
+        </Dialog>
         
         {/* データクリーンアップボタン */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 2, width: '100%' }}>
