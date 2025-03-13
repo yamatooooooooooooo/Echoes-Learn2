@@ -8,7 +8,8 @@ import { AnalyticsService } from '../application/services/AnalyticsService';
 import { UserRepository } from '../infrastructure/repositories/userRepository';
 import { SubjectRepository } from '../infrastructure/repositories/subjectRepository';
 import { ProgressRepository } from '../infrastructure/repositories/progressRepository';
-import { UserSettingsRepository } from '../infrastructure/repositories/userSettingsRepository';
+import { FirebaseUserSettingsRepository } from '../infrastructure/repositories/userSettingsRepository';
+import { UserSettingsRepository } from '../domain/repositories/UserSettingsRepository';
 import { StudyAnalyticsRepository } from '../infrastructure/repositories/studyAnalyticsRepository';
 import { useFirebase } from '../contexts/FirebaseContext';
 import { ServicesContext, ServicesProviderProps } from '../contexts/ServicesContext';
@@ -35,7 +36,7 @@ export const ServicesProvider: React.FC<ServicesProviderProps> = ({ children, se
   const userRepository = useMemo(() => services.userRepository || new UserRepository(firestore, auth), [services.userRepository, firestore, auth]);
   const subjectRepository = useMemo(() => services.subjectRepository || new SubjectRepository(firestore, auth), [services.subjectRepository, firestore, auth]);
   const progressRepository = useMemo(() => services.progressRepository || new ProgressRepository(firestore, auth), [services.progressRepository, firestore, auth]);
-  const userSettingsRepository = useMemo(() => services.userSettingsRepository || new UserSettingsRepository(firestore, auth), [services.userSettingsRepository, firestore, auth]);
+  const userSettingsRepository = useMemo(() => services.userSettingsRepository || new FirebaseUserSettingsRepository(firestore, auth), [services.userSettingsRepository, firestore, auth]);
   const studyAnalyticsRepository = useMemo(() => services.studyAnalyticsRepository || new StudyAnalyticsRepository(firestore, auth), [services.studyAnalyticsRepository, firestore, auth]);
   
   // サービスの初期化

@@ -64,6 +64,7 @@ export const useDashboardSettings = () => {
       }
       
       // LocalStorageになければFirestoreから読み込む試行
+      const app = { firestore, auth } as any;
       const userSettingsRepo = new FirebaseUserSettingsRepository(firestore, auth);
       const settings = await userSettingsRepo.getDashboardSettings();
       
@@ -95,6 +96,7 @@ export const useDashboardSettings = () => {
       localStorage.setItem('dashboardModuleSettings', JSON.stringify(moduleSettings));
       
       // Firestoreにも保存
+      const app = { firestore, auth } as any;
       const userSettingsRepo = new FirebaseUserSettingsRepository(firestore, auth);
       await userSettingsRepo.saveDashboardSettings({ moduleSettings });
       

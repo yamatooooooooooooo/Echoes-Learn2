@@ -7,7 +7,8 @@ import { Functions } from 'firebase/functions';
 import { UserRepository } from '../infrastructure/repositories/userRepository';
 import { SubjectRepository } from '../infrastructure/repositories/subjectRepository';
 import { ProgressRepository } from '../infrastructure/repositories/progressRepository';
-import { UserSettingsRepository } from '../infrastructure/repositories/userSettingsRepository';
+import { FirebaseUserSettingsRepository } from '../infrastructure/repositories/userSettingsRepository';
+import { UserSettingsRepository } from '../domain/repositories/UserSettingsRepository';
 import { StudyAnalyticsRepository } from '../infrastructure/repositories/studyAnalyticsRepository';
 
 // サービスのインポート
@@ -49,7 +50,7 @@ export const initializeServices = (
     const userRepository = new UserRepository(dependencies.firestore, dependencies.auth);
     const subjectRepository = new SubjectRepository(dependencies.firestore, dependencies.auth);
     const progressRepository = new ProgressRepository(dependencies.firestore, dependencies.auth);
-    const userSettingsRepository = new UserSettingsRepository(dependencies.firestore, dependencies.auth);
+    const userSettingsRepository = new FirebaseUserSettingsRepository(dependencies.firestore, dependencies.auth);
     const studyAnalyticsRepository = new StudyAnalyticsRepository(dependencies.firestore, dependencies.auth);
     
     // サービスの初期化

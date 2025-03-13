@@ -43,9 +43,18 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
   private firestore: Firestore;
   private auth: Auth;
   
-  constructor(app: FirebaseApp) {
-    this.firestore = getFirestore(app);
-    this.auth = getAuth(app);
+  constructor(app: FirebaseApp);
+  constructor(firestore: Firestore, auth: Auth);
+  constructor(appOrFirestore: FirebaseApp | Firestore, authParam?: Auth) {
+    if ('options' in appOrFirestore) {
+      // FirebaseAppが渡された場合
+      this.firestore = getFirestore(appOrFirestore);
+      this.auth = getAuth(appOrFirestore);
+    } else {
+      // FirestoreとAuthが直接渡された場合
+      this.firestore = appOrFirestore;
+      this.auth = authParam!;
+    }
   }
   
   /**
