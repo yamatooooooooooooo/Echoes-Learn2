@@ -34,11 +34,26 @@ import { RecentProgressCard } from './RecentProgressCard';
 import { LearningAnalyticsCard } from './LearningAnalyticsCard';
 import { DashboardSettingsDialog } from './DashboardSettingsDialog';
 import { NotionStyleCard } from '../../../components/common/NotionStyleCard';
+import CountdownContainer from './CountdownContainer';
 
 interface ModularDashboardProps {
   formatDate: (date: Date | string | undefined) => string;
-  dashboardData: DashboardData;
+  dashboardData: {
+    totalSubjects: number;
+    completedSubjects: number;
+    totalPages: number;
+    completedPages: number;
+    inProgressSubjects: number;
+    notStartedSubjects: number;
+    weeklyProgressData: any[];
+    subjects: any[];
+    recentProgress: any[];
+    studySessions: any[];
+    subjectPerformances: any[];
+  };
   isLoading: boolean;
+  error: string | null;
+  refreshData: () => void;
 }
 
 /**
@@ -47,7 +62,9 @@ interface ModularDashboardProps {
 export const ModularDashboard: React.FC<ModularDashboardProps> = ({
   formatDate,
   dashboardData,
-  isLoading
+  isLoading,
+  error,
+  refreshData
 }) => {
   // ダッシュボード設定フックを使用
   const {
@@ -138,8 +155,18 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
         );
       case 'exams':
         return (
-          <UpcomingExamsCard
-            subjects={dashboardData.subjects || []}
+          <CountdownContainer 
+            title="試験日カウントダウン"
+            subjects={dashboardData.subjects}
+            includeReportDeadlines={false}
+          />
+        );
+      case 'reports':
+        return (
+          <CountdownContainer 
+            title="レポート締切カウントダウン"
+            subjects={dashboardData.subjects}
+            includeReportDeadlines={true}
           />
         );
       case 'recentProgress':
@@ -178,15 +205,15 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
   return (
     <Box sx={{ 
       width: '100%',
-      maxWidth: '1200px',
+      maxWidth: '1400px',
       mx: 'auto',
-      p: { xs: 1, sm: 2 }
+      p: { xs: 1, sm: 2, md: 3 }
     }}>
       {/* 設定アクション */}
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'flex-end', 
-        mb: 2,
+        mb: { xs: 2, sm: 3 },
         position: 'relative',
         zIndex: 1
       }}>
@@ -196,7 +223,8 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
             size="small"
             sx={{ 
               backgroundColor: '#f5f5f5',
-              '&:hover': { backgroundColor: '#e0e0e0' } 
+              '&:hover': { backgroundColor: '#e0e0e0' },
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
             }}
           >
             <SettingsIcon />
@@ -209,13 +237,19 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'center', 
-          mb: 2, 
-          p: 1, 
+          mb: { xs: 2, sm: 3 }, 
+          p: { xs: 1, sm: 2 }, 
           bgcolor: '#e3f2fd', 
-          borderRadius: 1,
-          alignItems: 'center' 
+          borderRadius: 2,
+          alignItems: 'center',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
         }}>
-          <Typography variant="body2" sx={{ fontWeight: 500, color: '#0277bd', mr: 1 }}>
+          <Typography variant="body2" sx={{ 
+            fontWeight: 500, 
+            color: '#0277bd', 
+            mr: 1,
+            fontSize: { xs: '0.8rem', sm: '0.875rem' }
+          }}>
             編集モード: モジュールをドラッグして並べ替えできます
           </Typography>
           <Fab 
@@ -238,30 +272,56 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
               ref={provided.innerRef}
               sx={{ width: '100%' }}
             >
-              <Grid container spacing={3} justifyContent="center">
-                {enabledModules.map((moduleId: string, index: number) => (
-                  <Grid 
-                    item 
-                    xs={12} 
-                    sm={moduleId === 'learningAnalytics' ? 12 : 6}
-                    md={moduleId === 'learningAnalytics' ? 12 : 6}
-                    lg={moduleId === 'learningAnalytics' ? 12 : 4}
-                    key={moduleId}
-                  >
-                    <DraggableModuleCard
-                      id={moduleId}
-                      index={index}
-                      title={dashboardModules[moduleId]?.title || ''}
-                      icon={getModuleIcon(moduleId)}
-                      defaultCollapsed={moduleSettings[moduleId]?.collapsed || false}
-                      onToggleCollapse={() => toggleModuleCollapsed(moduleId)}
-                      onToggleVisibility={() => toggleModuleEnabled(moduleId)}
-                      isDraggingEnabled={editMode}
+              <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} justifyContent="flex-start">
+                {enabledModules.map((moduleId: string, index: number) => {
+                  // モジュールのサイズを動的に決定
+                  let gridSize = { 
+                    xs: 12, 
+                    sm: 6, 
+                    md: 4 
+                  };
+                  
+                  // 学習分析は常にフル幅
+                  if (moduleId === 'learningAnalytics') {
+                    gridSize = { xs: 12, sm: 12, md: 12 };
+                  }
+                  
+                  // 最近の学習進捗は中サイズのデバイスでも大きく表示
+                  if (moduleId === 'recentProgress') {
+                    gridSize = { xs: 12, sm: 12, md: 8 };
+                  }
+                  
+                  // 学習統計も少し大きめに
+                  if (moduleId === 'stats') {
+                    gridSize = { xs: 12, sm: 6, md: 6 };
+                  }
+                  
+                  return (
+                    <Grid 
+                      item 
+                      xs={gridSize.xs}
+                      sm={gridSize.sm}
+                      md={gridSize.md}
+                      key={moduleId}
                     >
-                      {renderModule(moduleId)}
-                    </DraggableModuleCard>
-                  </Grid>
-                ))}
+                      <DraggableModuleCard
+                        id={moduleId}
+                        index={index}
+                        title={dashboardModules[moduleId]?.title || ''}
+                        icon={getModuleIcon(moduleId)}
+                        defaultCollapsed={moduleSettings[moduleId]?.collapsed || false}
+                        onToggleCollapse={() => toggleModuleCollapsed(moduleId)}
+                        onToggleVisibility={() => toggleModuleEnabled(moduleId)}
+                        isDraggingEnabled={editMode}
+                        canHide={dashboardModules[moduleId]?.canDisable || false}
+                        isFirst={index === 0}
+                        isLast={index === enabledModules.length - 1}
+                      >
+                        {renderModule(moduleId)}
+                      </DraggableModuleCard>
+                    </Grid>
+                  );
+                })}
                 {provided.placeholder}
               </Grid>
             </Box>
@@ -276,18 +336,31 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
         onClose={handleSettingsClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            borderRadius: 2,
+            minWidth: 200
+          }
+        }}
       >
-        <MenuItem onClick={toggleEditMode}>
+        <MenuItem onClick={toggleEditMode} sx={{ py: 1.5 }}>
           <ListItemIcon>
             <ViewModuleIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary={editMode ? "編集モードを終了" : "モジュールを編集"} />
+          <ListItemText 
+            primary={editMode ? "編集モードを終了" : "モジュールを編集"} 
+            primaryTypographyProps={{ fontSize: '0.95rem' }}
+          />
         </MenuItem>
-        <MenuItem onClick={handleOpenSettingsDialog}>
+        <MenuItem onClick={handleOpenSettingsDialog} sx={{ py: 1.5 }}>
           <ListItemIcon>
             <TuneIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="ダッシュボード設定" />
+          <ListItemText 
+            primary="ダッシュボード設定" 
+            primaryTypographyProps={{ fontSize: '0.95rem' }}
+          />
         </MenuItem>
       </Menu>
       
@@ -307,8 +380,13 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
         open={snackbarOpen}
         autoHideDuration={5000}
         onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity="success" onClose={() => setSnackbarOpen(false)}>
+        <Alert 
+          severity="success" 
+          onClose={() => setSnackbarOpen(false)}
+          sx={{ width: '100%', boxShadow: 3, borderRadius: 2 }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>

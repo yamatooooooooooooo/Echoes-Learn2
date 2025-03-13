@@ -178,5 +178,6 @@ export const MODULE_ICONS = {
   dailyQuota: ICONS.assignment,
   exams: ICONS.calendar,
   recentProgress: ICONS.timeline,
-  priority: ICONS.flag
+  priority: ICONS.flag,
+  assignment: ICONS.assignment
 }; 

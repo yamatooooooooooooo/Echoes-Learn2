@@ -6,7 +6,9 @@ import {
   Typography, 
   Box, 
   IconButton, 
-  Collapse
+  Collapse,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { Draggable } from '@hello-pangea/dnd';
 import { OutlinedIcon } from './OutlinedIcon';
@@ -48,6 +50,8 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
   isFirst = false,
   isLast = false
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [isHovering, setIsHovering] = useState(false);
@@ -91,21 +95,29 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
         <Card
           ref={provided.innerRef}
           {...provided.draggableProps}
-          elevation={snapshot.isDragging ? 3 : 0}
+          elevation={snapshot.isDragging ? 4 : 1}
           sx={{
-            mb: 3,
-            border: '1px solid #F0F0F0',
-            transition: 'all 0.25s ease-in-out',
-            borderRadius: 1.5,
+            mb: { xs: 2, sm: 3 },
+            border: `1px solid ${theme.palette.divider}`,
+            transition: 'all 0.3s ease-in-out',
+            borderRadius: { xs: 2, sm: 2.5 },
             overflow: 'visible',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
             '&:hover': {
-              borderColor: '#E0E0E0',
-              transform: snapshot.isDragging ? 'rotate(1deg)' : 'none',
-              boxShadow: snapshot.isDragging ? '0 8px 20px rgba(0, 0, 0, 0.08)' : '0 2px 6px rgba(0, 0, 0, 0.03)',
+              borderColor: theme.palette.mode === 'dark' 
+                ? 'rgba(255, 255, 255, 0.2)' 
+                : 'rgba(0, 0, 0, 0.12)',
+              transform: snapshot.isDragging ? 'rotate(1deg) scale(1.02)' : 'translateY(-2px)',
+              boxShadow: snapshot.isDragging 
+                ? '0 10px 25px rgba(0, 0, 0, 0.1)' 
+                : '0 4px 10px rgba(0, 0, 0, 0.05)',
             },
             ...(snapshot.isDragging ? {
-              boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)',
-              cursor: 'grabbing'
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+              cursor: 'grabbing',
+              zIndex: 10
             } : {})
           }}
           onMouseEnter={() => setIsHovering(true)}
@@ -113,14 +125,17 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
         >
           <CardHeader
             sx={{
-              borderBottom: collapsed ? 'none' : '1px solid #F0F0F0',
-              py: 1.5,
-              px: 2,
-              bgcolor: '#FAFAFA',
+              borderBottom: collapsed ? 'none' : `1px solid ${theme.palette.divider}`,
+              py: { xs: 1.5, sm: 2 },
+              px: { xs: 1.5, sm: 2 },
+              bgcolor: theme.palette.mode === 'dark' 
+                ? 'rgba(255, 255, 255, 0.05)' 
+                : 'rgba(0, 0, 0, 0.02)',
               '& .MuiCardHeader-action': {
                 margin: 0,
                 alignSelf: 'center'
-              }
+              },
+              transition: 'background-color 0.3s ease'
             }}
             avatar={
               <Box 
@@ -133,82 +148,151 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
                   {...provided.dragHandleProps}
                   sx={{
                     mr: 1,
-                    opacity: isHovering || snapshot.isDragging ? 0.6 : 0,
+                    opacity: (isHovering || snapshot.isDragging || isMobile) ? 0.7 : 0,
                     transition: 'opacity 0.2s ease',
                     cursor: 'grab',
                     display: 'flex',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    color: theme.palette.text.secondary,
+                    // モバイルでタッチしやすいサイズに
+                    padding: isMobile ? '4px' : 0,
+                    '&:active': {
+                      cursor: 'grabbing'
+                    }
                   }}
                 >
-                  <OutlinedIcon icon={ICONS.dragHandle} size="small" />
+                  <OutlinedIcon 
+                    icon={ICONS.dragHandle} 
+                    size={isMobile ? "medium" : "small"} 
+                  />
                 </Box>
-                {icon}
+                <Box sx={{ 
+                  color: theme.palette.primary.main,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {icon}
+                </Box>
               </Box>
             }
             title={
-              <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+              <Typography 
+                variant={isMobile ? "body1" : "subtitle1"} 
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                  lineHeight: 1.4,
+                  letterSpacing: 0.2,
+                  color: theme.palette.text.primary
+                }}
+              >
                 {title}
               </Typography>
             }
             action={
-              <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 } }}>
                 {canHide && onToggleVisibility && (
                   <IconButton 
-                    size="small"
+                    size={isMobile ? "medium" : "small"}
                     onClick={handleToggleVisibility}
                     sx={{ 
                       opacity: 0.7,
-                      transition: 'opacity 0.2s ease',
-                      '&:hover': { opacity: 1 }
+                      transition: 'opacity 0.2s ease, background-color 0.2s ease',
+                      '&:hover': { 
+                        opacity: 1,
+                        backgroundColor: theme.palette.mode === 'dark' 
+                          ? 'rgba(255, 255, 255, 0.1)' 
+                          : 'rgba(0, 0, 0, 0.05)'
+                      },
+                      // モバイルでタッチしやすいサイズに
+                      padding: isMobile ? '8px' : '4px'
                     }}
                   >
-                    <OutlinedIcon icon={ICONS.invisible} size="small" />
+                    <OutlinedIcon 
+                      icon={ICONS.invisible} 
+                      size={isMobile ? "medium" : "small"} 
+                    />
                   </IconButton>
                 )}
                 
                 {!isFirst && onMoveUp && (
                   <IconButton 
-                    size="small"
+                    size={isMobile ? "medium" : "small"}
                     onClick={handleMoveUp}
                     sx={{ 
                       opacity: 0.7,
-                      transition: 'opacity 0.2s ease',
-                      '&:hover': { opacity: 1 }
+                      transition: 'opacity 0.2s ease, background-color 0.2s ease',
+                      '&:hover': { 
+                        opacity: 1,
+                        backgroundColor: theme.palette.mode === 'dark' 
+                          ? 'rgba(255, 255, 255, 0.1)' 
+                          : 'rgba(0, 0, 0, 0.05)'
+                      },
+                      padding: isMobile ? '8px' : '4px'
                     }}
                   >
-                    <OutlinedIcon icon={ICONS.arrowUp} size="small" />
+                    <OutlinedIcon 
+                      icon={ICONS.arrowUp} 
+                      size={isMobile ? "medium" : "small"} 
+                    />
                   </IconButton>
                 )}
                 
                 {!isLast && onMoveDown && (
                   <IconButton 
-                    size="small"
+                    size={isMobile ? "medium" : "small"}
                     onClick={handleMoveDown}
                     sx={{ 
                       opacity: 0.7,
-                      transition: 'opacity 0.2s ease',
-                      '&:hover': { opacity: 1 }
+                      transition: 'opacity 0.2s ease, background-color 0.2s ease',
+                      '&:hover': { 
+                        opacity: 1,
+                        backgroundColor: theme.palette.mode === 'dark' 
+                          ? 'rgba(255, 255, 255, 0.1)' 
+                          : 'rgba(0, 0, 0, 0.05)'
+                      },
+                      padding: isMobile ? '8px' : '4px'
                     }}
                   >
-                    <OutlinedIcon icon={ICONS.arrowDown} size="small" />
+                    <OutlinedIcon 
+                      icon={ICONS.arrowDown} 
+                      size={isMobile ? "medium" : "small"} 
+                    />
                   </IconButton>
                 )}
                 
                 <IconButton 
-                  size="small" 
+                  size={isMobile ? "medium" : "small"}
                   onClick={handleToggleCollapse}
+                  sx={{ 
+                    opacity: 0.9,
+                    transition: 'background-color 0.2s ease',
+                    '&:hover': { 
+                      backgroundColor: theme.palette.mode === 'dark' 
+                        ? 'rgba(255, 255, 255, 0.1)' 
+                        : 'rgba(0, 0, 0, 0.05)'
+                    },
+                    padding: isMobile ? '8px' : '4px'
+                  }}
                 >
                   <OutlinedIcon 
                     icon={collapsed ? ICONS.expandMore : ICONS.expandLess} 
-                    size="small" 
+                    size={isMobile ? "medium" : "small"} 
                   />
                 </IconButton>
               </Box>
             }
           />
           
-          <Collapse in={!collapsed} timeout="auto" unmountOnExit>
-            <CardContent sx={{ p: 2.5 }}>
+          <Collapse in={!collapsed} timeout="auto" unmountOnExit sx={{ flexGrow: 1 }}>
+            <CardContent sx={{ 
+              p: { xs: 1.5, sm: 2.5 },
+              height: '100%',
+              "&:last-child": {
+                paddingBottom: { xs: 2, sm: 3 }
+              }
+            }}>
               {children}
             </CardContent>
           </Collapse>

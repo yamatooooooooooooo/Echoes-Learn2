@@ -1,412 +1,368 @@
-import { createTheme, ThemeOptions } from '@mui/material/styles';
+import { createTheme, ThemeOptions, PaletteOptions, Components } from '@mui/material/styles';
 
-// ライトモードのテーマ設定
-export const lightThemeOptions: ThemeOptions = {
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#2E77EE',
-      light: '#E8F1FF',
-    },
-    secondary: {
-      main: '#6B7280',
-    },
-    background: {
-      default: '#FFFFFF',
-      paper: '#FFFFFF',
-    },
-    text: {
-      primary: '#333333',
-      secondary: '#666666',
-    },
-    divider: '#E0E0E0',
+// ダークテーマのパレット設定
+const darkPalette: PaletteOptions = {
+  mode: 'dark',
+  primary: {
+    main: '#0077CC', // Notionのブルー
+    light: '#3399FF',
+    dark: '#005599',
+    contrastText: '#ffffff',
   },
-  // カスタムブレークポイントの設定
-  breakpoints: {
-    values: {
-      xs: 0,      // スマートフォン（縦向き）
-      sm: 600,    // スマートフォン（横向き）
-      md: 960,    // タブレット
-      lg: 1280,   // デスクトップ（小）
-      xl: 1920,   // デスクトップ（大）
-    },
+  secondary: {
+    main: '#606060', // ダークグレー
+    light: '#808080',
+    dark: '#454545',
+    contrastText: '#ffffff',
   },
-  typography: {
-    fontFamily: [
-      'Inter',
-      'SF Pro Display',
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Hiragino Kaku Gothic ProN"',
-      '"Hiragino Sans"',
-      'Meiryo',
-      'sans-serif',
-    ].join(','),
-    // レスポンシブフォントサイズの設定
-    h4: {
-      fontWeight: 500,
-      letterSpacing: '-0.02em',
-      lineHeight: 1.3,
-      fontSize: '1.5rem',
-      '@media (min-width:600px)': {
-        fontSize: '1.75rem',
+  background: {
+    default: '#191919', // ダーク背景
+    paper: '#2D2D2D',  // カード背景
+  },
+  text: {
+    primary: '#EDEDED',
+    secondary: '#AAAAAA',
+  },
+  divider: 'rgba(255, 255, 255, 0.12)',
+  error: {
+    main: '#E03E3E', // Notion風の赤
+    light: '#FF5555',
+    dark: '#CC3333',
+  },
+  warning: {
+    main: '#D9730D', // Notion風のオレンジ
+    light: '#F0A958',
+    dark: '#B15A00',
+  },
+  info: {
+    main: '#0077CC', // ブルー（primaryと同じ）
+    light: '#3399FF',
+    dark: '#005599',
+  },
+  success: {
+    main: '#0F7B6C', // Notion風の緑
+    light: '#1EA993',
+    dark: '#096158',
+  },
+};
+
+// ライトテーマのパレット設定
+const lightPalette: PaletteOptions = {
+  mode: 'light',
+  primary: {
+    main: '#0077CC', // Notionのブルー
+    light: '#E6F2FF',
+    dark: '#005599',
+    contrastText: '#ffffff',
+  },
+  secondary: {
+    main: '#606060', // ダークグレー
+    light: '#F5F5F5',
+    dark: '#454545',
+    contrastText: '#ffffff',
+  },
+  background: {
+    default: '#FFFFFF', // 純白の背景
+    paper: '#FFFFFF',  // カード背景も白
+  },
+  text: {
+    primary: '#37352F', // Notionの本文色
+    secondary: '#6B6B6B',
+  },
+  divider: 'rgba(0, 0, 0, 0.08)',
+  error: {
+    main: '#E03E3E', // Notion風の赤
+    light: '#FFEAEA',
+    dark: '#CC3333',
+  },
+  warning: {
+    main: '#D9730D', // Notion風のオレンジ
+    light: '#FFEFDD',
+    dark: '#B15A00',
+  },
+  info: {
+    main: '#0077CC', // ブルー（primaryと同じ）
+    light: '#E6F2FF',
+    dark: '#005599',
+  },
+  success: {
+    main: '#0F7B6C', // Notion風の緑
+    light: '#E7F7F5',
+    dark: '#096158',
+  },
+};
+
+// ダークテーマの共通コンポーネントスタイル
+const darkComponents: Components = {
+  MuiCssBaseline: {
+    styleOverrides: {
+      body: {
+        backgroundColor: '#191919',
+        color: '#EDEDED',
+        scrollbarColor: 'rgba(255, 255, 255, 0.2) #191919',
+        '&::-webkit-scrollbar': {
+          width: '8px',
+          height: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: '#2D2D2D',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: '4px',
+        },
       },
-    },
-    h5: {
-      fontWeight: 500,
-      letterSpacing: '-0.01em',
-      lineHeight: 1.4,
-      fontSize: '1.25rem',
-      '@media (min-width:600px)': {
-        fontSize: '1.375rem',
-      },
-    },
-    h6: {
-      fontWeight: 500,
-      letterSpacing: '-0.01em',
-      lineHeight: 1.5,
-      fontSize: '1rem',
-      '@media (min-width:600px)': {
-        fontSize: '1.125rem',
-      },
-    },
-    subtitle1: {
-      fontWeight: 500,
-      lineHeight: 1.6,
-      letterSpacing: '0.01em',
-      fontSize: '0.9375rem',
-      '@media (min-width:600px)': {
-        fontSize: '1rem',
-      },
-    },
-    subtitle2: {
-      fontWeight: 500,
-      lineHeight: 1.6,
-      letterSpacing: '0.01em',
-      fontSize: '0.8125rem',
-      '@media (min-width:600px)': {
-        fontSize: '0.875rem',
-      },
-      opacity: 0.9,
-    },
-    body1: {
-      fontWeight: 400,
-      lineHeight: 1.8,
-      letterSpacing: '0.01em',
-      fontSize: '0.875rem',
-      '@media (min-width:600px)': {
-        fontSize: '0.9375rem',
-      },
-    },
-    body2: {
-      fontWeight: 400,
-      lineHeight: 1.7,
-      letterSpacing: '0.01em',
-      fontSize: '0.8125rem',
-      '@media (min-width:600px)': {
-        fontSize: '0.875rem',
-      },
-      opacity: 0.8,
-    },
-    caption: {
-      fontWeight: 400,
-      lineHeight: 1.5,
-      letterSpacing: '0.02em',
-      fontSize: '0.6875rem',
-      '@media (min-width:600px)': {
-        fontSize: '0.75rem',
-      },
-      opacity: 0.7,
-    },
-    button: {
-      textTransform: 'none',
-      fontWeight: 500,
-      letterSpacing: '0.01em',
     },
   },
-  spacing: (factor: number) => `${0.6 * factor}rem`,
-  components: {
-    MuiCssBaseline: {
-      styleOverrides: {
-        body: {
-          backgroundColor: '#FFFFFF',
-          margin: 0,
-          padding: 0,
-          // モバイル用のタッチ対応
-          WebkitTapHighlightColor: 'transparent',
-          // スクロールの改善
-          overflowY: 'auto',
-          // コンテンツが画面からはみ出るのを防ぐ
-          overflowX: 'hidden',
-          // ピンチズームの挙動を制御
-          touchAction: 'manipulation',
-        },
-        // ビューポート設定を確保
-        'html, body': {
-          height: '100%',
-          width: '100%',
-        },
-        // フォントレンダリングの最適化
-        '@media (max-width:600px)': {
-          html: {
-            fontSize: '14px', // モバイルでは基本フォントサイズを小さくする
-          }
-        }
+  MuiCard: {
+    styleOverrides: {
+      root: {
+        backgroundColor: '#2D2D2D',
+        backgroundImage: 'none',
+        boxShadow: 'none',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
       },
     },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          textTransform: 'none',
-          fontWeight: 500,
-          boxShadow: 'none',
-          transition: 'all 0.2s ease-in-out',
-          padding: '8px 16px',
-          '@media (max-width:600px)': {
-            padding: '6px 12px', // モバイルではボタンを小さくする
-            fontSize: '0.8125rem',
-          },
-          '&:hover': {
-            transform: 'translateY(-1px)',
-            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-            backgroundColor: (theme: any) => `${theme.palette.primary.light}20`,
-          },
-        },
-        contained: {
-          '&:hover': {
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-          },
-        },
-        outlined: {
-          '&:hover': {
-            backgroundColor: (theme: any) => `${theme.palette.primary.light}10`,
-          },
+  },
+  MuiPaper: {
+    styleOverrides: {
+      root: {
+        backgroundImage: 'none',
+        boxShadow: 'none',
+      },
+    },
+  },
+  MuiDialog: {
+    styleOverrides: {
+      paper: {
+        backgroundImage: 'none',
+      },
+    },
+  },
+  MuiDrawer: {
+    styleOverrides: {
+      paper: {
+        backgroundImage: 'none',
+        backgroundColor: '#232323',
+      },
+    },
+  },
+  MuiAppBar: {
+    styleOverrides: {
+      root: {
+        backgroundImage: 'none',
+        boxShadow: 'none',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      },
+    },
+  },
+  MuiInputBase: {
+    styleOverrides: {
+      input: {
+        '&:-webkit-autofill': {
+          '-webkit-box-shadow': '0 0 0 100px #2D2D2D inset !important',
+          '-webkit-text-fill-color': '#EDEDED !important',
         },
       },
     },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          boxShadow: 'none',
-          border: '1px solid #E0E0E0',
-          transition: 'all 0.25s ease-in-out',
-          backgroundColor: '#FFFFFF',
-          width: '100%',  // コンテナの幅いっぱいに広がる
-          maxWidth: '100%', // 横幅が親要素を超えないようにする
-          '@media (max-width:600px)': {
-            borderRadius: 6, // モバイルでは角丸を小さくする
-          },
-          '@media (min-width:601px)': {
-            minWidth: '500px', // タブレット以上では最小幅を設定
-          },
-          '@media (min-width:960px)': {
-            minWidth: '600px', // デスクトップでは最小幅を大きく
-          },
-          '&:hover': {
-            borderColor: '#C0C0C0',
-            transform: 'translateY(-2px)',
-            boxShadow: '0 3px 8px rgba(0, 0, 0, 0.04)',
-          }
+  },
+  MuiOutlinedInput: {
+    styleOverrides: {
+      notchedOutline: {
+        borderColor: 'rgba(255, 255, 255, 0.15)',
+      },
+    },
+  },
+  MuiTableCell: {
+    styleOverrides: {
+      root: {
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+      },
+    },
+  },
+  MuiChip: {
+    styleOverrides: {
+      filled: {
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+      },
+    },
+  },
+  MuiListItemButton: {
+    styleOverrides: {
+      root: {
+        '&.Mui-selected': {
+          backgroundColor: 'rgba(255, 255, 255, 0.08)',
         },
       },
     },
-    MuiCardContent: {
-      styleOverrides: {
-        root: {
-          padding: '1.5rem',
-          '@media (max-width:600px)': {
-            padding: '1rem', // モバイルではパディングを小さくする
-          },
-          '&:last-child': {
-            paddingBottom: '1.5rem',
-            '@media (max-width:600px)': {
-              paddingBottom: '1rem',
-            },
-          },
-        },
+  },
+  MuiAlert: {
+    styleOverrides: {
+      standardSuccess: {
+        backgroundColor: 'rgba(15, 123, 108, 0.15)',
       },
-    },
-    MuiCardHeader: {
-      styleOverrides: {
-        root: {
-          padding: '1.25rem 1.5rem',
-          borderBottom: '1px solid #F5F5F5',
-          backgroundColor: '#FFFFFF',
-        },
-        title: {
-          fontSize: '1.125rem',
-          fontWeight: 500,
-        },
-        subheader: {
-          fontSize: '0.875rem',
-          color: 'rgba(0, 0, 0, 0.6)',
-        },
+      standardError: {
+        backgroundColor: 'rgba(224, 62, 62, 0.15)',
       },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          boxShadow: 'none',
-          backgroundColor: '#FFFFFF',
-        },
-        elevation1: {
-          boxShadow: 'none',
-          border: '1px solid #E0E0E0',
-        },
+      standardWarning: {
+        backgroundColor: 'rgba(217, 115, 13, 0.15)',
       },
-    },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          boxShadow: 'none',
-          borderBottom: '1px solid #E0E0E0',
-          backgroundColor: '#FFFFFF',
-          color: '#333333',
-        },
-      },
-    },
-    MuiToolbar: {
-      styleOverrides: {
-        root: {
-          backgroundColor: '#FFFFFF',
-        },
-      },
-    },
-    MuiDivider: {
-      styleOverrides: {
-        root: {
-          borderColor: '#E0E0E0',
-        },
-      },
-    },
-    MuiTableCell: {
-      styleOverrides: {
-        root: {
-          borderBottom: '1px solid #E0E0E0',
-          padding: '1rem 1.5rem',
-        },
-      },
-    },
-    MuiLinearProgress: {
-      styleOverrides: {
-        root: {
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: 'rgba(0, 0, 0, 0.05)',
-        },
-        bar: {
-          borderRadius: 4,
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          fontSize: '0.8125rem',
-          fontWeight: 500,
-          transition: 'all 0.2s ease',
-          '&:hover': {
-            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-          },
-        },
-        clickable: {
-          '&:hover': {
-            transform: 'translateY(-1px)',
-          },
-        },
-      },
-    },
-    MuiList: {
-      styleOverrides: {
-        root: {
-          padding: 0,
-        },
-      },
-    },
-    MuiListItem: {
-      styleOverrides: {
-        root: {
-          borderBottom: '1px solid #F5F5F5',
-          transition: 'all 0.15s ease-in-out',
-          '&:hover': {
-            backgroundColor: 'rgba(0, 0, 0, 0.01)',
-            paddingLeft: '4px',
-          },
-          '&:last-child': {
-            borderBottom: 'none',
-          },
-        },
-      },
-    },
-    MuiIconButton: {
-      styleOverrides: {
-        root: {
-          transition: 'all 0.2s ease',
-          '&:hover': {
-            backgroundColor: 'rgba(0, 0, 0, 0.04)',
-            transform: 'scale(1.05)',
-          },
-        },
-      },
-    },
-    MuiTypography: {
-      styleOverrides: {
-        root: {
-          '&.on-dark': {
-            color: 'rgba(255, 255, 255, 0.95)',
-          },
-          '&.secondary-text': {
-            color: 'text.secondary',
-            fontSize: '0.875rem',
-            opacity: 0.85,
-          },
-          '&.primary-text': {
-            color: 'text.primary',
-            fontWeight: 500,
-          },
-          '&.meta-text': {
-            fontSize: '0.75rem',
-            color: 'text.secondary',
-            opacity: 0.7,
-            letterSpacing: '0.02em',
-          },
-          '&.label-text': {
-            fontSize: '0.75rem',
-            fontWeight: 500,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            opacity: 0.7,
-          },
-        },
+      standardInfo: {
+        backgroundColor: 'rgba(0, 119, 204, 0.15)',
       },
     },
   },
 };
 
-// ダークモードのテーマ設定
-export const darkThemeOptions: ThemeOptions = {
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#4B8AF0', // ライトモードよりやや明るく
-      light: '#1E293B',
+// ライトテーマの共通コンポーネントスタイル
+const lightComponents: Components = {
+  MuiCssBaseline: {
+    styleOverrides: {
+      body: {
+        backgroundColor: '#FFFFFF',
+        color: '#37352F',
+        scrollbarColor: 'rgba(0, 0, 0, 0.15) #FFFFFF',
+        '&::-webkit-scrollbar': {
+          width: '8px',
+          height: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: '#F5F5F5',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: 'rgba(0, 0, 0, 0.15)',
+          borderRadius: '4px',
+        },
+      },
     },
-    secondary: {
-      main: '#94A3B8',
+  },
+  MuiCard: {
+    styleOverrides: {
+      root: {
+        boxShadow: 'none',
+        border: '1px solid rgba(0, 0, 0, 0.05)',
+        borderRadius: '3px',
+      },
     },
-    background: {
-      default: '#121212',
-      paper: '#1E1E1E',
+  },
+  MuiPaper: {
+    styleOverrides: {
+      root: {
+        boxShadow: 'none',
+      },
     },
-    text: {
-      primary: '#E2E8F0',
-      secondary: '#94A3B8',
+  },
+  MuiAppBar: {
+    styleOverrides: {
+      root: {
+        boxShadow: 'none',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+      },
     },
+  },
+  MuiInputBase: {
+    styleOverrides: {
+      input: {
+        '&:-webkit-autofill': {
+          '-webkit-box-shadow': '0 0 0 100px #FFFFFF inset !important',
+          '-webkit-text-fill-color': '#37352F !important',
+        },
+      },
+    },
+  },
+  MuiOutlinedInput: {
+    styleOverrides: {
+      root: {
+        borderRadius: '3px',
+      },
+      notchedOutline: {
+        borderColor: 'rgba(0, 0, 0, 0.15)',
+      },
+    },
+  },
+  MuiButton: {
+    styleOverrides: {
+      root: {
+        boxShadow: 'none',
+        textTransform: 'none',
+        borderRadius: '3px',
+        fontWeight: 500,
+      },
+      contained: {
+        boxShadow: 'none',
+        '&:hover': {
+          boxShadow: 'none',
+        },
+      },
+      outlined: {
+        borderWidth: '1px',
+        '&:hover': {
+          borderWidth: '1px',
+        },
+      },
+    },
+  },
+  MuiChip: {
+    styleOverrides: {
+      filled: {
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+      },
+    },
+  },
+  MuiAlert: {
+    styleOverrides: {
+      standardSuccess: {
+        backgroundColor: 'rgba(15, 123, 108, 0.08)',
+      },
+      standardError: {
+        backgroundColor: 'rgba(224, 62, 62, 0.08)',
+      },
+      standardWarning: {
+        backgroundColor: 'rgba(217, 115, 13, 0.08)',
+      },
+      standardInfo: {
+        backgroundColor: 'rgba(0, 119, 204, 0.08)',
+      },
+    },
+  },
+};
+
+// 共通のテーマ設定
+const commonOptions = {
+  typography: {
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+      '"Segoe UI Symbol"',
+    ].join(','),
+    h1: {
+      fontSize: '2rem',
+      fontWeight: 500,
+    },
+    h2: {
+      fontSize: '1.75rem',
+      fontWeight: 500,
+    },
+    h3: {
+      fontSize: '1.5rem',
+      fontWeight: 500,
+    },
+    h4: {
+      fontSize: '1.25rem',
+      fontWeight: 500,
+    },
+    h5: {
+      fontSize: '1.125rem',
+      fontWeight: 500,
+    },
+パフォーマンス最適化の状態
     divider: '#2D3748',
   },
   typography: lightThemeOptions.typography,
@@ -514,28 +470,20 @@ export const darkThemeOptions: ThemeOptions = {
           borderColor: '#2D3748',
         },
       },
+main
     },
-    MuiTableCell: {
-      styleOverrides: {
-        root: {
-          borderBottom: '1px solid #2D3748',
-          padding: '1rem 1.5rem',
-        },
+  },
+  shape: {
+    borderRadius: 3,
+  },
+  mixins: {
+    toolbar: {
+      minHeight: 56,
+      '@media (min-width:0px) and (orientation: landscape)': {
+        minHeight: 48,
       },
-    },
-    MuiListItem: {
-      styleOverrides: {
-        root: {
-          borderBottom: '1px solid #2D3748',
-          transition: 'all 0.15s ease-in-out',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            paddingLeft: '4px',
-          },
-          '&:last-child': {
-            borderBottom: 'none',
-          },
-        },
+      '@media (min-width:600px)': {
+        minHeight: 64,
       },
     },
     MuiCardHeader: {
@@ -587,10 +535,25 @@ export const darkThemeOptions: ThemeOptions = {
   },
 };
 
-// デフォルトテーマ (軽量版)
-export const theme = createTheme(lightThemeOptions);
+// ダークテーマの設定
+const darkThemeOptions: ThemeOptions = {
+  ...commonOptions,
+  palette: darkPalette,
+  components: darkComponents,
+};
+
+// ライトテーマの設定
+const lightThemeOptions: ThemeOptions = {
+  ...commonOptions,
+  palette: lightPalette,
+  components: lightComponents,
+};
 
 // テーマを作成する関数
 export const createAppTheme = (mode: 'light' | 'dark') => {
+  // テーマモードに応じてbodyのdataset-themeを設定
+  if (typeof document !== 'undefined') {
+    document.body.dataset.theme = mode;
+  }
   return createTheme(mode === 'light' ? lightThemeOptions : darkThemeOptions);
 }; 

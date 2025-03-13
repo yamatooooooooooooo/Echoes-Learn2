@@ -43,13 +43,24 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
   },
   exams: {
     id: 'exams',
-    title: '試験スケジュール',
-    description: '今後の試験日程を表示します',
+    title: '試験日カウントダウン',
+    description: '試験日までの残り日数を表示します',
     icon: MODULE_ICONS.exams,
     defaultSize: 'medium',
     defaultCollapsed: false,
     defaultEnabled: true,
     order: 3,
+    canDisable: true
+  },
+  reports: {
+    id: 'reports',
+    title: 'レポート締切カウントダウン',
+    description: 'レポート提出締切までの残り日数を表示します',
+    icon: MODULE_ICONS.assignment,
+    defaultSize: 'medium',
+    defaultCollapsed: false,
+    defaultEnabled: true,
+    order: 4,
     canDisable: true
   },
   recentProgress: {
@@ -60,7 +71,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultSize: 'large',
     defaultCollapsed: false,
     defaultEnabled: true,
-    order: 4,
+    order: 5,
     canDisable: true
   },
   learningAnalytics: {
@@ -71,7 +82,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultSize: 'large',
     defaultCollapsed: false,
     defaultEnabled: true,
-    order: 5,
+    order: 6,
     canDisable: true
   }
 };

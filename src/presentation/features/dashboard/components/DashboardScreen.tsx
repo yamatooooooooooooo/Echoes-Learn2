@@ -1,177 +1,128 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { 
-  Box, 
-  Typography, 
-  CircularProgress, 
-  Alert, 
-  Grid, 
+import React, { useState, useMemo } from 'react';
+import {
+  Box,
+  Typography,
+  CircularProgress,
   Paper,
-  IconButton,
-  Tooltip,
+  Alert,
+  AlertTitle,
   useTheme,
-  useMediaQuery,
-  Button,
-  Card,
-  CardContent,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControlLabel,
-  Switch,
-  Divider
+  useMediaQuery
 } from '@mui/material';
-import { 
-  Dashboard as DashboardIcon,
-  Refresh as RefreshIcon,
-  Update as UpdateIcon,
-  Settings as SettingsIcon,
-  Visibility as VisibilityIcon,
-  Assignment as AssignmentIcon,
-  Event as EventIcon,
-  Timeline as TimelineIcon,
-  CalendarToday as CalendarTodayIcon,
-  Assessment as AssessmentIcon,
-  CheckCircle as CheckCircleIcon,
-  BarChart as BarChartIcon
-} from '@mui/icons-material';
-import { SimpleDailyQuotaCard } from './SimpleDailyQuotaCard';
-import { SimpleWeeklyQuotaCard } from './SimpleWeeklyQuotaCard';
-import { SimpleProgressBarCard } from './SimpleProgressBarCard';
-import { RecentProgressCard } from './RecentProgressCard';
-import { UpcomingExamsCard } from './UpcomingExamsCard';
-import { DeadlinesCard } from './DeadlinesCard';
-import ProgressRadarChart from './ProgressRadarChart';
-import CountdownContainer from './CountdownContainer';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../../../../contexts/AuthContext';
-import DataCleanupButton from '../../../components/common/DataCleanupButton';
-import { useVisualizationData } from '../hooks/useVisualizationData';
-import { format } from 'date-fns';
-import { CardHeader } from '../../../components/common/CardHeader';
-import { useDashboardSettings } from '../hooks/useDashboardSettings';
+import { ModularDashboard } from './ModularDashboard';
 
 /**
- * ダッシュボード画面 - モダンデザイン
- * 学習進捗と予定を視覚的に表示
+ * ダッシュボード画面コンポーネント
  */
 const DashboardScreen: React.FC = () => {
-  const { dashboardData, isLoading, error, formatDate, refreshData } = useDashboardData();
-  const { currentUser } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const { settings, toggleCard } = useDashboardSettings();
-  
-  // カード表示設定メニュー用のステート
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
-  
-  // 表示設定メニューを開く
-  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  
-  // 表示設定メニューを閉じる
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-  };
-  
-  // 設定ダイアログを開く
-  const handleOpenSettingsDialog = () => {
-    setSettingsDialogOpen(true);
-    handleCloseMenu();
-  };
-  
-  // 設定ダイアログを閉じる
-  const handleCloseSettingsDialog = () => {
-    setSettingsDialogOpen(false);
-  };
-  
-  // マウント時に最上部にスクロール
-  useEffect(() => {
-    const scrollToTop = () => {
-      try {
-        // シンプルなスクロールリセット - 一つだけの方法を使用
-        window.scrollTo(0, 0);
-        
-        // モバイルの場合のみ、遅延して再度スクロール位置を確認
-        if (isMobile) {
-          setTimeout(() => {
-            window.scrollTo(0, 0);
-          }, 300);
-        }
-      } catch (error) {
-        console.error('スクロール処理中にエラーが発生しました:', error);
-      }
-    };
-    
-    // 初回レンダリング時に実行
-    scrollToTop();
-    
-    // 一度だけ遅延実行
-    const timeoutId = setTimeout(scrollToTop, 300);
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [isMobile]);
-  
-  // 手動更新
-  const handleRefreshWithLoading = useCallback(async () => {
-    setRefreshing(true);
-    await refreshData();
-    setRefreshing(false);
-  }, [refreshData]);
-  
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { currentUser } = useAuth();
+  const { dashboardData, isLoading, error, formatDate, refreshData } = useDashboardData();
+
+  // 読み込み中の場合はローディングインジケータを表示
   if (isLoading) {
     return (
       <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '50vh',
+        p: { xs: 2, sm: 3, md: 4 },
+        display: 'flex',
         flexDirection: 'column',
-        gap: 2
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '50vh'
       }}>
-        <CircularProgress size={40} thickness={4} />
-        <Typography variant="body2" color="text.secondary">
-          学習データを読み込み中...
+        <CircularProgress size={isMobile ? 40 : 60} thickness={4} sx={{ mb: 3 }} />
+        <Typography 
+          variant={isMobile ? "h6" : "h5"} 
+          sx={{ 
+            mb: 2,
+            fontWeight: 500,
+            textAlign: 'center',
+            color: theme.palette.text.primary
+          }}
+        >
+          ダッシュボードを読み込み中...
+        </Typography>
+        <Typography 
+          variant="body2" 
+          color="text.secondary"
+          sx={{ textAlign: 'center', maxWidth: '500px', mx: 'auto' }}
+        >
+          学習データを集計しています。しばらくお待ちください。
         </Typography>
       </Box>
     );
   }
-  
+
+  // エラーがある場合はエラーメッセージを表示
   if (error) {
     return (
-      <Box sx={{ p: 2 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
+      <Box sx={{ 
+        p: { xs: 2, sm: 3, md: 4 },
+        maxWidth: '800px',
+        mx: 'auto'
+      }}>
+        <Alert 
+          severity="error" 
+          variant="filled"
+          sx={{ 
+            mb: 3, 
+            borderRadius: 2,
+            boxShadow: theme.shadows[3] 
+          }}
+        >
+          <AlertTitle>エラーが発生しました</AlertTitle>
+          データの読み込み中に問題が発生しました。
         </Alert>
+        
+        <Paper 
+          elevation={1} 
+          sx={{ 
+            p: 3, 
+            borderRadius: 2,
+            border: `1px solid ${theme.palette.divider}`
+          }}
+        >
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              mb: 2,
+              color: theme.palette.error.main,
+              fontWeight: 500
+            }}
+          >
+            エラーの詳細:
+          </Typography>
+          <Typography 
+            variant="body2" 
+            component="div" 
+            sx={{ 
+              p: 2, 
+              bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+              borderRadius: 1,
+              fontFamily: 'monospace',
+              overflowX: 'auto'
+            }}
+          >
+            {error}
+          </Typography>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ mt: 3 }}
+          >
+            ページを再読み込みするか、しばらくしてからアクセスしてください。問題が解決しない場合は管理者にお問い合わせください。
+          </Typography>
+        </Paper>
       </Box>
     );
   }
 
-  if (!currentUser) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Alert severity="info">
-          ログインしてください。
-        </Alert>
-      </Box>
-    );
-  }
-  
-  // 科目数の取得
-  const subjectCount = dashboardData?.subjects?.length || 0;
-  
   return (
     <Box sx={{ 
+パフォーマンス最適化の状態
       overflowX: 'hidden',
       minHeight: '100vh',
       bgcolor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 1)' : 'rgba(245, 245, 245, 1)',
@@ -613,12 +564,14 @@ const DashboardScreen: React.FC = () => {
         {/* データクリーンアップボタン */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 2, width: '100%' }}>
           <DataCleanupButton size="small" />
+main
         </Box>
-      </Box>
+      )}
     </Box>
   );
 };
 
+パフォーマンス最適化の状態
 /**
  * 統合されたデータ可視化コントロールコンポーネント
  */
@@ -794,5 +747,6 @@ const IntegratedVisualizationSection = React.memo(() => {
     </Box>
   );
 });
+main
 
 export default DashboardScreen; 

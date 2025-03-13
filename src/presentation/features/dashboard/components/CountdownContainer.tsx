@@ -7,7 +7,7 @@ import { Subject } from '../../../../domain/models/SubjectModel';
 import { differenceInDays, format } from 'date-fns';
 
 interface CountdownContainerProps {
-  data: CountdownData[];
+  data?: CountdownData[];
   title?: string;
   includeReportDeadlines?: boolean;
   subjects?: Subject[];
@@ -335,60 +335,72 @@ const GroupedCountdownItem = React.memo(({
 /**
  * 複数の試験準備カウントダウンウィジェットを表示するコンテナコンポーネント
  */
-const CountdownContainer: React.FC<CountdownContainerProps> = React.memo(({ 
-  data,
-  title = '締切カウントダウン',
-  includeReportDeadlines = false,
-  subjects = []
-}) => {
+const CountdownContainer = React.memo(({ data, title = "カウントダウン", includeReportDeadlines = false, subjects = [] }: CountdownContainerProps) => {
   const theme = useTheme();
+  const [expanded, setExpanded] = useState(true);
   const [tabValue, setTabValue] = useState(0);
+
+  // データを生成
+  const generatedData = useMemo(() => {
+    if (data) return data;
+    
+    if (includeReportDeadlines) {
+      return createReportDeadlineCountdownData(subjects);
+    } else {
+      // 試験日カウントダウンのデータを生成
+      if (!subjects || subjects.length === 0) return [];
+  
+      const today = new Date();
+      const result: CountdownData[] = [];
+      
+      subjects.forEach(subject => {
+        // 試験日がある科目のみ処理
+        if (subject.examDate) {
+          const dueDate = new Date(subject.examDate);
+          const remainingDays = Math.max(0, differenceInDays(dueDate, today));
+          
+          // 進捗率を計算
+          const progress = subject.totalPages > 0 
+            ? Math.round((subject.currentPage / subject.totalPages) * 100) 
+            : 0;
+          
+          result.push({
+            subject: subject.name,
+            dueDate,
+            remainingDays,
+            progressData: [
+              { name: '完了', value: progress },
+              { name: '未完了', value: 100 - progress }
+            ]
+          });
+        }
+      });
+      
+      return result;
+    }
+  }, [data, subjects, includeReportDeadlines]);
+
+  // ソート済みデータ
+  const sortedData = useMemo(() => {
+    if (!generatedData || generatedData.length === 0) return [];
+    return [...generatedData].sort((a, b) => a.remainingDays - b.remainingDays);
+  }, [generatedData]);
 
   // タブの切り替え処理
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  // リポート締め切りデータ生成関数をメモ化
-  const getReportData = useCallback((subs: Subject[]) => {
-    return createReportDeadlineCountdownData(subs);
-  }, []);
-
-  // リポート締め切りデータを生成し、試験データと結合
-  const combinedData = useMemo(() => {
-    if (!includeReportDeadlines || !subjects || subjects.length === 0) {
-      return data;
-    }
-    
-    const reportData = getReportData(subjects);
-    return [...data, ...reportData];
-  }, [data, includeReportDeadlines, subjects, getReportData]);
-
-  // 試験データとレポートデータを分離
-  const examData = useMemo(() => {
-    return combinedData.filter(item => !item.isReport);
-  }, [combinedData]);
-
-  const reportData = useMemo(() => {
-    return combinedData.filter(item => item.isReport);
-  }, [combinedData]);
-
   // 表示するデータ（タブに応じて切り替え）
   const displayData = useMemo(() => {
-    return tabValue === 0 ? examData : reportData;
-  }, [tabValue, examData, reportData]);
-
-  // 締切日が近い順にソート
-  const sortedData = useMemo(() => {
-    if (!displayData || displayData.length === 0) return [];
-    return [...displayData].sort((a, b) => a.remainingDays - b.remainingDays);
-  }, [displayData]);
+    return tabValue === 0 ? sortedData : sortedData.filter(item => item.isReport);
+  }, [tabValue, sortedData]);
 
   // 同じ日付のアイテムをグループ化
   const groupedData = useMemo(() => {
     const groups = new Map<string, CountdownData[]>();
     
-    sortedData.forEach(item => {
+    displayData.forEach(item => {
       const dateKey = format(item.dueDate, 'yyyy-MM-dd');
       if (!groups.has(dateKey)) {
         groups.set(dateKey, []);
@@ -402,7 +414,7 @@ const CountdownContainer: React.FC<CountdownContainerProps> = React.memo(({
         items
       }))
       .sort((a, b) => a.items[0].remainingDays - b.items[0].remainingDays);
-  }, [sortedData]);
+  }, [displayData]);
 
   // メモ化されたヘッダー部分
   const HeaderSection = useMemo(() => (
