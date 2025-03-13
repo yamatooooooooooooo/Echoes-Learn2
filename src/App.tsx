@@ -166,17 +166,23 @@ const App: React.FC = () => {
               height: '100vh',
               overflow: 'auto',
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              position: 'relative',
+              paddingTop: { xs: 0, sm: 0, md: 0 },
+              marginTop: 0
             }}
           >
             {/* スクロール可能なコンテンツエリア - シンプルに変更 */}
             <Box 
               sx={{ 
                 padding: { xs: 1, sm: 2, md: 3 },
-                paddingTop: { xs: 16, sm: 16, md: 16 },
+                paddingTop: { xs: 24, sm: 24, md: 24 },
+                paddingBottom: { xs: 100, sm: 50, md: 30 },
                 flexGrow: 1,
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                position: 'relative',
+                minHeight: '100vh'
               }}
             >
               <NavigationContext.Provider value={{ navigateTo }}>

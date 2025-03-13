@@ -49,69 +49,87 @@ const DashboardScreen: React.FC = () => {
   // マウント時に最上部にスクロール
   useEffect(() => {
     const scrollToTop = () => {
-      // グローバルwindowのスクロールをリセット
-      window.scrollTo({
-        top: 0,
-        behavior: 'auto'
-      });
-      
-      // 明示的に0にリセット
-      window.scrollY = 0;
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-      
-      // ダッシュボードのコンテナ要素をトップにスクロール
-      if (containerRef.current) {
-        containerRef.current.scrollTop = 0;
+      try {
+        // 最もシンプルなスクロールリセット
+        window.scrollTo(0, 0);
         
-        // モバイルデバイスでの追加調整
+        // バックアップとして詳細なスクロールリセット
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'auto'
+        });
+        
+        // スクロール位置を強制的にリセット
+        if ('scrollY' in window) {
+          window.scrollY = 0;
+        }
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+        
+        // コンテナのスクロール位置もリセット
+        if (containerRef.current) {
+          containerRef.current.scrollTop = 0;
+        }
+        
+        // ダッシュボードコンテナ要素を見つけて調整
         const dashboardContainer = document.getElementById('dashboard-root-container');
         if (dashboardContainer) {
           dashboardContainer.scrollTop = 0;
-          dashboardContainer.scrollIntoView({ 
-            behavior: 'auto', 
-            block: 'start',
-            inline: 'start'
-          });
           
-          // iOS Safariに対する特別な調整
+          // 要素を表示領域内の先頭に表示
+          dashboardContainer.scrollIntoView({
+            block: 'start',
+            inline: 'start',
+            behavior: 'auto'
+          });
+        }
+        
+        // iOS Safariなどのモバイルブラウザ向けの追加対応
+        if (isMobile) {
+          // 先に少し遅延を入れて実行（レンダリング完了を待つ）
           setTimeout(() => {
-            window.scrollTo({
-              top: 0,
-              behavior: 'auto'
-            });
-            dashboardContainer.scrollTop = 0;
+            window.scrollTo(0, 0);
             document.body.scrollTop = 0;
             document.documentElement.scrollTop = 0;
             
-            // さらに追加の調整を行う
-            setTimeout(() => {
-              window.scrollTo({
-                top: 0,
+            if (dashboardContainer) {
+              dashboardContainer.scrollTop = 0;
+              dashboardContainer.scrollIntoView({
+                block: 'start',
+                inline: 'start',
                 behavior: 'auto'
               });
+            }
+            
+            // さらに追加の調整を行う
+            setTimeout(() => {
+              window.scrollTo(0, 0);
               document.body.scrollTop = 0;
               document.documentElement.scrollTop = 0;
-            }, 200);
-          }, 300);
+            }, 300);
+          }, 500);
         }
+      } catch (error) {
+        console.error('スクロール処理中にエラーが発生しました:', error);
       }
     };
     
-    // 初回レンダリング時にスクロール
+    // 初回レンダリング時に実行
     scrollToTop();
     
-    // 複数のタイムアウトで確実にスクロール位置を調整
-    const timeoutId = setTimeout(scrollToTop, 150);
-    const secondTimeoutId = setTimeout(scrollToTop, 500);
-    const thirdTimeoutId = setTimeout(scrollToTop, 1000);
-    const finalTimeoutId = setTimeout(scrollToTop, 2000); // より長いタイムアウトも追加
+    // 複数回にわたって実行して確実に適用
+    const timeoutIds = [
+      setTimeout(scrollToTop, 100),
+      setTimeout(scrollToTop, 300),
+      setTimeout(scrollToTop, 800),
+      setTimeout(scrollToTop, 1500),
+      setTimeout(scrollToTop, 3000)
+    ];
     
     return () => {
-      clearTimeout(timeoutId);
-      clearTimeout(secondTimeoutId);
-      clearTimeout(thirdTimeoutId);
-      clearTimeout(finalTimeoutId);
+      // すべてのタイマーをクリア
+      timeoutIds.forEach(id => clearTimeout(id));
     };
   }, [isMobile]);
   
@@ -168,38 +186,46 @@ const DashboardScreen: React.FC = () => {
         width: '100%', 
         maxWidth: { xs: '100%', sm: '95%', md: '1400px' },
         mx: 'auto', 
-        p: { xs: 1, sm: 2, md: 3 },
-        pt: { xs: 20, sm: 20, md: 20 }, // 上部のパディングを大幅に増やす
-        pb: { xs: 8, sm: 6 }, // 下部にスペースを追加してスクロールを確保
+        p: { xs: 2, sm: 3, md: 4 },
+        pt: { xs: 80, sm: 80, md: 80 }, // 極端に大きな上部パディングを設定
+        pb: { xs: 120, sm: 80, md: 60 }, // 十分な下部パディングも設定
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        height: 'auto', // 高さを自動に設定し、コンテンツに合わせて伸縮
-        minHeight: isMobile ? '100%' : '100vh',
+        height: 'auto',
+        minHeight: '100vh',
         backgroundColor: 'background.default',
         scrollBehavior: 'smooth',
-        WebkitOverflowScrolling: 'touch', // iOS向けスムーススクロール
-        overflowY: 'visible', // 下部が見切れないように修正
+        WebkitOverflowScrolling: 'touch',
+        overflowY: 'visible',
         overflowX: 'hidden',
+        marginTop: { xs: 30, sm: 40, md: 40 }, // 上部にマージンを追加
+        ...(!isMobile && {
+          marginTop: 50, // デスクトップでの上部マージン
+        }),
         ...(isMobile && {
-          paddingTop: 60, // モバイルでの上部スペースをさらに大幅に確保
-          paddingBottom: 200, // モバイルでの下部スペースをさらに増やす
+          paddingTop: 100, // モバイルでの上部パディングをさらに増やす
+          paddingBottom: 200,
+          marginTop: 40 // モバイルでの上部マージン
         })
       }}
     >
-      {/* ヘッダー部分 - 固定表示 */}
+      {/* ヘッダー部分 */}
       <Box 
         sx={{ 
           width: '100%',
-          mb: { xs: 2, sm: 3 },
-          position: 'relative', // sticky から relative に変更してトップ固定を解除
+          mb: { xs: 3, sm: 4, md: 4 }, // 下部のマージンを増やす
+          position: 'relative',
           zIndex: 10,
           backgroundColor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(8px)',
           borderRadius: 2,
           boxShadow: 1,
-          py: 1,
-          marginTop: { xs: 4, sm: 4, md: 4 } // 上部にマージンを追加
+          py: 2, // 上下のパディングを増やす
+          px: { xs: 2, sm: 3 }, // 左右のパディングを追加
+          marginTop: { xs: 10, sm: 10, md: 10 }, // 上部のマージンを大きく増やす
+          border: '1px solid',
+          borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
         }}
       >
         {/* ダッシュボードヘッダー */}
