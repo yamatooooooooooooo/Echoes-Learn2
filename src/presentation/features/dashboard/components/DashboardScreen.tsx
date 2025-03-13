@@ -32,6 +32,8 @@ import { useAuth } from '../../../../contexts/AuthContext';
 import DataCleanupButton from '../../../components/common/DataCleanupButton';
 import { useVisualizationData } from '../hooks/useVisualizationData';
 import { format } from 'date-fns';
+import { CardHeader } from '../../../components/common/CardHeader';
+import { useDashboardSettings } from '../hooks/useDashboardSettings';
 
 /**
  * ダッシュボード画面 - モダンデザイン
@@ -44,6 +46,7 @@ const DashboardScreen: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const containerRef = useRef<HTMLDivElement>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const { settings, toggleCard } = useDashboardSettings();
   
   // マウント時に最上部にスクロール
   useEffect(() => {
@@ -238,147 +241,103 @@ const DashboardScreen: React.FC = () => {
       </Box>
       
       {/* メインコンテンツエリア */}
-      <Box 
-        sx={{ 
-          flexGrow: 1, 
-          width: '100%',
-          pb: 4,
-          mt: 2,
-        }}
-      >
-        {/* カードコンテナ - 縦に並ぶように並び替え */}
+      <Box sx={{ flexGrow: 1, width: '100%', pb: 4, mt: 2 }}>
         <Grid container direction="column" spacing={isMobile ? 2 : 3} sx={{ mb: 2 }}>
           {/* 試験スケジュールカード */}
-          <Grid item>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                borderRadius: 3,
-                overflow: 'hidden',
-                border: '1px solid',
-                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                backdropFilter: 'blur(10px)',
-                bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: theme.palette.mode === 'dark' 
-                    ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
-                    : '0 8px 24px rgba(0, 0, 0, 0.08)'
-                }
-              }}
-            >
-              <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
-            </Paper>
-          </Grid>
+          {settings.upcomingExams && (
+            <Grid item>
+              <Paper sx={{ /* existing styles */ }}>
+                <CardHeader
+                  title="試験スケジュール"
+                  isVisible={settings.upcomingExams}
+                  onToggleVisibility={() => toggleCard('upcomingExams')}
+                />
+                <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
+              </Paper>
+            </Grid>
+          )}
           
           {/* レポート締切カード */}
-          <Grid item>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                borderRadius: 3,
-                overflow: 'hidden',
-                border: '1px solid',
-                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                backdropFilter: 'blur(10px)',
-                bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: theme.palette.mode === 'dark' 
-                    ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
-                    : '0 8px 24px rgba(0, 0, 0, 0.08)'
-                }
-              }}
-            >
-              <DeadlinesCard subjects={dashboardData?.subjects || []} />
-            </Paper>
-          </Grid>
+          {settings.deadlines && (
+            <Grid item>
+              <Paper sx={{ /* existing styles */ }}>
+                <CardHeader
+                  title="レポート締切"
+                  isVisible={settings.deadlines}
+                  onToggleVisibility={() => toggleCard('deadlines')}
+                />
+                <DeadlinesCard subjects={dashboardData?.subjects || []} />
+              </Paper>
+            </Grid>
+          )}
           
           {/* ノルマカードのコンテナ */}
-          <Grid item>
-            <Grid container spacing={isMobile ? 2 : 3}>
-              {/* 今日のノルマ */}
-              <Grid item xs={12} md={6}>
-                <SimpleDailyQuotaCard 
-                  subjects={dashboardData?.subjects || []} 
-                  isLoading={isLoading}
-                />
-              </Grid>
-              
-              {/* 今週のノルマ */}
-              <Grid item xs={12} md={6}>
-                <SimpleWeeklyQuotaCard 
-                  subjects={dashboardData?.subjects || []} 
-                  isLoading={isLoading}
-                />
+          {(settings.dailyQuota || settings.weeklyQuota) && (
+            <Grid item>
+              <Grid container spacing={isMobile ? 2 : 3}>
+                {/* 今日のノルマ */}
+                {settings.dailyQuota && (
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ /* existing styles */ }}>
+                      <CardHeader
+                        title="今日のノルマ"
+                        isVisible={settings.dailyQuota}
+                        onToggleVisibility={() => toggleCard('dailyQuota')}
+                      />
+                      <SimpleDailyQuotaCard 
+                        subjects={dashboardData?.subjects || []} 
+                        isLoading={isLoading}
+                      />
+                    </Paper>
+                  </Grid>
+                )}
+                
+                {/* 今週のノルマ */}
+                {settings.weeklyQuota && (
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ /* existing styles */ }}>
+                      <CardHeader
+                        title="今週のノルマ"
+                        isVisible={settings.weeklyQuota}
+                        onToggleVisibility={() => toggleCard('weeklyQuota')}
+                      />
+                      <SimpleWeeklyQuotaCard 
+                        subjects={dashboardData?.subjects || []} 
+                        isLoading={isLoading}
+                      />
+                    </Paper>
+                  </Grid>
+                )}
               </Grid>
             </Grid>
-          </Grid>
+          )}
           
           {/* 進捗バー */}
-          <Grid item>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                borderRadius: 3,
-                overflow: 'hidden',
-                border: '1px solid',
-                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                backdropFilter: 'blur(10px)',
-                bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: theme.palette.mode === 'dark' 
-                    ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
-                    : '0 8px 24px rgba(0, 0, 0, 0.08)'
-                }
-              }}
-            >
-              <SimpleProgressBarCard 
-                subjects={dashboardData?.subjects || []} 
-                isLoading={isLoading}
-              />
-            </Paper>
-          </Grid>
+          {settings.progressBar && (
+            <Grid item>
+              <Paper sx={{ /* existing styles */ }}>
+                <CardHeader
+                  title="進捗状況"
+                  isVisible={settings.progressBar}
+                  onToggleVisibility={() => toggleCard('progressBar')}
+                />
+                <SimpleProgressBarCard 
+                  subjects={dashboardData?.subjects || []} 
+                  isLoading={isLoading}
+                />
+              </Paper>
+            </Grid>
+          )}
           
           {/* 最近の進捗 */}
-          {dashboardData && dashboardData.recentProgress && dashboardData.recentProgress.length > 0 && (
+          {settings.recentProgress && dashboardData?.recentProgress && dashboardData.recentProgress.length > 0 && (
             <Grid item>
-              <Paper 
-                elevation={0} 
-                sx={{ 
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  border: '1px solid',
-                  borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  backdropFilter: 'blur(10px)',
-                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: theme.palette.mode === 'dark' 
-                      ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
-                      : '0 8px 24px rgba(0, 0, 0, 0.08)'
-                  }
-                }}
-              >
+              <Paper sx={{ /* existing styles */ }}>
+                <CardHeader
+                  title="最近の進捗"
+                  isVisible={settings.recentProgress}
+                  onToggleVisibility={() => toggleCard('recentProgress')}
+                />
                 <RecentProgressCard 
                   recentProgress={dashboardData.recentProgress} 
                   formatDate={formatDate}
@@ -389,47 +348,24 @@ const DashboardScreen: React.FC = () => {
           )}
 
           {/* データ可視化セクション */}
-          <Grid item>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                borderRadius: 3,
-                overflow: 'hidden',
-                border: '1px solid',
-                borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                backdropFilter: 'blur(10px)',
-                bgcolor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
-                p: 3,
-                mb: 3
-              }}
-            >
-              <Box sx={{ mb: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-                    データ可視化
-                  </Typography>
-                  <IntegratedVisualizationControls />
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  学習進捗と試験準備の状況を視覚的に確認できます
-                </Typography>
-              </Box>
-              <IntegratedVisualizationSection />
-            </Paper>
-          </Grid>
+          {settings.visualization && (
+            <Grid item>
+              <Paper sx={{ /* existing styles */ }}>
+                <CardHeader
+                  title="データ可視化"
+                  subtitle="学習進捗と試験準備の状況を視覚的に確認できます"
+                  isVisible={settings.visualization}
+                  onToggleVisibility={() => toggleCard('visualization')}
+                  action={<IntegratedVisualizationControls />}
+                />
+                <IntegratedVisualizationSection />
+              </Paper>
+            </Grid>
+          )}
         </Grid>
         
         {/* データクリーンアップボタン */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'flex-end', 
-          mt: 3,
-          mb: 2,
-          width: '100%'
-        }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 2, width: '100%' }}>
           <DataCleanupButton size="small" />
         </Box>
       </Box>

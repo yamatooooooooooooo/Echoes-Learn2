@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
 import { DASHBOARD_MODULES } from '../../../../config/dashboardModules';
 import { FirebaseUserSettingsRepository } from '../../../../infrastructure/repositories/userSettingsRepository';
+import { useLocalStorage } from '../../../../hooks/useLocalStorage';
 
 // モジュール設定の型定義
 export interface ModuleSettings {
@@ -25,6 +26,26 @@ const getDefaultModuleSettings = (): ModuleSettings => {
   return settings;
 };
 
+export interface DashboardCardSettings {
+  upcomingExams: boolean;
+  deadlines: boolean;
+  dailyQuota: boolean;
+  weeklyQuota: boolean;
+  progressBar: boolean;
+  recentProgress: boolean;
+  visualization: boolean;
+}
+
+const DEFAULT_SETTINGS: DashboardCardSettings = {
+  upcomingExams: true,
+  deadlines: true,
+  dailyQuota: true,
+  weeklyQuota: true,
+  progressBar: true,
+  recentProgress: true,
+  visualization: true,
+};
+
 /**
  * ダッシュボード設定を管理するカスタムフック
  */
@@ -41,7 +62,10 @@ export const useDashboardSettings = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   
   // ユーザー設定
-  const [settings, setSettings] = useState<any>({});
+  const [settings, setSettings] = useLocalStorage<DashboardCardSettings>(
+    'dashboard-card-settings',
+    DEFAULT_SETTINGS
+  );
 
   /**
    * モジュールが表示可能かチェックする
@@ -186,6 +210,13 @@ export const useDashboardSettings = () => {
     setSnackbarOpen(true);
   };
   
+  const toggleCard = (cardKey: keyof DashboardCardSettings) => {
+    setSettings({
+      ...settings,
+      [cardKey]: !settings[cardKey],
+    });
+  };
+
   return {
     moduleSettings,
     isSaving,
@@ -198,6 +229,7 @@ export const useDashboardSettings = () => {
     updateModulesOrder,
     resetToDefaults,
     settings,
-    isVisibleModule
+    isVisibleModule,
+    toggleCard,
   };
 }; 
