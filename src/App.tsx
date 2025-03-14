@@ -197,15 +197,18 @@ const App: React.FC = () => {
                   flexDirection: 'column',
                   position: 'relative',
                   height: '100%',
-                  // スクロールを有効化して柔軟なレイアウトに
+                  // スクロール性能の最適化
                   overflow: 'auto',
+                  WebkitOverflowScrolling: 'touch', // iOS向けのスムーススクロール
+                  msOverflowStyle: 'none', // IE/Edgeでのスクロールバー非表示
+                  scrollbarWidth: 'thin', // Firefox向け
                   // スクロールバーのカスタマイズ
                   '&::-webkit-scrollbar': {
-                    width: '8px',
-                    height: '8px',
+                    width: '6px',
+                    height: '6px',
                   },
                   '&::-webkit-scrollbar-track': {
-                    backgroundColor: theme.palette.background.default,
+                    backgroundColor: 'transparent',
                   },
                   '&::-webkit-scrollbar-thumb': {
                     backgroundColor: theme.palette.divider,
@@ -226,6 +229,17 @@ const App: React.FC = () => {
                     >
                       <Route index element={<>{renderContent()}</>} />
                     </Route>
+                    {/* 科目管理ページ */}
+                    <Route
+                      path="/subjects"
+                      element={
+                        <PrivateRoute>
+                          <ErrorBoundary>
+                            <SubjectList formatDate={formatDate} />
+                          </ErrorBoundary>
+                        </PrivateRoute>
+                      }
+                    />
                     {/* 設定ページ */}
                     <Route
                       path="/settings"
