@@ -364,8 +364,7 @@ const commonOptions = {
     },
     divider: '#2D3748',
   },
-  typography: lightThemeOptions.typography,
-  spacing: lightThemeOptions.spacing,
+  spacing: 8, // デフォルトのスペーシングを使用
   components: {
     MuiCssBaseline: {
       styleOverrides: {
