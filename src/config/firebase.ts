@@ -36,23 +36,23 @@ import {
 
 // Firebase設定
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_API_KEY,
-  authDomain: process.env.REACT_APP_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_APP_ID,
-  measurementId: process.env.REACT_APP_MEASUREMENT_ID
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || process.env.REACT_APP_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || process.env.REACT_APP_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || process.env.REACT_APP_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || process.env.REACT_APP_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || process.env.REACT_APP_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || process.env.REACT_APP_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || process.env.REACT_APP_MEASUREMENT_ID
 };
 
 // デバッグ用：環境変数が設定されているか確認
 console.log("Firebase設定のデバッグ:", { 
-  apiKey: process.env.REACT_APP_API_KEY ? "設定済み" : "未設定",
-  authDomain: process.env.REACT_APP_AUTH_DOMAIN ? "設定済み" : "未設定",
-  projectId: process.env.REACT_APP_PROJECT_ID ? "設定済み" : "未設定",
-  storageBucket: process.env.REACT_APP_STORAGE_BUCKET ? "設定済み" : "未設定",
-  messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID ? "設定済み" : "未設定",
-  appId: process.env.REACT_APP_APP_ID ? "設定済み" : "未設定"
+  apiKey: firebaseConfig.apiKey ? "設定済み" : "未設定",
+  authDomain: firebaseConfig.authDomain ? "設定済み" : "未設定",
+  projectId: firebaseConfig.projectId ? "設定済み" : "未設定",
+  storageBucket: firebaseConfig.storageBucket ? "設定済み" : "未設定",
+  messagingSenderId: firebaseConfig.messagingSenderId ? "設定済み" : "未設定",
+  appId: firebaseConfig.appId ? "設定済み" : "未設定"
 });
 
 // Firebaseサービスの型定義
