@@ -55,6 +55,13 @@ console.log("Firebase設定のデバッグ:", {
   appId: firebaseConfig.appId ? "設定済み" : "未設定"
 });
 
+// 実際の値を（安全のため一部マスクして）確認
+console.log("APIキー確認:", firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 6)}...` : "未設定");
+console.log("環境変数直接確認:", {
+  REACT_APP_FIREBASE_API_KEY: process.env.REACT_APP_FIREBASE_API_KEY ? "存在" : "なし",
+  REACT_APP_API_KEY: process.env.REACT_APP_API_KEY ? "存在" : "なし",
+});
+
 // Firebaseサービスの型定義
 interface FirebaseServices {
   app: FirebaseApp;
