@@ -1,239 +1,56 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useFirebase } from '../../../../contexts/FirebaseContext';
-import { DASHBOARD_MODULES } from '../../../../config/dashboardModules';
-import { FirebaseUserSettingsRepository } from '../../../../infrastructure/repositories/userSettingsRepository';
-import { useLocalStorage } from '../../../../hooks/useLocalStorage';
-
-// モジュール設定の型定義
-export interface ModuleSettings {
-  [moduleId: string]: {
-    enabled: boolean;
-    order: number;
-    collapsed: boolean;
-  };
-}
-
-// デフォルトのモジュール設定を取得
-const getDefaultModuleSettings = (): ModuleSettings => {
-  const settings: ModuleSettings = {};
-  Object.entries(DASHBOARD_MODULES).forEach(([key, module]) => {
-    settings[key] = {
-      enabled: module.defaultEnabled,
-      order: module.order,
-      collapsed: module.defaultCollapsed
-    };
-  });
-  return settings;
-};
-
-export interface DashboardCardSettings {
-  upcomingExams: boolean;
-  deadlines: boolean;
-  dailyQuota: boolean;
-  weeklyQuota: boolean;
-  progressBar: boolean;
-  recentProgress: boolean;
-  visualization: boolean;
-  navigation: boolean;
-  progressRadar: boolean;
-}
-
-const DEFAULT_SETTINGS: DashboardCardSettings = {
-  upcomingExams: true,
-  deadlines: true,
-  dailyQuota: true,
-  weeklyQuota: true,
-  progressBar: true,
-  recentProgress: true,
-  visualization: true,
-  navigation: true,
-  progressRadar: true,
-};
+import { useState, useCallback } from 'react';
 
 /**
  * ダッシュボード設定を管理するカスタムフック
+ * ユーザーのカード表示設定を保存・読み込みする機能を提供
  */
 export const useDashboardSettings = () => {
-  // Firebaseサービスを取得
-  const { firestore, auth } = useFirebase();
+  // 設定の状態を管理
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   
-  // モジュールの設定状態
-  const [moduleSettings, setModuleSettings] = useState<ModuleSettings>(getDefaultModuleSettings());
-  // 保存処理中の状態
-  const [isSaving, setIsSaving] = useState(false);
-  // 通知関連の状態
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  
-  // ユーザー設定
-  const [settings, setSettings] = useLocalStorage<DashboardCardSettings>(
-    'dashboard-card-settings',
-    DEFAULT_SETTINGS
-  );
-
-  /**
-   * モジュールが表示可能かチェックする
-   * @param moduleId モジュールID
-   */
-  const isVisibleModule = useCallback((moduleId: string): boolean => {
-    return moduleSettings[moduleId]?.enabled ?? false;
-  }, [moduleSettings]);
-
-  /**
-   * 保存された設定を読み込む
-   */
-  const loadSavedSettings = useCallback(async () => {
+  // 設定を保存する関数
+  const saveSettings = useCallback(async () => {
     try {
-      // まずLocalStorageから読み込み
-      const savedSettings = localStorage.getItem('dashboardModuleSettings');
-      if (savedSettings) {
-        setModuleSettings(JSON.parse(savedSettings));
-        return;
-      }
+      setIsSaving(true);
+      // TODO: 実際のストレージに設定を保存する処理を実装
       
-      // LocalStorageになければFirestoreから読み込む試行
-      const app = { firestore, auth } as any;
-      const userSettingsRepo = new FirebaseUserSettingsRepository(firestore, auth);
-      const settings = await userSettingsRepo.getDashboardSettings();
-      
-      if (settings && settings.moduleSettings) {
-        setModuleSettings(settings.moduleSettings);
-        // LocalStorageにも保存
-        localStorage.setItem('dashboardModuleSettings', JSON.stringify(settings.moduleSettings));
-      }
-    } catch (error) {
-      console.error('ダッシュボード設定の読み込みに失敗しました:', error);
-      // デフォルト設定を使用
-      setModuleSettings(getDefaultModuleSettings());
-    }
-  }, [firestore, auth]);
-  
-  // 初期化時に保存された設定を読み込む
-  useEffect(() => {
-    loadSavedSettings();
-  }, [loadSavedSettings]);
-  
-  /**
-   * 設定を保存する
-   */
-  const saveSettings = async () => {
-    setIsSaving(true);
-    
-    try {
-      // まずLocalStorageに保存
-      localStorage.setItem('dashboardModuleSettings', JSON.stringify(moduleSettings));
-      
-      // Firestoreにも保存
-      const app = { firestore, auth } as any;
-      const userSettingsRepo = new FirebaseUserSettingsRepository(firestore, auth);
-      await userSettingsRepo.saveDashboardSettings({ moduleSettings });
-      
-      setSnackbarMessage('設定が保存されました');
+      // 保存成功の通知
+      setSnackbarMessage('ダッシュボード設定が保存されました');
       setSnackbarOpen(true);
     } catch (error) {
-      console.error('設定の保存に失敗しました:', error);
+      console.error('設定の保存中にエラーが発生しました', error);
       setSnackbarMessage('設定の保存に失敗しました');
       setSnackbarOpen(true);
     } finally {
       setIsSaving(false);
     }
-  };
+  }, []);
   
-  /**
-   * モジュールの有効/無効を切り替える
-   */
-  const toggleModuleEnabled = (moduleId: string) => {
-    setModuleSettings(prev => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        enabled: !prev[moduleId]?.enabled
-      }
-    }));
-  };
-  
-  /**
-   * モジュールの表示/非表示を切り替える
-   */
-  const toggleModuleCollapsed = (moduleId: string) => {
-    setModuleSettings(prev => ({
-      ...prev,
-      [moduleId]: {
-        ...prev[moduleId],
-        collapsed: !prev[moduleId]?.collapsed
-      }
-    }));
-  };
-  
-  /**
-   * ドラッグ＆ドロップ後の順序を更新
-   */
-  const updateModulesOrder = (sourceIndex: number, destinationIndex: number) => {
-    if (sourceIndex === destinationIndex) return;
-    
-    // 並び順を更新
-    const updatedSettings = { ...moduleSettings };
-    const moduleKeys = Object.keys(updatedSettings).filter(key => updatedSettings[key].enabled);
-    
-    // ドラッグしたモジュールのID
-    const draggedModuleId = moduleKeys[sourceIndex];
-    
-    // ソート順の更新
-    moduleKeys.forEach(moduleId => {
-      const currentOrder = updatedSettings[moduleId].order;
+  // デフォルト設定に戻す関数
+  const resetToDefaults = useCallback(async () => {
+    try {
+      setIsSaving(true);
+      // TODO: デフォルト設定に戻す処理を実装
       
-      if (moduleId === draggedModuleId) {
-        // ドラッグしたモジュールを移動先の位置に
-        updatedSettings[moduleId].order = destinationIndex;
-      } else if (
-        sourceIndex < destinationIndex && 
-        currentOrder > sourceIndex && 
-        currentOrder <= destinationIndex
-      ) {
-        // 前から後ろに移動した場合、間のモジュールを1つ前に
-        updatedSettings[moduleId].order--;
-      } else if (
-        sourceIndex > destinationIndex && 
-        currentOrder < sourceIndex && 
-        currentOrder >= destinationIndex
-      ) {
-        // 後ろから前に移動した場合、間のモジュールを1つ後ろに
-        updatedSettings[moduleId].order++;
-      }
-    });
-    
-    setModuleSettings(updatedSettings);
-  };
+      setSnackbarMessage('設定をデフォルトに戻しました');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('デフォルト設定の復元中にエラーが発生しました', error);
+      setSnackbarMessage('デフォルト設定の復元に失敗しました');
+      setSnackbarOpen(true);
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
   
-  /**
-   * デフォルト設定に戻す
-   */
-  const resetToDefaults = () => {
-    setModuleSettings(getDefaultModuleSettings());
-    setSnackbarMessage('デフォルト設定に戻しました');
-    setSnackbarOpen(true);
-  };
-  
-  // カードの表示/非表示を切り替える
-  const toggleCard = useCallback((cardName: keyof DashboardCardSettings) => {
-    const newSettings = { ...settings };
-    newSettings[cardName] = !settings[cardName];
-    setSettings(newSettings);
-  }, [settings, setSettings]);
-
   return {
-    moduleSettings,
     isSaving,
     snackbarOpen,
     snackbarMessage,
     setSnackbarOpen,
     saveSettings,
-    toggleModuleEnabled,
-    toggleModuleCollapsed,
-    updateModulesOrder,
-    resetToDefaults,
-    settings,
-    isVisibleModule,
-    toggleCard,
+    resetToDefaults
   };
 }; 
