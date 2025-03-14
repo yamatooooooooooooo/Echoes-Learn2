@@ -233,8 +233,8 @@ const DashboardScreen: React.FC = () => {
           </Box>
         </Box>
         
+        {/* モジュラーダッシュボード */}
         <ModularDashboard
-          formatDate={formatDate}
           dashboardData={dashboardData || {
             totalSubjects: 0,
             completedSubjects: 0,
@@ -248,9 +248,10 @@ const DashboardScreen: React.FC = () => {
             studySessions: [],
             subjectPerformances: []
           }}
+          formatDate={formatDate}
+          refreshData={refreshData}
           isLoading={isLoading}
           error={error}
-          refreshData={refreshData}
         />
       </Box>
     </Box>
