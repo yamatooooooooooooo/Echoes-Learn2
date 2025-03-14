@@ -14,7 +14,8 @@ import {
   Grid, 
   useTheme, 
   LinearProgress,
-  linearProgressClasses
+  linearProgressClasses,
+  Theme
 } from '@mui/material';
 import { format } from 'date-fns';
 import { CountdownData } from '../../../../domain/services/visualizationService';
@@ -23,10 +24,19 @@ interface CountdownPieChartProps {
   data: CountdownData;
 }
 
+// 型定義の改善
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+  }>;
+}
+
 /**
  * カスタムTooltipコンポーネント
  */
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
       <Box
@@ -49,9 +59,15 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-// 進捗状態を計算するコンポーネント
-const ProgressStatus = React.memo(({ progress, theme }: { progress: number; theme: any }) => {
-  const progressState = useMemo(() => {
+// 進捗状態の型定義
+interface ProgressState {
+  label: string;
+  color: string;
+}
+
+// 進捗状態を計算するカスタムフック
+const useProgressStatus = (progress: number, theme: Theme) => {
+  return useMemo(() => {
     if (progress >= 80) {
       return {
         label: '良好',
@@ -74,6 +90,16 @@ const ProgressStatus = React.memo(({ progress, theme }: { progress: number; them
       };
     }
   }, [progress, theme]);
+};
+
+// 進捗状態を表示するコンポーネント
+interface ProgressStatusProps {
+  progress: number;
+  theme: Theme;
+}
+
+const ProgressStatus: React.FC<ProgressStatusProps> = React.memo(({ progress, theme }) => {
+  const progressState = useProgressStatus(progress, theme);
 
   return (
     <Box sx={{ px: 1, mb: 1 }}>
@@ -112,9 +138,24 @@ const ProgressStatus = React.memo(({ progress, theme }: { progress: number; them
   );
 });
 
+// 円グラフデータの型定義
+interface PieChartSectionProps {
+  data: Array<{ name: string; value: number }>;
+  theme: Theme;
+}
+
 // 円グラフコンポーネント
-const PieChartSection = React.memo(({ data, theme }: { data: any; theme: any }) => {
+const PieChartSection: React.FC<PieChartSectionProps> = React.memo(({ data, theme }) => {
   const COLORS = [theme.palette.success.main, theme.palette.grey[300]];
+
+  // Rechartsのエラー対策として、データチェックを追加
+  if (!data || data.length === 0) {
+    return (
+      <Box sx={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography variant="caption" color="text.secondary">データなし</Typography>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -132,7 +173,7 @@ const PieChartSection = React.memo(({ data, theme }: { data: any; theme: any }) 
               startAngle={90}
               endAngle={-270}
             >
-              {data.map((entry: any, index: number) => (
+              {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
@@ -156,20 +197,24 @@ const PieChartSection = React.memo(({ data, theme }: { data: any; theme: any }) 
   );
 });
 
+// カウントダウンの色を計算するカスタムフック
+const useCountdownColor = (remainingDays: number, theme: Theme) => {
+  return useMemo(() => {
+    if (remainingDays <= 7) {
+      return theme.palette.error.main;
+    } else if (remainingDays <= 14) {
+      return theme.palette.warning.main;
+    }
+    return theme.palette.success.main;
+  }, [remainingDays, theme]);
+};
+
 /**
  * 試験準備カウントダウンウィジェットコンポーネント
  */
 const CountdownPieChart: React.FC<CountdownPieChartProps> = React.memo(({ data }) => {
   const theme = useTheme();
-
-  const countdownColor = useMemo(() => {
-    if (data.remainingDays <= 7) {
-      return theme.palette.error.main;
-    } else if (data.remainingDays <= 14) {
-      return theme.palette.warning.main;
-    }
-    return theme.palette.success.main;
-  }, [data.remainingDays, theme]);
+  const countdownColor = useCountdownColor(data.remainingDays, theme);
 
   return (
     <Card sx={{ 

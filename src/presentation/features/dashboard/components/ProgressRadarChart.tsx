@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
+import { Box, Card, CardContent, Typography, useTheme, Theme } from '@mui/material';
 import { RadarChartData } from '../../../../domain/services/visualizationService';
 
 interface ProgressRadarChartProps {
@@ -17,10 +17,21 @@ interface ProgressRadarChartProps {
   title?: string;
 }
 
+// 型定義の改善
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    payload: {
+      subject: string;
+    };
+  }>;
+}
+
 /**
  * カスタムTooltipコンポーネント
  */
-const CustomTooltip = React.memo(({ active, payload }: any) => {
+const CustomTooltip = React.memo(({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <Box
@@ -43,11 +54,19 @@ const CustomTooltip = React.memo(({ active, payload }: any) => {
   return null;
 });
 
+// 型定義の改善
+interface CustomLegendProps {
+  payload?: Array<{
+    color: string;
+  }>;
+  theme: Theme;
+}
+
 /**
  * カスタム凡例コンポーネント
  */
-const CustomLegend = React.memo((props: any) => {
-  const { payload, theme } = props;
+const CustomLegend = React.memo(({ payload, theme }: CustomLegendProps) => {
+  if (!payload) return null;
   
   return (
     <Box 
@@ -59,7 +78,7 @@ const CustomLegend = React.memo((props: any) => {
         mt: 2
       }}
     >
-      {payload.map((entry: any, index: number) => (
+      {payload.map((entry, index) => (
         <Box 
           key={`legend-${index}`}
           sx={{ 
@@ -107,17 +126,32 @@ const ChartDescription = React.memo(({ dividerColor }: { dividerColor: string })
   </Box>
 ));
 
+// データ処理のためのカスタムフック
+const useRadarChartData = (data: RadarChartData[] | undefined) => {
+  return useMemo(() => {
+    if (!data || data.length === 0) {
+      return {
+        isDataAvailable: false,
+        dataCountText: '0科目の進捗を表示',
+      };
+    }
+    
+    return {
+      isDataAvailable: true,
+      dataCountText: `${data.length}科目の進捗を表示`,
+    };
+  }, [data]);
+};
+
 /**
  * 学習進捗レーダーチャートコンポーネント
  */
 const ProgressRadarChart: React.FC<ProgressRadarChartProps> = React.memo(({ 
-  data,
+  data = [],
   title = '学習進捗レーダーチャート'
 }) => {
   const theme = useTheme();
-
-  // データの件数を表示する文字列
-  const dataCountText = useMemo(() => `${data?.length || 0}科目の進捗を表示`, [data]);
+  const { isDataAvailable, dataCountText } = useRadarChartData(data);
 
   // ヘッダー部分をメモ化
   const HeaderSection = useMemo(() => (
@@ -167,7 +201,7 @@ const ProgressRadarChart: React.FC<ProgressRadarChartProps> = React.memo(({
   ), [data, theme]);
 
   // データがない場合のメッセージを表示
-  if (!data || data.length === 0) {
+  if (!isDataAvailable) {
     return <EmptyChartMessage />;
   }
 
