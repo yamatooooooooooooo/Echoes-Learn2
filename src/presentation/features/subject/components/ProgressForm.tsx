@@ -28,7 +28,7 @@ import SentimentNeutralIcon from '@mui/icons-material/SentimentNeutral';
 import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Subject } from '../../../../domain/models/SubjectModel';
-import { Progress } from '../../../../domain/models/ProgressModel';
+import { Progress, ProgressFormData } from '../../../../domain/models/ProgressModel';
 import { useProgressForm } from '../hooks/useProgressForm';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -40,10 +40,11 @@ import { calculateProgress } from '../utils/subjectUtils';
 interface ProgressFormProps {
   subject?: Subject;
   progress?: Progress;
-  open: boolean;
-  onClose: () => void;
-  onSuccess: (progressId: string) => void;
+  open?: boolean;
+  onClose?: () => void;
+  onSuccess?: (progressId: string) => void;
   isEditMode?: boolean;
+  onSubmit?: (data: ProgressFormData) => Promise<void>;
 }
 
 /**
@@ -55,8 +56,14 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
   open,
   onClose,
   onSuccess,
-  isEditMode = false
+  isEditMode = false,
+  onSubmit
 }) => {
+  // インラインモードかモーダルモードかを判定
+  const isInlineMode = onSubmit !== undefined;
+  const isModalMode = open !== undefined;
+
+  // カスタムフックを使用
   const {
     formData,
     isSubmitting,
@@ -65,17 +72,17 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
     handleChange,
     handleDateChange,
     handleSatisfactionChange,
-    handleSubmit,
+    handleSubmit: formSubmitHandler,
     resetForm,
     setFormDataFromProgress
   } = useProgressForm({
     subject,
     progress,
     isEditMode,
-    onSuccess: (progressId) => {
-      onSuccess(progressId);
-      onClose();
-    }
+    onSuccess: isModalMode ? (progressId) => {
+      if (onSuccess) onSuccess(progressId);
+      if (onClose) onClose();
+    } : undefined
   });
 
   // 編集モードの場合、フォームデータを設定
@@ -89,24 +96,39 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
   const handleClose = () => {
     if (!isSubmitting) {
       resetForm();
-      onClose();
+      onClose?.();
     }
   };
 
-  // クイック入力用の関数
+  // クイック入力ボタンの処理
   const handleQuickIncrement = (pages: number) => {
-    const newEndPage = Math.min(
-      (formData.endPage || 0) + pages,
-      subject?.totalPages || Number.MAX_SAFE_INTEGER
+    const nextPage = Math.min(
+      (subject?.totalPages || 999999),
+      (formData.startPage || 0) + pages - 1
     );
     
+    // 通常のhandleChangeは使用せず、直接formDataを更新
+    // フォームデータを直接更新する関数がカスタムフックから提供されていないため、
+    // 代わりにhandleSatisfactionChange関数を参考に実装
+    const newPagesRead = (nextPage - (formData.startPage || 0)) + 1;
+    
+    // ページ数の更新
     handleChange({
       target: {
         name: 'endPage',
-        value: newEndPage.toString(),
-        type: 'number'
+        value: nextPage.toString(),
+        type: 'text'
       }
-    } as React.ChangeEvent<HTMLInputElement>);
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
+    
+    // 読了ページ数の更新
+    handleChange({
+      target: {
+        name: 'pagesRead',
+        value: newPagesRead.toString(),
+        type: 'text'
+      }
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
 
   // クイック入力ボタンを追加します
@@ -155,244 +177,278 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
     return !isNaN(date.getTime()) ? date : null;
   };
 
-  return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      fullWidth
-      maxWidth="sm"
-      aria-labelledby="progress-form-dialog-title"
-    >
-      <DialogTitle id="progress-form-dialog-title" sx={{ m: 0, p: 2 }}>
-        {isEditMode ? '進捗記録の編集' : '進捗記録'}
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
-          disabled={isSubmitting}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      
-      <DialogContent dividers>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-          {subject && (
-            <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper', mb: 2 }}>
-              <Typography variant="body2">
-                科目名: {subject.name}
-              </Typography>
-              <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    現在の進捗:
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {subject.currentPage || 0} / {subject.totalPages} ページ
-                  </Typography>
-                </Box>
-                
-                <Box sx={{ mt: 1 }}>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={calculateProgress(subject.currentPage || 0, subject.totalPages)} 
-                    sx={{ 
-                      height: 8, 
-                      borderRadius: 4,
-                      '& .MuiLinearProgress-bar': {
-                        borderRadius: 4
-                      }
-                    }} 
-                  />
-                </Box>
-              </Box>
-            </Paper>
-          )}
-          
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ja}>
-                  <DatePicker
-                    label="記録日"
-                    value={getSafeDate(formData.recordDate)}
-                    onChange={(newDate) => handleDateChange(newDate)}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        variant: 'outlined',
-                        error: !!fieldErrors.recordDate,
-                        helperText: fieldErrors.recordDate
-                      }
-                    }}
-                  />
-                </LocalizationProvider>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={6}>
-              <TextField
-                label="開始ページ"
-                name="startPage"
-                type="number"
-                fullWidth
-                variant="outlined"
-                value={formData.startPage}
-                onChange={handleChange}
-                error={!!fieldErrors.startPage}
-                helperText={fieldErrors.startPage}
-                disabled={isSubmitting}
-                InputProps={{
-                  inputProps: { min: 0, max: formData.endPage }
-                }}
-                sx={{ '& input': { fontSize: { xs: '1.1rem', sm: '1rem' } } }}
-              />
-            </Grid>
-            
-            <Grid item xs={6}>
-              <TextField
-                label="終了ページ"
-                name="endPage"
-                type="number"
-                fullWidth
-                variant="outlined"
-                value={formData.endPage}
-                onChange={handleChange}
-                error={!!fieldErrors.endPage}
-                helperText={fieldErrors.endPage}
-                disabled={isSubmitting}
-                InputProps={{
-                  inputProps: { min: formData.startPage }
-                }}
-                sx={{ '& input': { fontSize: { xs: '1.1rem', sm: '1rem' } } }}
-              />
-            </Grid>
-            
-            <Grid item xs={12}>
-              <QuickInputButtons 
-                handleQuickIncrement={handleQuickIncrement}
-                isSubmitting={isSubmitting}
-              />
-            </Grid>
+  // フォームの提出処理
+  const handleSubmitForm = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (isInlineMode && onSubmit) {
+      // インラインモードの場合、親コンポーネントのonSubmit関数を呼び出す
+      await onSubmit(formData as unknown as ProgressFormData);
+      resetForm();
+    } else {
+      // モーダルモードの場合、フックのhandleSubmitを呼び出す
+      await formSubmitHandler(e);
+    }
+  };
 
-            {/* 学習時間入力フィールド */}
+  // フォームコンテンツ
+  const renderFormContent = () => (
+    <Box component="form" onSubmit={handleSubmitForm} sx={{ mt: 1 }}>
+      {subject && (
+        <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper', mb: 2 }}>
+          <Grid container spacing={1}>
             <Grid item xs={12}>
-              <TextField
-                label="学習時間（分）"
-                name="studyDuration"
-                type="number"
-                fullWidth
-                variant="outlined"
-                value={formData.studyDuration || ''}
-                onChange={handleChange}
-                error={!!fieldErrors.studyDuration}
-                helperText={fieldErrors.studyDuration || '学習時間を分単位で入力してください'}
-                disabled={isSubmitting}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AccessTimeIcon />
-                    </InputAdornment>
-                  ),
-                  inputProps: { min: 0, max: 1440 }
-                }}
-              />
-            </Grid>
-            
-            {/* 満足度選択 */}
-            <Grid item xs={12}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                今回の学習の満足度:
+              <Typography variant="subtitle1" gutterBottom>
+                {subject.name || '科目名'}
               </Typography>
-              <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-                <ToggleButtonGroup
-                  value={formData.satisfactionLevel}
-                  exclusive
-                  onChange={(_, value) => value && handleSatisfactionChange(value)}
-                  aria-label="学習満足度"
-                  sx={{ width: '100%', justifyContent: 'center' }}
-                >
-                  <ToggleButton value="good" aria-label="満足" sx={{ flex: 1 }}>
-                    <Tooltip title="良い">
-                      <Box sx={{ textAlign: 'center' }}>
-                        <SentimentSatisfiedAltIcon color="success" sx={{ fontSize: 32 }} />
-                        <Typography variant="caption" display="block">良い</Typography>
-                      </Box>
-                    </Tooltip>
-                  </ToggleButton>
-                  <ToggleButton value="neutral" aria-label="普通" sx={{ flex: 1 }}>
-                    <Tooltip title="普通">
-                      <Box sx={{ textAlign: 'center' }}>
-                        <SentimentNeutralIcon color="primary" sx={{ fontSize: 32 }} />
-                        <Typography variant="caption" display="block">普通</Typography>
-                      </Box>
-                    </Tooltip>
-                  </ToggleButton>
-                  <ToggleButton value="bad" aria-label="不満" sx={{ flex: 1 }}>
-                    <Tooltip title="悪い">
-                      <Box sx={{ textAlign: 'center' }}>
-                        <SentimentVeryDissatisfiedIcon color="error" sx={{ fontSize: 32 }} />
-                        <Typography variant="caption" display="block">悪い</Typography>
-                      </Box>
-                    </Tooltip>
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </Stack>
-              <FormHelperText>学習の質や効率を振り返り、満足度を選択してください</FormHelperText>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                label="学習メモ"
-                name="memo"
-                multiline
-                rows={3}
-                fullWidth
-                variant="outlined"
-                value={formData.memo || ''}
-                onChange={handleChange}
-                placeholder="学習内容のメモや、レポートの進捗状況などを記録できます"
-                disabled={isSubmitting}
+              <LinearProgress 
+                variant="determinate" 
+                value={calculateProgress(subject.currentPage || 0, subject.totalPages || 0)} 
+                sx={{ mb: 1, borderRadius: 1 }}
               />
-            </Grid>
-            
-            <Grid item xs={12}>
-              <Box sx={{ borderRadius: 1, p: 1, bgcolor: 'background.default', mb: 1 }}>
-                読んだページ数: {formData.pagesRead} ページ
-              </Box>
+              <Typography variant="caption" color="text.secondary">
+                {subject.currentPage || 0}/{subject.totalPages || '?'} ページ
+                （{Math.round(calculateProgress(subject.currentPage || 0, subject.totalPages || 0))}%）
+              </Typography>
             </Grid>
           </Grid>
-          
-          {error && (
-            <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-        </Box>
-      </DialogContent>
+        </Paper>
+      )}
       
-      <DialogActions>
-        <Button
-          onClick={handleClose}
-          disabled={isSubmitting}
-        >
-          キャンセル
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          color="primary"
-          disabled={isSubmitting}
-          startIcon={isSubmitting && <CircularProgress size={20} color="inherit" />}
-        >
-          {isEditMode ? '更新する' : '記録する'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      
+      <Grid container spacing={2}>
+        {/* 日付選択 */}
+        <Grid item xs={12}>
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ja}>
+            <DatePicker
+              label="記録日"
+              value={getSafeDate(formData.recordDate)}
+              onChange={handleDateChange}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  variant: "outlined",
+                  error: !!fieldErrors.recordDate,
+                  helperText: fieldErrors.recordDate,
+                  disabled: isSubmitting,
+                  InputProps: {
+                    sx: { fontSize: { xs: '1.1rem', sm: '1rem' } }
+                  }
+                }
+              }}
+            />
+          </LocalizationProvider>
+        </Grid>
+        
+        {/* ページ入力フィールド */}
+        <Grid item xs={6}>
+          <TextField
+            label="開始ページ"
+            name="startPage"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={formData.startPage}
+            onChange={handleChange}
+            error={!!fieldErrors.startPage}
+            helperText={fieldErrors.startPage}
+            disabled={isSubmitting}
+            InputProps={{
+              inputProps: { min: 0 }
+            }}
+            sx={{ '& input': { fontSize: { xs: '1.1rem', sm: '1rem' } } }}
+          />
+        </Grid>
+        
+        <Grid item xs={6}>
+          <TextField
+            label="終了ページ"
+            name="endPage"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={formData.endPage}
+            onChange={handleChange}
+            error={!!fieldErrors.endPage}
+            helperText={fieldErrors.endPage}
+            disabled={isSubmitting}
+            InputProps={{
+              inputProps: { min: formData.startPage }
+            }}
+            sx={{ '& input': { fontSize: { xs: '1.1rem', sm: '1rem' } } }}
+          />
+        </Grid>
+        
+        <Grid item xs={12}>
+          <QuickInputButtons 
+            handleQuickIncrement={handleQuickIncrement}
+            isSubmitting={isSubmitting}
+          />
+        </Grid>
+
+        {/* 学習時間入力フィールド */}
+        <Grid item xs={12}>
+          <TextField
+            label="学習時間（分）"
+            name="studyDuration"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={formData.studyDuration || ''}
+            onChange={handleChange}
+            error={!!fieldErrors.studyDuration}
+            helperText={fieldErrors.studyDuration || '学習時間を分単位で入力してください'}
+            disabled={isSubmitting}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <AccessTimeIcon />
+                </InputAdornment>
+              ),
+              inputProps: { min: 0, max: 1440 }
+            }}
+          />
+        </Grid>
+        
+        {/* 満足度選択 */}
+        <Grid item xs={12}>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            今回の学習の満足度:
+          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+            <ToggleButtonGroup
+              value={formData.satisfactionLevel}
+              exclusive
+              onChange={(_, value) => value && handleSatisfactionChange(value)}
+              aria-label="学習満足度"
+              sx={{ width: '100%', justifyContent: 'center' }}
+            >
+              <ToggleButton value="good" aria-label="満足" sx={{ flex: 1 }}>
+                <Tooltip title="良い">
+                  <Box sx={{ textAlign: 'center' }}>
+                    <SentimentSatisfiedAltIcon color="success" sx={{ fontSize: 32 }} />
+                    <Typography variant="caption" display="block">良い</Typography>
+                  </Box>
+                </Tooltip>
+              </ToggleButton>
+              <ToggleButton value="neutral" aria-label="普通" sx={{ flex: 1 }}>
+                <Tooltip title="普通">
+                  <Box sx={{ textAlign: 'center' }}>
+                    <SentimentNeutralIcon color="primary" sx={{ fontSize: 32 }} />
+                    <Typography variant="caption" display="block">普通</Typography>
+                  </Box>
+                </Tooltip>
+              </ToggleButton>
+              <ToggleButton value="bad" aria-label="不満" sx={{ flex: 1 }}>
+                <Tooltip title="悪い">
+                  <Box sx={{ textAlign: 'center' }}>
+                    <SentimentVeryDissatisfiedIcon color="error" sx={{ fontSize: 32 }} />
+                    <Typography variant="caption" display="block">悪い</Typography>
+                  </Box>
+                </Tooltip>
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Stack>
+        </Grid>
+        
+        {/* メモ入力フィールド */}
+        <Grid item xs={12}>
+          <TextField
+            label="学習メモ"
+            name="memo"
+            multiline
+            rows={4}
+            fullWidth
+            variant="outlined"
+            value={formData.memo || ''}
+            onChange={handleChange}
+            disabled={isSubmitting}
+            placeholder="今日の学習の振り返りや気づいたことを記録しましょう..."
+          />
+        </Grid>
+        
+        {/* インラインモードの場合のみ、ここに送信ボタンを表示 */}
+        {isInlineMode && (
+          <Grid item xs={12}>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              disabled={isSubmitting}
+              startIcon={isSubmitting && <CircularProgress size={24} />}
+            >
+              {isSubmitting ? '送信中...' : '進捗を記録'}
+            </Button>
+          </Grid>
+        )}
+      </Grid>
+    </Box>
   );
+
+  // モーダルモードの場合はダイアログとしてレンダリング
+  if (isModalMode) {
+    return (
+      <Dialog 
+        open={open === true} 
+        onClose={onClose} 
+        fullWidth 
+        maxWidth="sm"
+        scroll="paper"
+      >
+        <DialogTitle>
+          {isEditMode ? '進捗記録を編集' : '新しい進捗を記録'}
+          <IconButton
+            aria-label="close"
+            onClick={onClose}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        
+        <DialogContent dividers>
+          {renderFormContent()}
+        </DialogContent>
+        
+        <DialogActions>
+          <Button 
+            onClick={onClose} 
+            disabled={isSubmitting}
+          >
+            キャンセル
+          </Button>
+          <Button
+            type="submit"
+            form="progress-form" 
+            variant="contained"
+            color="primary"
+            disabled={isSubmitting}
+            startIcon={isSubmitting && <CircularProgress size={24} />}
+            onClick={() => {
+              const formElement = document.querySelector('form');
+              if (formElement) {
+                formElement.dispatchEvent(new Event('submit', { cancelable: true }));
+              }
+            }}
+          >
+            {isSubmitting ? '送信中...' : isEditMode ? '更新する' : '記録する'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  }
+  
+  // インラインモードの場合はフォームを直接レンダリング
+  return renderFormContent();
 }; 

@@ -26,7 +26,10 @@ import {
   InputLabel,
   Select,
   FormHelperText,
-  Grid
+  Grid,
+  Card,
+  Skeleton,
+  SelectChangeEvent
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -123,7 +126,7 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
   };
   
   // 編集フォームの入力変更
-  const handleEditFormChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | { value: unknown }>) => {
+  const handleEditFormChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | { value: unknown }> | SelectChangeEvent<string>) => {
     const value = e.target.value;
     setEditFormData(prev => ({
       ...prev,
@@ -554,8 +557,13 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
                 <FormControl fullWidth size="small">
                   <InputLabel>満足度</InputLabel>
                   <Select
-                    value={editFormData.satisfactionLevel}
-                    onChange={handleEditFormChange('satisfactionLevel')}
+                    value={editFormData.satisfactionLevel || ''}
+                    onChange={(e: SelectChangeEvent) => {
+                      setEditFormData(prev => ({
+                        ...prev,
+                        satisfactionLevel: e.target.value as 'good' | 'neutral' | 'bad'
+                      }));
+                    }}
                     label="満足度"
                     disabled={isSubmitting}
                   >
