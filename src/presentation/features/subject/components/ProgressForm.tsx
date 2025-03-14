@@ -15,9 +15,18 @@ import {
   DialogActions,
   IconButton,
   FormControl,
-  LinearProgress
+  LinearProgress,
+  Stack,
+  ToggleButtonGroup,
+  ToggleButton,
+  Tooltip,
+  FormHelperText
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
+import SentimentNeutralIcon from '@mui/icons-material/SentimentNeutral';
+import SentimentVeryDissatisfiedIcon from '@mui/icons-material/SentimentVeryDissatisfied';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { Progress } from '../../../../domain/models/ProgressModel';
 import { useProgressForm } from '../hooks/useProgressForm';
@@ -55,6 +64,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
     fieldErrors,
     handleChange,
     handleDateChange,
+    handleSatisfactionChange,
     handleSubmit,
     resetForm,
     setFormDataFromProgress
@@ -104,52 +114,45 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
     handleQuickIncrement: (pages: number) => void,
     isSubmitting: boolean
   }) => (
-    <Box sx={{ 
-      display: 'flex', 
-      flexWrap: 'wrap', 
-      gap: 1,
-      my: 2
-    }}>
-      <Typography variant="body2" color="text.secondary" sx={{ width: '100%', mb: 0.5 }}>
+    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+      <Typography variant="body2" sx={{ color: 'text.secondary', width: '100%', mb: 0.5 }}>
         クイック入力:
       </Typography>
-      {[1, 5, 10, 20, 50].map(pages => (
-        <Button 
-          key={pages} 
-          variant="outlined" 
-          size="small"
-          onClick={() => handleQuickIncrement(pages)}
-          disabled={isSubmitting}
-          sx={{ 
-            minWidth: { xs: '60px', sm: '48px' },
-            minHeight: { xs: '48px', sm: '36px' },
-            borderRadius: 2,
-            fontWeight: 'bold'
-          }}
-        >
-          +{pages}
-        </Button>
-      ))}
+      <Button 
+        size="small"
+        variant="outlined"
+        onClick={() => handleQuickIncrement(1)}
+        disabled={isSubmitting}
+        sx={{ minWidth: '4rem' }}
+      >
+        +1ページ
+      </Button>
+      <Button 
+        size="small"
+        variant="outlined"
+        onClick={() => handleQuickIncrement(5)}
+        disabled={isSubmitting}
+        sx={{ minWidth: '4rem' }}
+      >
+        +5ページ
+      </Button>
+      <Button 
+        size="small"
+        variant="outlined"
+        onClick={() => handleQuickIncrement(10)}
+        disabled={isSubmitting}
+        sx={{ minWidth: '4rem' }}
+      >
+        +10ページ
+      </Button>
     </Box>
   );
 
-  // 日付入力値の安全な変換
-  const getSafeDate = (dateValue: string | Date | undefined): Date => {
-    if (!dateValue) return new Date();
-    
-    try {
-      // 文字列の場合は日付オブジェクトに変換
-      if (typeof dateValue === 'string') {
-        const parsedDate = new Date(dateValue);
-        // 不正な日付の場合は今日の日付を返す
-        return isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
-      }
-      // 日付オブジェクトの場合はそのまま返す
-      return dateValue;
-    } catch (e) {
-      // 変換エラーの場合は今日の日付を返す
-      return new Date();
-    }
+  // 日付型の安全な変換のためのヘルパー関数
+  const getSafeDate = (dateValue: string | Date | undefined): Date | null => {
+    if (!dateValue) return null;
+    const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+    return !isNaN(date.getTime()) ? date : null;
   };
 
   return (
@@ -276,10 +279,76 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
                 isSubmitting={isSubmitting}
               />
             </Grid>
+
+            {/* 学習時間入力フィールド */}
+            <Grid item xs={12}>
+              <TextField
+                label="学習時間（分）"
+                name="studyDuration"
+                type="number"
+                fullWidth
+                variant="outlined"
+                value={formData.studyDuration || ''}
+                onChange={handleChange}
+                error={!!fieldErrors.studyDuration}
+                helperText={fieldErrors.studyDuration || '学習時間を分単位で入力してください'}
+                disabled={isSubmitting}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <AccessTimeIcon />
+                    </InputAdornment>
+                  ),
+                  inputProps: { min: 0, max: 1440 }
+                }}
+              />
+            </Grid>
+            
+            {/* 満足度選択 */}
+            <Grid item xs={12}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                今回の学習の満足度:
+              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+                <ToggleButtonGroup
+                  value={formData.satisfactionLevel}
+                  exclusive
+                  onChange={(_, value) => value && handleSatisfactionChange(value)}
+                  aria-label="学習満足度"
+                  sx={{ width: '100%', justifyContent: 'center' }}
+                >
+                  <ToggleButton value="good" aria-label="満足" sx={{ flex: 1 }}>
+                    <Tooltip title="良い">
+                      <Box sx={{ textAlign: 'center' }}>
+                        <SentimentSatisfiedAltIcon color="success" sx={{ fontSize: 32 }} />
+                        <Typography variant="caption" display="block">良い</Typography>
+                      </Box>
+                    </Tooltip>
+                  </ToggleButton>
+                  <ToggleButton value="neutral" aria-label="普通" sx={{ flex: 1 }}>
+                    <Tooltip title="普通">
+                      <Box sx={{ textAlign: 'center' }}>
+                        <SentimentNeutralIcon color="primary" sx={{ fontSize: 32 }} />
+                        <Typography variant="caption" display="block">普通</Typography>
+                      </Box>
+                    </Tooltip>
+                  </ToggleButton>
+                  <ToggleButton value="bad" aria-label="不満" sx={{ flex: 1 }}>
+                    <Tooltip title="悪い">
+                      <Box sx={{ textAlign: 'center' }}>
+                        <SentimentVeryDissatisfiedIcon color="error" sx={{ fontSize: 32 }} />
+                        <Typography variant="caption" display="block">悪い</Typography>
+                      </Box>
+                    </Tooltip>
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Stack>
+              <FormHelperText>学習の質や効率を振り返り、満足度を選択してください</FormHelperText>
+            </Grid>
             
             <Grid item xs={12}>
               <TextField
-                label="メモ"
+                label="学習メモ"
                 name="memo"
                 multiline
                 rows={3}
@@ -287,7 +356,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
                 variant="outlined"
                 value={formData.memo || ''}
                 onChange={handleChange}
-                placeholder="学習内容のメモを残しておくと後で振り返りに役立ちます"
+                placeholder="学習内容のメモや、レポートの進捗状況などを記録できます"
                 disabled={isSubmitting}
               />
             </Grid>

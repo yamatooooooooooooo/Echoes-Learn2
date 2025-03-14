@@ -37,6 +37,7 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
       (typeof progress.recordDate === 'string' ? progress.recordDate : format(progress.recordDate, 'yyyy-MM-dd')) : 
       today,
     studyDuration: progress?.studyDuration || 0,
+    satisfactionLevel: progress?.satisfactionLevel || 'neutral',
     memo: progress?.memo || ''
   };
   
@@ -53,6 +54,7 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
         ? progress.recordDate 
         : format(progress.recordDate, 'yyyy-MM-dd'),
       studyDuration: progress.studyDuration || 0,
+      satisfactionLevel: progress.satisfactionLevel || 'neutral',
       memo: progress.memo || ''
     });
   }, []);
@@ -105,6 +107,14 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
     handleChange({
       target: { name: 'recordDate', value: formattedDate, type: 'text' }
     } as React.ChangeEvent<HTMLInputElement>);
+  };
+
+  // 満足度選択の処理
+  const handleSatisfactionChange = (value: 'good' | 'neutral' | 'bad') => {
+    setFormData(prev => ({
+      ...prev,
+      satisfactionLevel: value
+    }));
   };
   
   // フォーム送信
@@ -231,6 +241,7 @@ export const useProgressForm = ({ subject, progress, isEditMode = false, onSucce
     fieldErrors,
     handleChange,
     handleDateChange,
+    handleSatisfactionChange,
     handleSubmit,
     resetForm,
     setFormDataFromProgress

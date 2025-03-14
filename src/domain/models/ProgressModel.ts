@@ -10,6 +10,7 @@ export interface Progress {
   pagesRead: number;
   recordDate: string | Date;
   studyDuration?: number; // 学習時間（分）
+  satisfactionLevel?: 'good' | 'neutral' | 'bad'; // 満足度（良い・普通・悪い）
   memo?: string; // 学習メモ
   createdAt: Date;
   updatedAt: Date;
@@ -25,6 +26,7 @@ export interface ProgressCreateInput {
   pagesRead: number;
   recordDate: string | Date;
   studyDuration?: number;
+  satisfactionLevel?: 'good' | 'neutral' | 'bad';
   memo?: string;
 }
 
@@ -37,6 +39,7 @@ export interface ProgressUpdateInput {
   pagesRead?: number;
   recordDate?: string | Date;
   studyDuration?: number;
+  satisfactionLevel?: 'good' | 'neutral' | 'bad';
   memo?: string;
 }
 
@@ -48,10 +51,14 @@ export interface ProgressFormData {
   startTime?: string;
   endTime?: string;
   duration?: number;
+  studyDuration?: number;
+  satisfactionLevel?: 'good' | 'neutral' | 'bad';
+  memo?: string;
 }
 
 export interface QuickProgressInput {
   subjectId: string;
   pages: number;
   duration?: number;
+  satisfactionLevel?: 'good' | 'neutral' | 'bad';
 } 
