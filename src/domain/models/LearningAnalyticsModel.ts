@@ -21,11 +21,12 @@ export interface ProgressRecord {
 }
 
 export interface ChartDataPoint {
-  date: string;
-  time: number;
-  tasks: number;
-  frequency: number;
+  period: string;
+  label: string;
+  studyTime: number;
+  pagesRead: number;
   satisfaction: number;
+  frequency: number;
 }
 
 export interface AnalysisResult {
@@ -35,17 +36,18 @@ export interface AnalysisResult {
 
 export interface AnalysisSummary {
   totalStudyTime: number;
-  averageStudyTimePerDay: number;
-  totalTasksCompleted: number;
-  averageTasksPerDay: number;
-  daysStudied: number;
-  maxStudyInterval: number;
+  averageStudyTime: number;
+  totalPages: number;
+  averagePagesPerDay: number;
+  longestStreak: number;
+  currentStreak: number;
+  studyFrequency: number;
+  studyGap: number;
   averageSatisfaction: number;
-  studyEfficiency: number;
 }
 
-export type AnalysisMetric = 'time' | 'tasks' | 'frequency' | 'satisfaction';
-export type AnalysisPeriod = 'day' | 'week' | 'month';
+export type AnalysisMetric = 'studyTime' | 'pagesRead' | 'frequency' | 'satisfaction';
+export type AnalysisPeriod = 'daily' | 'weekly' | 'monthly';
 
 export type LearningMetric = 'studyTime' | 'completedTasks' | 'frequency' | 'satisfaction';
 
@@ -58,49 +60,42 @@ export interface LearningAdvice {
 /**
  * 時間区分を計算する関数
  */
-export const getPeriodLabel = (period: AnalysisPeriod, date: Date): string => {
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  const year = date.getFullYear();
-  
+export const getPeriodLabel = (dateKey: string, period: AnalysisPeriod): string => {
+  // 日付キーからラベルを生成
   switch (period) {
-    case 'day':
-      return `${month}/${day}`;
-    case 'week': {
-      // 週の開始日（月曜日）を計算
-      const dayOfWeek = date.getDay();
-      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 日曜日は6、それ以外は曜日 - 1
-      const monday = new Date(date);
-      monday.setDate(date.getDate() - diff);
-      const mondayDay = monday.getDate();
-      const mondayMonth = monday.getMonth() + 1;
-      
-      return `${mondayMonth}/${mondayDay}週`;
+    case 'daily':
+      // 日次の場合は「MM/DD」形式
+      return dateKey.substring(5).replace('-', '/');
+    case 'weekly': {
+      // 週次の場合は「第N週」形式
+      const weekNum = parseInt(dateKey.substring(6));
+      return `第${weekNum}週`;
     }
-    case 'month':
-      return `${year}/${month}`;
+    case 'monthly':
+      // 月次の場合は「YYYY/MM」形式
+      return dateKey.replace('-', '/');
     default:
-      return '';
+      return dateKey;
   }
 };
 
 /**
  * データをグループ化するためのキーを生成する関数
  */
-export const getGroupKey = (period: AnalysisPeriod, date: Date): string => {
+export const getGroupKey = (date: Date, period: AnalysisPeriod): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   
   switch (period) {
-    case 'day':
+    case 'daily':
       return `${year}-${month}-${day}`;
-    case 'week': {
+    case 'weekly': {
       // ISO週番号を取得（1-53）
       const weekNumber = getWeekNumber(date);
       return `${year}-W${String(weekNumber).padStart(2, '0')}`;
     }
-    case 'month':
+    case 'monthly':
       return `${year}-${month}`;
     default:
       return '';
@@ -140,13 +135,13 @@ export const generateLearningAdvice = (summary: AnalysisSummary): LearningAdvice
   }
   
   // 学習頻度に関するアドバイス
-  if (summary.daysStudied < 3) {
+  if (summary.currentStreak < 3) {
     advice.push({
       type: 'warning',
       message: '学習頻度が低めです',
       recommendation: '継続的な学習がより効果的です。毎日短時間でも学習することを目指しましょう。'
     });
-  } else if (summary.maxStudyInterval > 2) {
+  } else if (summary.studyGap > 2) {
     advice.push({
       type: 'info',
       message: '学習間隔があいています',
@@ -176,7 +171,7 @@ export const generateLearningAdvice = (summary: AnalysisSummary): LearningAdvice
   }
   
   // 学習効率に関するアドバイス
-  if (summary.studyEfficiency < 0.5) {
+  if (summary.averagePagesPerDay < 5) {
     advice.push({
       type: 'info',
       message: '学習効率を高める余地があります',
@@ -188,9 +183,10 @@ export const generateLearningAdvice = (summary: AnalysisSummary): LearningAdvice
 };
 
 export interface LearningAnalyticsData {
-  date: string;
+  date: Date;
   studyTime: number;
-  completedTasks: number;
-  frequency: number;
+  pagesRead: number;
   satisfaction: number;
+  satisfactionCount: number;
+  hasStudied: boolean;
 } 

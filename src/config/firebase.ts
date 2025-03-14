@@ -206,4 +206,17 @@ export const isFirebaseConfigValid = (): boolean => {
     firebaseConfig.messagingSenderId &&
     firebaseConfig.appId
   );
-}; 
+};
+
+// Firebase サービスのインスタンスを初期化してエクスポート
+const firebaseServices = initializeFirebase();
+
+// 各サービスを個別にエクスポート
+export const app = firebaseServices.app;
+export const auth = firebaseServices.auth;
+export const firestore = firebaseServices.firestore;
+export const storage = firebaseServices.storage;
+export const functions = firebaseServices.functions;
+export const performance = firebaseServices.performance;
+export const analytics = firebaseServices.analytics;
+export const remoteConfig = firebaseServices.remoteConfig; 

@@ -367,7 +367,7 @@ export const withPerformanceTracking = <P extends object>(
   const displayName = componentName || Component.displayName || Component.name || 'Component';
   
   const PerformanceTrackedComponent: React.FC<P> = (props) => {
-    const startTime = useRef<number>();
+    const startTime = useRef<number>(0);
     
     useEffect(() => {
       if (process.env.NODE_ENV !== 'production') {
@@ -386,9 +386,10 @@ export const withPerformanceTracking = <P extends object>(
     
     startTime.current = performance.now();
     
-    const result = <Component {...props} />;
+    // パフォーマンス計測開始
+    const renderedComponent = React.createElement(Component, props);
     
-    if (process.env.NODE_ENV !== 'production' && startTime.current) {
+    if (process.env.NODE_ENV !== 'production') {
       const endTime = performance.now();
       const renderTime = endTime - startTime.current;
       if (renderTime > 16) { // 60fpsに相当する16.67msを超えた場合に警告
@@ -396,7 +397,7 @@ export const withPerformanceTracking = <P extends object>(
       }
     }
     
-    return result;
+    return renderedComponent;
   };
   
   PerformanceTrackedComponent.displayName = `withPerformanceTracking(${displayName})`;

@@ -18,6 +18,21 @@ export interface Progress {
 }
 
 /**
+ * 進捗データ（学習分析用のデータ形式）
+ */
+export interface ProgressData {
+  id: string;
+  userId: string;
+  subjectId: string;
+  subjectName: string;
+  pageNumber: number;
+  date: Date;
+  duration: number;
+  note: string;
+  satisfaction: number;
+}
+
+/**
  * 進捗記録作成時の入力インターフェース
  */
 export interface ProgressCreateInput {

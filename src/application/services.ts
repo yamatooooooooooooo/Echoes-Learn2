@@ -10,6 +10,7 @@ import { ProgressRepository } from '../infrastructure/repositories/progressRepos
 import { FirebaseUserSettingsRepository } from '../infrastructure/repositories/userSettingsRepository';
 import { UserSettingsRepository } from '../domain/repositories/UserSettingsRepository';
 import { StudyAnalyticsRepository } from '../infrastructure/repositories/studyAnalyticsRepository';
+import { learningAnalyticsRepository } from '../infrastructure/repositories/learningAnalyticsRepository';
 
 // サービスのインポート
 import { QuotaService } from './services/QuotaService';
@@ -31,6 +32,7 @@ export interface ApplicationServices {
   progressRepository: ProgressRepository;
   userSettingsRepository: UserSettingsRepository;
   studyAnalyticsRepository: StudyAnalyticsRepository;
+  learningAnalyticsRepository: typeof learningAnalyticsRepository;
   quotaService: QuotaService;
   priorityService: PriorityService;
   analyticsService: AnalyticsService;
@@ -66,6 +68,7 @@ export const initializeServices = (
       progressRepository,
       userSettingsRepository,
       studyAnalyticsRepository,
+      learningAnalyticsRepository,
       quotaService,
       priorityService,
       analyticsService

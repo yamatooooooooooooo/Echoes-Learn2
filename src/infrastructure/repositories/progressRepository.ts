@@ -12,11 +12,15 @@ import {
   orderBy,
   limit,
   serverTimestamp,
-  Timestamp 
+  Timestamp,
+  DocumentData,
+  Query
 } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
-import { Progress, ProgressCreateInput, ProgressUpdateInput } from '../../domain/models/ProgressModel';
+import { Progress, ProgressCreateInput, ProgressUpdateInput, ProgressData } from '../../domain/models/ProgressModel';
 import { IProgressRepository } from '../../domain/interfaces/repositories/IProgressRepository';
+import { firestore, auth } from '../../config/firebase';
+import { Subject } from '../../domain/models/SubjectModel';
 
 /**
  * 進捗情報を管理するリポジトリ
@@ -296,4 +300,76 @@ export class ProgressRepository implements IProgressRepository {
       throw error;
     }
   }
-} 
+
+  // 日付範囲とオプションで科目IDでフィルタリングする汎用関数
+  public async getByDateRange(
+    startDate: Date,
+    endDate: Date,
+    subjectId?: string
+  ): Promise<ProgressData[]> {
+    try {
+      const userId = this.auth.currentUser?.uid;
+      if (!userId) {
+        throw new Error('ユーザーがログインしていません');
+      }
+      
+      let progressQuery: Query<DocumentData> = query(
+        collection(this.firestore, 'users', userId, 'progress'),
+        where('recordDate', '>=', Timestamp.fromDate(startDate)),
+        where('recordDate', '<=', Timestamp.fromDate(endDate)),
+        orderBy('recordDate', 'desc')
+      );
+      
+      // 科目IDが指定されていれば、そのフィルターも追加
+      if (subjectId) {
+        progressQuery = query(
+          progressQuery,
+          where('subjectId', '==', subjectId)
+        );
+      }
+      
+      const querySnapshot = await getDocs(progressQuery);
+      const progressList: ProgressData[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        progressList.push({
+          id: doc.id,
+          userId: data.userId,
+          subjectId: data.subjectId,
+          subjectName: data.subjectName,
+          pageNumber: data.pageNumber,
+          date: data.recordDate.toDate(),
+          duration: data.duration,
+          note: data.note || '',
+          satisfaction: data.satisfaction || 0
+        });
+      });
+      
+      return progressList;
+    } catch (error) {
+      console.error('日付範囲でのプログレス取得エラー:', error);
+      throw error;
+    }
+  }
+}
+
+// シングルトンインスタンスをエクスポート
+export const progressRepository = new ProgressRepository(firestore, auth);
+
+// 特定の期間と科目のデータを取得するための便利な関数
+export const getByDateRange = (
+  userId: string, 
+  startDate: Date, 
+  endDate: Date,
+  subjectId?: string
+): Promise<Progress[]> => {
+  // subjectIdが指定されていればフィルタリング
+  return progressRepository.getProgressByDateRange(userId, startDate, endDate)
+    .then(progress => {
+      if (subjectId) {
+        return progress.filter(p => p.subjectId === subjectId);
+      }
+      return progress;
+    });
+}; 
