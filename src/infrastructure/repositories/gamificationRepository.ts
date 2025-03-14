@@ -37,6 +37,7 @@ export class GamificationRepository {
       totalExp: 1750,
       level: 3,
       streakDays: 5,
+      points: 1200,
       pointsToday: 120,
       pointsThisWeek: 450,
       achievements: [
