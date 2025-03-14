@@ -1,4 +1,4 @@
-import React, { useState, ReactNode, useMemo } from 'react';
+import React, { useState, ReactNode, useMemo, useCallback } from 'react';
 import { 
   Box, 
   Typography, 
@@ -35,6 +35,7 @@ import { LearningAnalyticsCard } from './LearningAnalyticsCard';
 import { DashboardSettingsDialog } from './DashboardSettingsDialog';
 import { NotionStyleCard } from '../../../components/common/NotionStyleCard';
 import CountdownContainer from './CountdownContainer';
+import LearningAnalysis from '../../../../components/LearningAnalysis';
 
 interface ModularDashboardProps {
   formatDate: (date: Date | string | undefined) => string;
@@ -56,8 +57,102 @@ interface ModularDashboardProps {
   refreshData: () => void;
 }
 
+// 設定メニューをメモ化されたコンポーネントとして分離
+const SettingsMenu = React.memo(({ 
+  anchorEl, 
+  onClose, 
+  onToggleEditMode, 
+  onOpenSettingsDialog, 
+  editMode 
+}: { 
+  anchorEl: HTMLElement | null;
+  onClose: () => void;
+  onToggleEditMode: () => void;
+  onOpenSettingsDialog: () => void;
+  editMode: boolean;
+}) => (
+  <Menu
+    anchorEl={anchorEl}
+    open={Boolean(anchorEl)}
+    onClose={onClose}
+    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+    PaperProps={{
+      elevation: 3,
+      sx: {
+        borderRadius: 2,
+        minWidth: 200
+      }
+    }}
+  >
+    <MenuItem onClick={onToggleEditMode} sx={{ py: 1.5 }}>
+      <ListItemIcon>
+        <ViewModuleIcon fontSize="small" />
+      </ListItemIcon>
+      <ListItemText 
+        primary={editMode ? "編集モードを終了" : "モジュールを編集"} 
+        primaryTypographyProps={{ fontSize: '0.95rem' }}
+      />
+    </MenuItem>
+    <MenuItem onClick={onOpenSettingsDialog} sx={{ py: 1.5 }}>
+      <ListItemIcon>
+        <TuneIcon fontSize="small" />
+      </ListItemIcon>
+      <ListItemText 
+        primary="ダッシュボード設定" 
+        primaryTypographyProps={{ fontSize: '0.95rem' }}
+      />
+    </MenuItem>
+  </Menu>
+));
+
+SettingsMenu.displayName = 'SettingsMenu';
+
+// 編集モードバナーをメモ化されたコンポーネントとして分離
+const EditModeBanner = React.memo(({ 
+  onSave, 
+  isSaving 
+}: { 
+  onSave: () => void; 
+  isSaving: boolean;
+}) => (
+  <Box sx={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    mb: { xs: 2, sm: 3 }, 
+    p: { xs: 1, sm: 2 }, 
+    bgcolor: '#e3f2fd', 
+    borderRadius: 2,
+    alignItems: 'center',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+  }}>
+    <Typography variant="body2" sx={{ 
+      fontWeight: 500, 
+      color: '#0277bd', 
+      mr: 1,
+      fontSize: { xs: '0.8rem', sm: '0.875rem' }
+    }}>
+      編集モード: モジュールをドラッグして並べ替えできます
+    </Typography>
+    <Fab 
+      size="small" 
+      color="primary" 
+      onClick={onSave} 
+      disabled={isSaving}
+      sx={{ ml: 1, minWidth: 40, boxShadow: 'none' }}
+    >
+      <SaveIcon fontSize="small" />
+    </Fab>
+  </Box>
+));
+
+EditModeBanner.displayName = 'EditModeBanner';
+
 /**
- * ドラッグ＆ドロップでカスタマイズ可能なモジュラーダッシュボード
+ * パフォーマンス最適化されたモジュラーダッシュボード
+ * - メモ化による再レンダリングの最小化
+ * - 小さなコンポーネントへの分割
+ * - useCallbackの活用
  */
 export const ModularDashboard: React.FC<ModularDashboardProps> = ({
   formatDate,
@@ -84,13 +179,11 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
   const dashboardModules = useMemo(() => DASHBOARD_MODULES, []);
   
   // アイコンをReactNodeとして安全に変換する関数
-  const getModuleIcon = useMemo(() => {
-    return (moduleId: string): ReactNode => {
-      const module = dashboardModules[moduleId];
-      if (!module) return null;
-      const IconComponent = module.icon;
-      return IconComponent ? <IconComponent /> : null;
-    };
+  const getModuleIcon = useCallback((moduleId: string): ReactNode => {
+    const module = dashboardModules[moduleId];
+    if (!module) return null;
+    const IconComponent = module.icon;
+    return IconComponent ? <IconComponent /> : null;
   }, [dashboardModules]);
   
   // 設定メニューの状態
@@ -101,36 +194,36 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
   const [editMode, setEditMode] = useState(false);
   
   // 設定メニューを開く
-  const handleSettingsClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleSettingsClick = useCallback((event: React.MouseEvent<HTMLElement>) => {
     setSettingsMenuAnchorEl(event.currentTarget);
-  };
+  }, []);
   
   // 設定メニューを閉じる
-  const handleSettingsClose = () => {
+  const handleSettingsClose = useCallback(() => {
     setSettingsMenuAnchorEl(null);
-  };
+  }, []);
   
   // 設定ダイアログを開く
-  const handleOpenSettingsDialog = () => {
+  const handleOpenSettingsDialog = useCallback(() => {
     setSettingsDialogOpen(true);
     handleSettingsClose();
-  };
+  }, [handleSettingsClose]);
   
   // 編集モードを切り替える
-  const toggleEditMode = () => {
-    setEditMode(!editMode);
+  const toggleEditMode = useCallback(() => {
+    setEditMode(prevMode => !prevMode);
     handleSettingsClose();
-  };
+  }, [handleSettingsClose]);
   
   // 設定を保存する
-  const handleSaveSettings = () => {
+  const handleSaveSettings = useCallback(() => {
     saveSettings();
     setEditMode(false);
     handleSettingsClose();
-  };
+  }, [saveSettings, handleSettingsClose]);
 
   // モジュールをレンダリングする
-  const renderModule = (moduleId: string) => {
+  const renderModule = useCallback((moduleId: string) => {
     switch (moduleId) {
       case 'stats':
         return (
@@ -146,7 +239,6 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
           />
         );
       case 'dailyQuota':
-        // SimpleDailyQuotaCardコンポーネントを使用するように修正
         return (
           <SimpleDailyQuotaCard
             subjects={dashboardData.subjects || []}
@@ -179,53 +271,73 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
         );
       case 'learningAnalytics':
         return (
-          <LearningAnalyticsCard
-            studySessions={dashboardData.studySessions}
-            subjectPerformances={dashboardData.subjectPerformances}
-            isLoading={isLoading}
-          />
+          <>
+            <LearningAnalysis />
+          </>
         );
       default:
         return null;
     }
-  };
+  }, [dashboardData, formatDate, isLoading]);
 
   // ドラッグ＆ドロップの処理
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragEnd = useCallback((result: DropResult) => {
     if (!result.destination) return;
     updateModulesOrder(result.source.index, result.destination.index);
-  };
+  }, [updateModulesOrder]);
 
   // 有効なモジュールを取得
-  const enabledModules = Object.entries(moduleSettings)
-    .filter(([_, settings]) => settings.enabled)
-    .sort((a, b) => a[1].order - b[1].order)
-    .map(([moduleId]) => moduleId);
+  const enabledModules = useMemo(() => 
+    Object.entries(moduleSettings)
+      .filter(([_, settings]) => settings.enabled)
+      .sort((a, b) => a[1].order - b[1].order)
+      .map(([moduleId]) => moduleId),
+    [moduleSettings]
+  );
+
+  // メインコンテナのスタイルをメモ化
+  const containerStyle = useMemo(() => ({ 
+    width: '100%',
+    maxWidth: '1400px',
+    mx: 'auto',
+    p: { xs: 1, sm: 2, md: 3 }
+  }), []);
+
+  // 設定アクションのスタイルをメモ化
+  const settingsButtonStyle = useMemo(() => ({
+    display: 'flex', 
+    justifyContent: 'flex-end', 
+    mb: { xs: 2, sm: 3 },
+    position: 'relative',
+    zIndex: 1
+  }), []);
+
+  // 設定ボタンのスタイルをメモ化
+  const iconButtonStyle = useMemo(() => ({ 
+    backgroundColor: '#f5f5f5',
+    '&:hover': { backgroundColor: '#e0e0e0' },
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+  }), []);
+
+  // スナックバーを閉じる
+  const handleCloseSnackbar = useCallback(() => {
+    setSnackbarOpen(false);
+  }, [setSnackbarOpen]);
+
+  // 設定ダイアログを閉じる
+  const handleCloseSettingsDialog = useCallback(() => {
+    setSettingsDialogOpen(false);
+  }, []);
 
   return (
-    <Box sx={{ 
-      width: '100%',
-      maxWidth: '1400px',
-      mx: 'auto',
-      p: { xs: 1, sm: 2, md: 3 }
-    }}>
+    <Box sx={containerStyle}>
       {/* 設定アクション */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'flex-end', 
-        mb: { xs: 2, sm: 3 },
-        position: 'relative',
-        zIndex: 1
-      }}>
+      <Box sx={settingsButtonStyle}>
         <Tooltip title="ダッシュボード設定">
           <IconButton
             onClick={handleSettingsClick}
             size="small"
-            sx={{ 
-              backgroundColor: '#f5f5f5',
-              '&:hover': { backgroundColor: '#e0e0e0' },
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-            }}
+            sx={iconButtonStyle}
           >
             <SettingsIcon />
           </IconButton>
@@ -234,34 +346,10 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
       
       {/* 編集モード表示 */}
       {editMode && (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          mb: { xs: 2, sm: 3 }, 
-          p: { xs: 1, sm: 2 }, 
-          bgcolor: '#e3f2fd', 
-          borderRadius: 2,
-          alignItems: 'center',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-        }}>
-          <Typography variant="body2" sx={{ 
-            fontWeight: 500, 
-            color: '#0277bd', 
-            mr: 1,
-            fontSize: { xs: '0.8rem', sm: '0.875rem' }
-          }}>
-            編集モード: モジュールをドラッグして並べ替えできます
-          </Typography>
-          <Fab 
-            size="small" 
-            color="primary" 
-            onClick={handleSaveSettings} 
-            disabled={isSaving}
-            sx={{ ml: 1, minWidth: 40, boxShadow: 'none' }}
-          >
-            <SaveIcon fontSize="small" />
-          </Fab>
-        </Box>
+        <EditModeBanner 
+          onSave={handleSaveSettings} 
+          isSaving={isSaving} 
+        />
       )}
       
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -330,44 +418,18 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
       </DragDropContext>
       
       {/* 設定メニュー */}
-      <Menu
+      <SettingsMenu 
         anchorEl={settingsMenuAnchorEl}
-        open={Boolean(settingsMenuAnchorEl)}
         onClose={handleSettingsClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        PaperProps={{
-          elevation: 3,
-          sx: {
-            borderRadius: 2,
-            minWidth: 200
-          }
-        }}
-      >
-        <MenuItem onClick={toggleEditMode} sx={{ py: 1.5 }}>
-          <ListItemIcon>
-            <ViewModuleIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText 
-            primary={editMode ? "編集モードを終了" : "モジュールを編集"} 
-            primaryTypographyProps={{ fontSize: '0.95rem' }}
-          />
-        </MenuItem>
-        <MenuItem onClick={handleOpenSettingsDialog} sx={{ py: 1.5 }}>
-          <ListItemIcon>
-            <TuneIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText 
-            primary="ダッシュボード設定" 
-            primaryTypographyProps={{ fontSize: '0.95rem' }}
-          />
-        </MenuItem>
-      </Menu>
+        onToggleEditMode={toggleEditMode}
+        onOpenSettingsDialog={handleOpenSettingsDialog}
+        editMode={editMode}
+      />
       
       {/* 設定ダイアログ */}
       <DashboardSettingsDialog
         open={settingsDialogOpen}
-        onClose={() => setSettingsDialogOpen(false)}
+        onClose={handleCloseSettingsDialog}
         moduleSettings={moduleSettings}
         toggleModuleEnabled={toggleModuleEnabled}
         resetToDefaults={resetToDefaults}
@@ -379,12 +441,12 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={5000}
-        onClose={() => setSnackbarOpen(false)}
+        onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert 
           severity="success" 
-          onClose={() => setSnackbarOpen(false)}
+          onClose={handleCloseSnackbar}
           sx={{ width: '100%', boxShadow: 3, borderRadius: 2 }}
         >
           {snackbarMessage}

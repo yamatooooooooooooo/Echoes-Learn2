@@ -11,6 +11,7 @@ import { ProgressRepository } from '../infrastructure/repositories/progressRepos
 import { FirebaseUserSettingsRepository } from '../infrastructure/repositories/userSettingsRepository';
 import { UserSettingsRepository } from '../domain/repositories/UserSettingsRepository';
 import { StudyAnalyticsRepository } from '../infrastructure/repositories/studyAnalyticsRepository';
+import { LearningAnalyticsRepository } from '../infrastructure/repositories/learningAnalyticsRepository';
 import { useFirebase } from '../contexts/FirebaseContext';
 import { ServicesContext, ServicesProviderProps } from '../contexts/ServicesContext';
 import { ApplicationServices } from '../application/services';
@@ -38,22 +39,24 @@ export const ServicesProvider: React.FC<ServicesProviderProps> = ({ children, se
   const progressRepository = useMemo(() => services.progressRepository || new ProgressRepository(firestore, auth), [services.progressRepository, firestore, auth]);
   const userSettingsRepository = useMemo(() => services.userSettingsRepository || new FirebaseUserSettingsRepository(firestore, auth), [services.userSettingsRepository, firestore, auth]);
   const studyAnalyticsRepository = useMemo(() => services.studyAnalyticsRepository || new StudyAnalyticsRepository(firestore, auth), [services.studyAnalyticsRepository, firestore, auth]);
+  const learningAnalyticsRepository = useMemo(() => services.learningAnalyticsRepository || new LearningAnalyticsRepository(firestore), [services.learningAnalyticsRepository, firestore]);
   
   // サービスの初期化
   const quotaService = useMemo(() => services.quotaService || new QuotaService(subjectRepository, progressRepository, userSettingsRepository), [services.quotaService, subjectRepository, progressRepository, userSettingsRepository]);
   const priorityService = useMemo(() => services.priorityService || new PriorityService(subjectRepository, progressRepository), [services.priorityService, subjectRepository, progressRepository]);
   const analyticsService = useMemo(() => services.analyticsService || new AnalyticsService(subjectRepository, progressRepository), [services.analyticsService, subjectRepository, progressRepository]);
   
-  const servicesValue: ApplicationServices = useMemo(() => ({
+  const servicesValue = useMemo(() => ({
     userRepository,
     subjectRepository,
     progressRepository,
     userSettingsRepository,
     studyAnalyticsRepository,
+    learningAnalyticsRepository,
     quotaService,
     priorityService,
     analyticsService
-  }), [userRepository, subjectRepository, progressRepository, userSettingsRepository, studyAnalyticsRepository, quotaService, priorityService, analyticsService]);
+  }), [userRepository, subjectRepository, progressRepository, userSettingsRepository, studyAnalyticsRepository, learningAnalyticsRepository, quotaService, priorityService, analyticsService]);
   
   return (
     <ServicesContext.Provider value={{ services: servicesValue }}>
