@@ -1,15 +1,16 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthContext } from '../contexts/AuthContext';
 import { Box, CircularProgress } from '@mui/material';
 
 interface PrivateRouteProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 /**
  * 認証が必要なルートを保護するコンポーネント
  * ログインしていない場合はログインページにリダイレクトする
+ * ネストされたRouteの子要素としても、直接子要素を持つ場合もサポート
  */
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const { user, loading } = useAuthContext();
@@ -28,8 +29,8 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // 認証されている場合は子コンポーネントをレンダリング
-  return <>{children}</>;
+  // 子コンポーネントが提供されている場合はそれを、そうでなければOutletをレンダリング
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default PrivateRoute; 

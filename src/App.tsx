@@ -3,7 +3,7 @@ import { Box, CssBaseline, Typography, Button, useMediaQuery, useTheme } from '@
 import { SubjectList } from './presentation/features/subject/components/SubjectList';
 import DashboardScreen from './presentation/features/dashboard/components/DashboardScreen';
 import { Sidebar } from './presentation/components/Sidebar';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Outlet } from 'react-router-dom';
 import LoginPage from './presentation/features/auth/pages/LoginPage';
 import SignupPage from './presentation/features/auth/pages/SignupPage';
 import PrivateRoute from './presentation/components/PrivateRoute';
@@ -11,6 +11,7 @@ import ErrorBoundary from './presentation/components/common/ErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { SettingsPage } from './presentation/features/settings/pages/SettingsPage';
+import { BackupPage } from './presentation/pages/BackupPage';
 
 // ナビゲーションコンテキスト
 interface NavigationContextType {
@@ -196,6 +197,28 @@ const App: React.FC = () => {
                   >
                     <Route index element={<>{renderContent()}</>} />
                   </Route>
+                  {/* 設定ページ */}
+                  <Route
+                    path="/settings"
+                    element={
+                      <PrivateRoute>
+                        <ErrorBoundary>
+                          <SettingsPage />
+                        </ErrorBoundary>
+                      </PrivateRoute>
+                    }
+                  />
+                  {/* バックアップページ */}
+                  <Route
+                    path="/backup"
+                    element={
+                      <PrivateRoute>
+                        <ErrorBoundary>
+                          <BackupPage />
+                        </ErrorBoundary>
+                      </PrivateRoute>
+                    }
+                  />
                 </Routes>
               </NavigationContext.Provider>
             </Box>
