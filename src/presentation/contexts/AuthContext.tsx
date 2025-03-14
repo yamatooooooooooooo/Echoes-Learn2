@@ -23,21 +23,34 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("AuthContext: 認証状態の監視を開始します");
+    
     const unsubscribe = onAuthStateChanged(
       auth,
       (user) => {
+        console.log("AuthContext: 認証状態が変更されました", user ? "ユーザー認証済み" : "未認証");
+        if (user) {
+          console.log("AuthContext: 認証済みユーザー情報", {
+            uid: user.uid,
+            email: user.email,
+            emailVerified: user.emailVerified
+          });
+        }
         setUser(user);
         setLoading(false);
       },
       (error) => {
-        console.error('認証エラー:', error);
+        console.error('AuthContext: 認証エラーが発生しました:', error);
         setError(error.message);
         setLoading(false);
       }
     );
 
     // クリーンアップ関数
-    return () => unsubscribe();
+    return () => {
+      console.log("AuthContext: 認証状態の監視を終了します");
+      unsubscribe();
+    };
   }, []);
 
   return (
