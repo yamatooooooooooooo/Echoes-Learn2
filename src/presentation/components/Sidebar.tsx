@@ -41,7 +41,8 @@ import {
   MoreHoriz as MoreHorizIcon,
   DragIndicator as DragIndicatorIcon,
   ExpandMore,
-  ExpandLess
+  ExpandLess,
+  Backup as BackupIcon
 } from '@mui/icons-material';
 
 // サイドバーのプロパティ型
@@ -97,6 +98,12 @@ const sidebarItems: SidebarItem[] = [
     id: 'settings',
     text: '設定',
     icon: <SettingsIcon />,
+    type: 'page'
+  },
+  {
+    id: 'backup',
+    text: 'バックアップ',
+    icon: <BackupIcon />,
     type: 'page'
   }
 ];

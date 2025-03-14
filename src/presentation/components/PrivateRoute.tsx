@@ -1,17 +1,21 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
+import { useAuthContext } from '../contexts/AuthContext';
 import { Box, CircularProgress } from '@mui/material';
+
+interface PrivateRouteProps {
+  children: React.ReactNode;
+}
 
 /**
  * 認証が必要なルートを保護するコンポーネント
  * ログインしていない場合はログインページにリダイレクトする
  */
-const PrivateRoute: React.FC = () => {
-  const { currentUser, isLoading } = useAuth();
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
+  const { user, loading } = useAuthContext();
 
   // 認証状態の読み込み中
-  if (isLoading) {
+  if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
@@ -20,12 +24,12 @@ const PrivateRoute: React.FC = () => {
   }
 
   // 認証されていない場合はログインページにリダイレクト
-  if (!currentUser) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // 認証されている場合は子ルートをレンダリング
-  return <Outlet />;
+  // 認証されている場合は子コンポーネントをレンダリング
+  return <>{children}</>;
 };
 
 export default PrivateRoute; 
