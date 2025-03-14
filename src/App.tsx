@@ -3,7 +3,7 @@ import { Box, CssBaseline, Typography, Button, useMediaQuery, useTheme } from '@
 import { SubjectList } from './presentation/features/subject/components/SubjectList';
 import DashboardScreen from './presentation/features/dashboard/components/DashboardScreen';
 import { Sidebar } from './presentation/components/Sidebar';
-import { Routes, Route, Outlet } from 'react-router-dom';
+import { Routes, Route, Outlet, useNavigate } from 'react-router-dom';
 import LoginPage from './presentation/features/auth/pages/LoginPage';
 import SignupPage from './presentation/features/auth/pages/SignupPage';
 import PrivateRoute from './presentation/components/PrivateRoute';
@@ -50,6 +50,7 @@ const App: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [drawerOpen, setDrawerOpen] = useState(true); // 常に開いた状態で初期化
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
+  const navigate = useNavigate();
   
   // ハンバーガーメニューでサイドバーを切り替え
   const handleDrawerToggle = () => {
@@ -57,9 +58,18 @@ const App: React.FC = () => {
   };
 
   const handleMenuSelect = (menu: string) => {
-    // 現在は「ダッシュボード」と「科目管理」のみ有効
-    if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings') {
+    // メニュー選択時のナビゲーション処理
+    if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings' || menu === 'backup') {
       setSelectedMenu(menu);
+      
+      // 必要に応じて特定のルートへナビゲーション
+      const currentPath = window.location.pathname;
+      const targetPath = `/${menu === 'dashboard' ? '' : menu}`;
+      
+      // 現在のパスと異なる場合のみナビゲーション
+      if (currentPath !== targetPath) {
+        navigate(targetPath);
+      }
     } else {
       setSelectedMenu('dashboard');
     }
@@ -72,11 +82,11 @@ const App: React.FC = () => {
 
   // ナビゲーション関数
   const navigateTo = (menu: string) => {
-    // 現在は「ダッシュボード」と「科目管理」のみ有効
-    if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings') {
-      setSelectedMenu(menu);
-    } else {
-      setSelectedMenu('dashboard');
+    // 適切なルートへのナビゲーション
+    if (menu === 'dashboard') {
+      navigate('/'); // ルートパスへ
+    } else if (menu === 'subjects' || menu === 'settings' || menu === 'backup') {
+      navigate(`/${menu}`); // 対応するパスへ
     }
     
     // モバイルでは自動的にドロワーを閉じる
@@ -105,6 +115,8 @@ const App: React.FC = () => {
         return <SubjectList formatDate={formatDate} />;
       case 'settings':
         return <SettingsPage />;
+      case 'backup':
+        return <BackupPage />;
       // 以下のケースは一時的に無効化
       // case 'progress':
       //   return <ProgressStatsPage />;

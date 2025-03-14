@@ -598,22 +598,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <Divider />
       
       <List dense sx={{ p: 0 }}>
-        <ListItemButton 
-          sx={{
-            borderRadius: 1,
-            mb: 0.5,
-            '&:hover': {
-              backgroundColor: theme.palette.action.hover,
-            },
-          }}
-          onClick={() => onMenuSelect('settings')}
-        >
-          <ListItemIcon>
-            <SettingsIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary="設定" />
-        </ListItemButton>
-        
         <ListItemButton
           component={RouterLink}
           to="/help"
