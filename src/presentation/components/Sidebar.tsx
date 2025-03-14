@@ -690,35 +690,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <AppBar
         position="fixed"
         color="default"
-        elevation={1}
+        elevation={0}
         sx={{
-          bgcolor: theme.palette.background.paper,
+          bgcolor: theme.palette.mode === 'dark' 
+            ? 'rgba(18, 18, 18, 0.8)' 
+            : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(8px)',
+          borderBottom: `1px solid ${theme.palette.divider}`,
           zIndex: theme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar sx={{ px: 1 }}>
+        <Toolbar sx={{ 
+          px: { xs: 1, sm: 1.5 },
+          minHeight: { xs: '48px', sm: '56px' }
+        }}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
             onClick={onToggle}
+            size="small"
             sx={{ mr: 1 }}
           >
-            <MenuIcon />
+            <MenuIcon fontSize="small" />
           </IconButton>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Avatar
               sx={{
                 bgcolor: theme.palette.primary.main,
                 color: theme.palette.primary.contrastText,
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 mr: 1,
+                fontSize: '0.8rem'
               }}
             >
               E
             </Avatar>
-            <Typography variant="subtitle1" component="div" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="subtitle2" component="div" sx={{ fontWeight: 'medium' }}>
               Echoes Learn
             </Typography>
           </Box>

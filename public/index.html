@@ -74,8 +74,8 @@
     </noscript>
     <div id="root"></div>
     
-    <footer id="app-footer" style="position: fixed; bottom: 0; width: 100%; text-align: center; padding: 10px; font-size: 14px;">
-      <p>&copy; 2024 Echoes Learn</p>
+    <footer id="app-footer" style="position: fixed; bottom: 0; width: 100%; text-align: center; padding: 4px; font-size: 11px; z-index: 900; backdrop-filter: blur(4px);">
+      <p style="margin: 0; opacity: 0.7;">&copy; 2024 Echoes Learn</p>
     </footer>
 
     <script>
@@ -94,11 +94,11 @@
         const footer = document.getElementById('app-footer');
         if (footer) {
           if (isAppDarkMode || isDarkMode) {
-            footer.style.backgroundColor = '#121212';
-            footer.style.color = '#ffffff';
+            footer.style.backgroundColor = 'rgba(18, 18, 18, 0.7)';
+            footer.style.color = 'rgba(255, 255, 255, 0.8)';
           } else {
-            footer.style.backgroundColor = '#ffffff';
-            footer.style.color = '#333333';
+            footer.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+            footer.style.color = 'rgba(51, 51, 51, 0.8)';
           }
         }
       }

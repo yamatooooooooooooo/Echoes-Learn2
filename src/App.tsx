@@ -176,10 +176,10 @@ const App: React.FC = () => {
                 sx={{ 
                   // デバイスサイズに応じたパディングの最適化
                   padding: { xs: 1, sm: 2, md: 3, lg: 4 },
-                  // 上部のパディングを調整（モバイルでは小さく）
-                  paddingTop: { xs: 2, sm: 3, md: 4 },
+                  // 上部のパディングを調整（コンパクト化したAppBarの高さに合わせて縮小）
+                  paddingTop: { xs: 6, sm: 7, md: 7 },
                   // 下部のパディングも最適化（スクロール時のスペース確保）
-                  paddingBottom: { xs: 20, sm: 16, md: 12 },
+                  paddingBottom: { xs: 4, sm: 5, md: 6 },
                   flexGrow: 1,
                   display: 'flex',
                   flexDirection: 'column',
