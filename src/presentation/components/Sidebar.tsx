@@ -686,13 +686,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <nav>
-      {/* モバイルアプリバー */}
+      {/* ヘッダーバー - モバイルとデスクトップ両方で表示 */}
       <AppBar
         position="fixed"
         color="default"
         elevation={1}
         sx={{
-          display: { sm: 'none' },
           bgcolor: theme.palette.background.paper,
           zIndex: theme.zIndex.drawer + 1,
         }}

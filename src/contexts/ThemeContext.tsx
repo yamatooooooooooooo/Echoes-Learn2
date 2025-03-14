@@ -80,6 +80,17 @@ export const AppThemeProvider: FC<AppThemeProviderProps> = ({ children }) => {
     });
     window.dispatchEvent(themeChangeEvent);
     
+    // HTMLドキュメントに明示的にテーマ属性を設定
+    if (actualTheme === 'dark') {
+      document.documentElement.setAttribute('data-mui-color-scheme', 'dark');
+      document.body.classList.add('MuiDarkMode');
+      document.body.style.backgroundColor = '#121212';
+    } else {
+      document.documentElement.setAttribute('data-mui-color-scheme', 'light');
+      document.body.classList.remove('MuiDarkMode');
+      document.body.style.backgroundColor = '#ffffff';
+    }
+    
     // デバッグログ
     console.log(`Theme mode updated: ${actualTheme}`);
   }, [actualTheme]);
@@ -115,6 +126,29 @@ export const AppThemeProvider: FC<AppThemeProviderProps> = ({ children }) => {
   const setMode = (newMode: ThemeMode) => {
     setModeState(newMode);
     localStorage.setItem('themeMode', newMode);
+    
+    // テーマ変更イベントを発火して確実に反映
+    setTimeout(() => {
+      const event = new CustomEvent('themeChange', { 
+        detail: { 
+          mode: newMode, 
+          isDark: newMode === 'dark' || (newMode === 'system' && prefersDarkMode) 
+        } 
+      });
+      window.dispatchEvent(event);
+      
+      // HTMLドキュメントに明示的にテーマ属性を設定
+      if (newMode === 'dark' || (newMode === 'system' && prefersDarkMode)) {
+        document.documentElement.setAttribute('data-mui-color-scheme', 'dark');
+        document.body.classList.add('MuiDarkMode');
+        document.body.style.backgroundColor = '#121212';
+      } else {
+        document.documentElement.setAttribute('data-mui-color-scheme', 'light');
+        document.body.classList.remove('MuiDarkMode');
+        document.body.style.backgroundColor = '#ffffff';
+      }
+    }, 0);
+    
     console.log(`Theme mode set to: ${newMode}`); // デバッグログ追加
   };
 

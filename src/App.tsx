@@ -48,14 +48,10 @@ const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
 const App: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [drawerOpen, setDrawerOpen] = useState(!isMobile);
+  const [drawerOpen, setDrawerOpen] = useState(true); // 常に開いた状態で初期化
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
   
-  // 画面サイズが変更されたときにドロワーの状態を調整
-  useEffect(() => {
-    setDrawerOpen(!isMobile);
-  }, [isMobile]);
-
+  // ハンバーガーメニューでサイドバーを切り替え
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
   };
@@ -68,7 +64,7 @@ const App: React.FC = () => {
       setSelectedMenu('dashboard');
     }
     
-    // モバイルでは自動的にドロワーを閉じる
+    // モバイルでのみ自動的にドロワーを閉じる
     if (isMobile) {
       setDrawerOpen(false);
     }
