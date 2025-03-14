@@ -9,6 +9,7 @@ import SignupPage from './presentation/features/auth/pages/SignupPage';
 import PrivateRoute from './presentation/components/PrivateRoute';
 import ErrorBoundary from './presentation/components/common/ErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider as PresentationAuthProvider } from './presentation/contexts/AuthContext';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { SettingsPage } from './presentation/features/settings/pages/SettingsPage';
 import { BackupPage } from './presentation/pages/BackupPage';
@@ -134,97 +135,99 @@ const App: React.FC = () => {
       }
       onError={handleError}
     >
-      <AuthProvider>
-        <CssBaseline />
-        <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-          {/* サイドバー */}
-          <Sidebar
-            open={drawerOpen}
-            onToggle={handleDrawerToggle}
-            onMenuSelect={handleMenuSelect}
-            selectedMenu={selectedMenu}
-          />
+      <PresentationAuthProvider>
+        <AuthProvider>
+          <CssBaseline />
+          <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+            {/* サイドバー */}
+            <Sidebar
+              open={drawerOpen}
+              onToggle={handleDrawerToggle}
+              onMenuSelect={handleMenuSelect}
+              selectedMenu={selectedMenu}
+            />
 
-          {/* メインコンテンツ */}
-          <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              width: { sm: `calc(100% - ${drawerWidth}px)` },
-              ml: { sm: drawerOpen ? `${drawerWidth}px` : 0 },
-              transition: theme.transitions.create(['margin', 'width'], {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.leavingScreen,
-              }),
-              ...(drawerOpen && {
-                width: { sm: `calc(100% - ${drawerWidth}px)` },
-                ml: { sm: `${drawerWidth}px` },
-                transition: theme.transitions.create(['margin', 'width'], {
-                  easing: theme.transitions.easing.easeOut,
-                  duration: theme.transitions.duration.enteringScreen,
-                }),
-              }),
-              height: '100vh',
-              overflow: 'auto', // メインコンテナでのみスクロールを許可
-              display: 'flex',
-              flexDirection: 'column',
-              position: 'relative',
-              paddingTop: { xs: 0, sm: 0, md: 0 },
-              marginTop: 0
-            }}
-          >
-            {/* スクロール可能なコンテンツエリア - シンプルに変更 */}
-            <Box 
-              sx={{ 
-                padding: { xs: 1, sm: 2, md: 3 },
-                paddingTop: { xs: 12, sm: 12, md: 12 }, // パディングを調整
-                paddingBottom: { xs: 80, sm: 40, md: 20 }, // パディングを調整
+            {/* メインコンテンツ */}
+            <Box
+              component="main"
+              sx={{
                 flexGrow: 1,
+                width: { sm: `calc(100% - ${drawerWidth}px)` },
+                ml: { sm: drawerOpen ? `${drawerWidth}px` : 0 },
+                transition: theme.transitions.create(['margin', 'width'], {
+                  easing: theme.transitions.easing.sharp,
+                  duration: theme.transitions.duration.leavingScreen,
+                }),
+                ...(drawerOpen && {
+                  width: { sm: `calc(100% - ${drawerWidth}px)` },
+                  ml: { sm: `${drawerWidth}px` },
+                  transition: theme.transitions.create(['margin', 'width'], {
+                    easing: theme.transitions.easing.easeOut,
+                    duration: theme.transitions.duration.enteringScreen,
+                  }),
+                }),
+                height: '100vh',
+                overflow: 'auto', // メインコンテナでのみスクロールを許可
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
-                minHeight: '100vh',
-                overflow: 'visible' // 内部コンテナではスクロールを無効化
+                paddingTop: { xs: 0, sm: 0, md: 0 },
+                marginTop: 0
               }}
             >
-              <NavigationContext.Provider value={{ navigateTo }}>
-                <Routes>
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/signup" element={<SignupPage />} />
-                  <Route
-                    path="/"
-                    element={<PrivateRoute />}
-                  >
-                    <Route index element={<>{renderContent()}</>} />
-                  </Route>
-                  {/* 設定ページ */}
-                  <Route
-                    path="/settings"
-                    element={
-                      <PrivateRoute>
-                        <ErrorBoundary>
-                          <SettingsPage />
-                        </ErrorBoundary>
-                      </PrivateRoute>
-                    }
-                  />
-                  {/* バックアップページ */}
-                  <Route
-                    path="/backup"
-                    element={
-                      <PrivateRoute>
-                        <ErrorBoundary>
-                          <BackupPage />
-                        </ErrorBoundary>
-                      </PrivateRoute>
-                    }
-                  />
-                </Routes>
-              </NavigationContext.Provider>
+              {/* スクロール可能なコンテンツエリア - シンプルに変更 */}
+              <Box 
+                sx={{ 
+                  padding: { xs: 1, sm: 2, md: 3 },
+                  paddingTop: { xs: 12, sm: 12, md: 12 }, // パディングを調整
+                  paddingBottom: { xs: 80, sm: 40, md: 20 }, // パディングを調整
+                  flexGrow: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
+                  minHeight: '100vh',
+                  overflow: 'visible' // 内部コンテナではスクロールを無効化
+                }}
+              >
+                <NavigationContext.Provider value={{ navigateTo }}>
+                  <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignupPage />} />
+                    <Route
+                      path="/"
+                      element={<PrivateRoute />}
+                    >
+                      <Route index element={<>{renderContent()}</>} />
+                    </Route>
+                    {/* 設定ページ */}
+                    <Route
+                      path="/settings"
+                      element={
+                        <PrivateRoute>
+                          <ErrorBoundary>
+                            <SettingsPage />
+                          </ErrorBoundary>
+                        </PrivateRoute>
+                      }
+                    />
+                    {/* バックアップページ */}
+                    <Route
+                      path="/backup"
+                      element={
+                        <PrivateRoute>
+                          <ErrorBoundary>
+                            <BackupPage />
+                          </ErrorBoundary>
+                        </PrivateRoute>
+                      }
+                    />
+                  </Routes>
+                </NavigationContext.Provider>
+              </Box>
             </Box>
           </Box>
-        </Box>
-      </AuthProvider>
+        </AuthProvider>
+      </PresentationAuthProvider>
     </ErrorBoundary>
   );
 };
