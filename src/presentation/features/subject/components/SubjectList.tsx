@@ -47,7 +47,12 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<SortOption>('priority-high');
+  const [sortBy, setSortBy] = useState<SortOption>(() => {
+    // ローカルストレージから並び替え条件を取得
+    const savedSortBy = localStorage.getItem('subjectSortBy');
+    // 保存されている場合はその値を、なければ試験日が近い順をデフォルトに
+    return (savedSortBy as SortOption) || 'exam-date-asc';
+  });
   const [autoPriority, setAutoPriority] = useState(true);
   const [priorityUpdating, setPriorityUpdating] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
@@ -279,7 +284,10 @@ export const SubjectList: React.FC<SubjectListProps> = ({ formatDate }) => {
 
   // 並び替え方法の変更 - メモ化
   const handleSortChange = useCallback((event: SelectChangeEvent<SortOption>) => {
-    setSortBy(event.target.value as SortOption);
+    const newSortBy = event.target.value as SortOption;
+    setSortBy(newSortBy);
+    // ローカルストレージに保存
+    localStorage.setItem('subjectSortBy', newSortBy);
   }, []);
 
   // 新しい科目の登録または更新 - メモ化

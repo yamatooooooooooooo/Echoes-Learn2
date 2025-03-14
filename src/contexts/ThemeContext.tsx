@@ -59,6 +59,8 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
       }
       
       setCurrentTheme(theme);
+      // DOMのdata-theme属性も設定してCSSでも利用できるようにする
+      document.documentElement.setAttribute('data-theme', theme);
       setError(null);
     } catch (err) {
       console.error('テーマの適用に失敗しました', err);
@@ -69,24 +71,36 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
   // テーマの変更を監視し、適用する
   useEffect(() => {
     applyTheme(mode);
-  }, [mode, applyTheme]);
+  }, [mode]);
 
   // システムのダークモード設定を監視
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
-    const handleChange = (e: MediaQueryListEvent) => {
+    const handleChange = () => {
       if (mode === 'system') {
         applyTheme('system');
       }
     };
     
-    mediaQuery.addEventListener('change', handleChange);
+    // 初期化時にも一度実行
+    handleChange();
     
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [mode, applyTheme]);
+    // イベントリスナーの追加
+    try {
+      // 新しいAPI (addEventListener)をサポートしているブラウザ
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    } catch (e1) {
+      try {
+        // 古いブラウザ向けのフォールバック (addListener)
+        mediaQuery.addListener(handleChange);
+        return () => mediaQuery.removeListener(handleChange);
+      } catch (e2) {
+        console.error('メディアクエリリスナーの設定に失敗しました', e2);
+      }
+    }
+  }, [mode]);
 
   // テーマの切り替え
   const toggleTheme = () => {

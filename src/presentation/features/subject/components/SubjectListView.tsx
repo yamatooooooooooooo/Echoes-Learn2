@@ -211,7 +211,13 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                     />
                     <Typography 
                       variant={isMobile ? "body1" : "subtitle1"}
-                      sx={{ fontWeight: subject.priority === 'high' ? 600 : 400 }}
+                      sx={{ 
+                        fontWeight: subject.priority === 'high' ? 600 : 400,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: { xs: 'calc(100vw - 100px)', sm: 'auto' }
+                      }}
                     >
                       {subject.name}
                     </Typography>
@@ -245,7 +251,13 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                     <Typography 
                       variant="body2" 
                       component="span"
-                      sx={getDaysRemainingStyle(daysRemaining)}
+                      sx={{
+                        ...getDaysRemainingStyle(daysRemaining),
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: { xs: '100%', sm: 'auto' }
+                      }}
                     >
                       {subject.examDate 
                         ? (daysRemaining !== null 
@@ -296,7 +308,10 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                     width: { xs: '100%', sm: '10%' }, 
                     display: 'flex',
                     justifyContent: { xs: 'flex-end', sm: 'center' },
-                    mt: { xs: 1, sm: 0 }
+                    mt: { xs: 1, sm: 0 },
+                    position: { xs: 'absolute', sm: 'static' },
+                    top: { xs: '10px', sm: 'auto' },
+                    right: { xs: '10px', sm: 'auto' }
                   }}>
                     {/* 進捗記録ボタン */}
                     {onRecordProgress && (
