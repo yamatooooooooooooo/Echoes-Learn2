@@ -120,26 +120,81 @@ export class QuotaService {
    * 同時並行可能な最大科目数を考慮
    */
   private selectPrioritySubjects(subjects: Subject[], maxConcurrent: number): Subject[] {
-    // 試験日順にソート
-    const sorted = [...subjects].sort((a, b) => {
-      // 1. 試験日が近い順（残り日数の小さい順）- 重みを2倍に
-      const daysA = calculateDaysRemaining(a.examDate) || Infinity;
-      const daysB = calculateDaysRemaining(b.examDate) || Infinity;
+    // 各科目に一時的なスコアを計算（数値で比較するため）
+    const subjectsWithScores = subjects.map(subject => {
+      // 試験日までの残り日数
+      const daysRemaining = calculateDaysRemaining(subject.examDate) || Infinity;
       
-      // 残り日数に大きな差がある場合は、それを優先（重み付けを強化）
-      if (Math.abs(daysA - daysB) > 5) return daysA - daysB;
+      // 優先度スコアの計算
+      let score = 0;
       
-      // 残り日数が非常に少ない場合（7日以内）は最優先
-      if (daysA <= 7 && daysB > 7) return -1;
-      if (daysB <= 7 && daysA > 7) return 1;
+      // 日数に基づくスコア（少ないほど高スコア）
+      if (daysRemaining <= 3) {
+        score += 100; // 3日以内は最優先
+      } else if (daysRemaining <= 7) {
+        score += 80; // 1週間以内は高優先
+      } else if (daysRemaining <= 14) {
+        score += 60; // 2週間以内は中優先
+      } else if (daysRemaining <= 30) {
+        score += 40; // 1ヶ月以内
+      } else if (daysRemaining <= 60) {
+        score += 20; // 2ヶ月以内
+      }
       
-      // 残り日数が同程度の場合は優先度で判断
-      const priorityOrder = { high: 3, medium: 2, low: 1 };
-      return priorityOrder[b.priority || 'low'] - priorityOrder[a.priority || 'low'];
+      // 現在の優先度も考慮（ユーザーが手動設定したものを優先）
+      if (subject.priority === 'high') {
+        score += 15;
+      } else if (subject.priority === 'medium') {
+        score += 10;
+      }
+      
+      // 進捗率による調整
+      const progress = subject.currentPage / subject.totalPages * 100;
+      if (progress < 30) {
+        score += 15; // 進捗30%未満
+      } else if (progress < 50) {
+        score += 10; // 進捗50%未満
+      } else if (progress < 70) {
+        score += 5; // 進捗70%未満
+      }
+      
+      // 重要度による調整
+      if (subject.importance === 'high') {
+        score += 10;
+      }
+      
+      return { subject, score, daysRemaining };
     });
-
+    
+    // スコアの高い順にソート
+    subjectsWithScores.sort((a, b) => b.score - a.score);
+    
     // 最大同時並行数まで選択
-    return sorted.slice(0, maxConcurrent);
+    const selectedSubjects = subjectsWithScores.slice(0, maxConcurrent);
+    
+    // 最高スコアの科目を見つける
+    const highestScore = selectedSubjects.length > 0 ? selectedSubjects[0].score : 0;
+    
+    // 選択された科目から、各科目の優先度を決定
+    // 最高スコアの科目のみ「high」に設定
+    return selectedSubjects.map((item, index) => {
+      const updatedSubject = { ...item.subject };
+      
+      // 1番目の科目（最高スコア）のみ「high」に設定
+      if (index === 0 && item.score >= highestScore) {
+        updatedSubject.priority = 'high';
+      } 
+      // 2番目以降で高スコア（トップ科目の80%以上）は「medium」
+      else if (item.score >= highestScore * 0.8 || item.daysRemaining <= 14) {
+        updatedSubject.priority = 'medium';
+      } 
+      // それ以外は「low」
+      else {
+        updatedSubject.priority = 'low';
+      }
+      
+      return updatedSubject;
+    });
   }
 
   /**

@@ -84,14 +84,6 @@ const cardStyles = {
     justifyContent: 'space-between',
     mb: 2
   },
-  priorityBadge: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '4px',
-    zIndex: 1
-  },
   actionArea: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -311,14 +303,6 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
       elevation={0}
       sx={cardStyles.root}
     >
-      {/* 優先度を示すトップバー */}
-      <Box
-        sx={{
-          ...cardStyles.priorityBadge,
-          bgcolor: getPriorityColor()
-        }}
-      />
-
       <Box sx={cardStyles.contentArea}>
         {/* タイトル部分 */}
         <Box sx={cardStyles.title}>

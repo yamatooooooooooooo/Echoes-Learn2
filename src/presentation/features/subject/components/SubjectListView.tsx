@@ -183,9 +183,7 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                       ? 'rgba(255, 255, 255, 0.06)' 
                       : 'rgba(0, 0, 0, 0.02)',
                     transform: 'translateY(-1px)'
-                  },
-                  borderLeft: '3px solid',
-                  borderColor: `${getPriorityColorClass(subject.priority)}.main`,
+                  }
                 }}
               >
                 <Box 
