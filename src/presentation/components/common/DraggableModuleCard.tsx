@@ -1,14 +1,14 @@
 import React, { ReactNode, useState } from 'react';
-import { 
-  Card, 
-  CardHeader, 
-  CardContent, 
-  Typography, 
-  Box, 
-  IconButton, 
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  Typography,
+  Box,
+  IconButton,
   Collapse,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
 } from '@mui/material';
 import { Draggable } from '@hello-pangea/dnd';
 import { OutlinedIcon } from './OutlinedIcon';
@@ -48,14 +48,14 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
   isDraggingEnabled = true,
   canHide = true,
   isFirst = false,
-  isLast = false
+  isLast = false,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [isHovering, setIsHovering] = useState(false);
-  
+
   const handleToggleCollapse = () => {
     const newCollapsedState = !collapsed;
     setCollapsed(newCollapsedState);
@@ -63,32 +63,32 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
       onToggleCollapse(id, newCollapsedState);
     }
   };
-  
+
   const handleMenuClose = () => {
     setMenuAnchorEl(null);
   };
-  
+
   const handleToggleVisibility = () => {
     if (onToggleVisibility) {
       onToggleVisibility(id);
     }
     handleMenuClose();
   };
-  
+
   const handleMoveUp = () => {
     if (onMoveUp) {
       onMoveUp(id);
     }
     handleMenuClose();
   };
-  
+
   const handleMoveDown = () => {
     if (onMoveDown) {
       onMoveDown(id);
     }
     handleMenuClose();
   };
-  
+
   return (
     <Draggable draggableId={id} index={index} isDragDisabled={!isDraggingEnabled}>
       {(provided, snapshot) => (
@@ -106,19 +106,20 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
             display: 'flex',
             flexDirection: 'column',
             '&:hover': {
-              borderColor: theme.palette.mode === 'dark' 
-                ? 'rgba(255, 255, 255, 0.2)' 
-                : 'rgba(0, 0, 0, 0.12)',
+              borderColor:
+                theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.12)',
               transform: snapshot.isDragging ? 'rotate(1deg) scale(1.02)' : 'translateY(-2px)',
-              boxShadow: snapshot.isDragging 
-                ? '0 10px 25px rgba(0, 0, 0, 0.1)' 
+              boxShadow: snapshot.isDragging
+                ? '0 10px 25px rgba(0, 0, 0, 0.1)'
                 : '0 4px 10px rgba(0, 0, 0, 0.05)',
             },
-            ...(snapshot.isDragging ? {
-              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-              cursor: 'grabbing',
-              zIndex: 10
-            } : {})
+            ...(snapshot.isDragging
+              ? {
+                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                  cursor: 'grabbing',
+                  zIndex: 10,
+                }
+              : {}),
           }}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
@@ -128,27 +129,26 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
               borderBottom: collapsed ? 'none' : `1px solid ${theme.palette.divider}`,
               py: { xs: 1.5, sm: 2 },
               px: { xs: 1.5, sm: 2 },
-              bgcolor: theme.palette.mode === 'dark' 
-                ? 'rgba(255, 255, 255, 0.05)' 
-                : 'rgba(0, 0, 0, 0.02)',
+              bgcolor:
+                theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
               '& .MuiCardHeader-action': {
                 margin: 0,
-                alignSelf: 'center'
+                alignSelf: 'center',
               },
-              transition: 'background-color 0.3s ease'
+              transition: 'background-color 0.3s ease',
             }}
             avatar={
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center'
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
               >
                 <Box
                   {...provided.dragHandleProps}
                   sx={{
                     mr: 1,
-                    opacity: (isHovering || snapshot.isDragging || isMobile) ? 0.7 : 0,
+                    opacity: isHovering || snapshot.isDragging || isMobile ? 0.7 : 0,
                     transition: 'opacity 0.2s ease',
                     cursor: 'grab',
                     display: 'flex',
@@ -157,34 +157,33 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
                     // モバイルでタッチしやすいサイズに
                     padding: isMobile ? '4px' : 0,
                     '&:active': {
-                      cursor: 'grabbing'
-                    }
+                      cursor: 'grabbing',
+                    },
                   }}
                 >
-                  <OutlinedIcon 
-                    icon={ICONS.dragHandle} 
-                    size={isMobile ? "medium" : "small"} 
-                  />
+                  <OutlinedIcon icon={ICONS.dragHandle} size={isMobile ? 'medium' : 'small'} />
                 </Box>
-                <Box sx={{ 
-                  color: theme.palette.primary.main,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
+                <Box
+                  sx={{
+                    color: theme.palette.primary.main,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   {icon}
                 </Box>
               </Box>
             }
             title={
-              <Typography 
-                variant={isMobile ? "body1" : "subtitle1"} 
-                sx={{ 
+              <Typography
+                variant={isMobile ? 'body1' : 'subtitle1'}
+                sx={{
                   fontWeight: 600,
                   fontSize: { xs: '0.95rem', sm: '1rem' },
                   lineHeight: 1.4,
                   letterSpacing: 0.2,
-                  color: theme.palette.text.primary
+                  color: theme.palette.text.primary,
                 }}
               >
                 {title}
@@ -193,106 +192,103 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
             action={
               <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 } }}>
                 {canHide && onToggleVisibility && (
-                  <IconButton 
-                    size={isMobile ? "medium" : "small"}
+                  <IconButton
+                    size={isMobile ? 'medium' : 'small'}
                     onClick={handleToggleVisibility}
-                    sx={{ 
+                    sx={{
                       opacity: 0.7,
                       transition: 'opacity 0.2s ease, background-color 0.2s ease',
-                      '&:hover': { 
+                      '&:hover': {
                         opacity: 1,
-                        backgroundColor: theme.palette.mode === 'dark' 
-                          ? 'rgba(255, 255, 255, 0.1)' 
-                          : 'rgba(0, 0, 0, 0.05)'
+                        backgroundColor:
+                          theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.1)'
+                            : 'rgba(0, 0, 0, 0.05)',
                       },
                       // モバイルでタッチしやすいサイズに
-                      padding: isMobile ? '8px' : '4px'
+                      padding: isMobile ? '8px' : '4px',
                     }}
                   >
-                    <OutlinedIcon 
-                      icon={ICONS.invisible} 
-                      size={isMobile ? "medium" : "small"} 
-                    />
+                    <OutlinedIcon icon={ICONS.invisible} size={isMobile ? 'medium' : 'small'} />
                   </IconButton>
                 )}
-                
+
                 {!isFirst && onMoveUp && (
-                  <IconButton 
-                    size={isMobile ? "medium" : "small"}
+                  <IconButton
+                    size={isMobile ? 'medium' : 'small'}
                     onClick={handleMoveUp}
-                    sx={{ 
+                    sx={{
                       opacity: 0.7,
                       transition: 'opacity 0.2s ease, background-color 0.2s ease',
-                      '&:hover': { 
+                      '&:hover': {
                         opacity: 1,
-                        backgroundColor: theme.palette.mode === 'dark' 
-                          ? 'rgba(255, 255, 255, 0.1)' 
-                          : 'rgba(0, 0, 0, 0.05)'
+                        backgroundColor:
+                          theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.1)'
+                            : 'rgba(0, 0, 0, 0.05)',
                       },
-                      padding: isMobile ? '8px' : '4px'
+                      padding: isMobile ? '8px' : '4px',
                     }}
                   >
-                    <OutlinedIcon 
-                      icon={ICONS.arrowUp} 
-                      size={isMobile ? "medium" : "small"} 
-                    />
+                    <OutlinedIcon icon={ICONS.arrowUp} size={isMobile ? 'medium' : 'small'} />
                   </IconButton>
                 )}
-                
+
                 {!isLast && onMoveDown && (
-                  <IconButton 
-                    size={isMobile ? "medium" : "small"}
+                  <IconButton
+                    size={isMobile ? 'medium' : 'small'}
                     onClick={handleMoveDown}
-                    sx={{ 
+                    sx={{
                       opacity: 0.7,
                       transition: 'opacity 0.2s ease, background-color 0.2s ease',
-                      '&:hover': { 
+                      '&:hover': {
                         opacity: 1,
-                        backgroundColor: theme.palette.mode === 'dark' 
-                          ? 'rgba(255, 255, 255, 0.1)' 
-                          : 'rgba(0, 0, 0, 0.05)'
+                        backgroundColor:
+                          theme.palette.mode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.1)'
+                            : 'rgba(0, 0, 0, 0.05)',
                       },
-                      padding: isMobile ? '8px' : '4px'
+                      padding: isMobile ? '8px' : '4px',
                     }}
                   >
-                    <OutlinedIcon 
-                      icon={ICONS.arrowDown} 
-                      size={isMobile ? "medium" : "small"} 
-                    />
+                    <OutlinedIcon icon={ICONS.arrowDown} size={isMobile ? 'medium' : 'small'} />
                   </IconButton>
                 )}
-                
-                <IconButton 
-                  size={isMobile ? "medium" : "small"}
+
+                <IconButton
+                  size={isMobile ? 'medium' : 'small'}
                   onClick={handleToggleCollapse}
-                  sx={{ 
+                  sx={{
                     opacity: 0.9,
                     transition: 'background-color 0.2s ease',
-                    '&:hover': { 
-                      backgroundColor: theme.palette.mode === 'dark' 
-                        ? 'rgba(255, 255, 255, 0.1)' 
-                        : 'rgba(0, 0, 0, 0.05)'
+                    '&:hover': {
+                      backgroundColor:
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.1)'
+                          : 'rgba(0, 0, 0, 0.05)',
                     },
-                    padding: isMobile ? '8px' : '4px'
+                    padding: isMobile ? '8px' : '4px',
                   }}
                 >
-                  <OutlinedIcon 
-                    icon={collapsed ? ICONS.expandMore : ICONS.expandLess} 
-                    size={isMobile ? "medium" : "small"} 
+                  <OutlinedIcon
+                    icon={collapsed ? ICONS.expandMore : ICONS.expandLess}
+                    size={isMobile ? 'medium' : 'small'}
                   />
                 </IconButton>
               </Box>
             }
           />
-          
+
           <Collapse in={!collapsed} timeout="auto" unmountOnExit sx={{ flexGrow: 1 }}>
-            <CardContent sx={{ 
-              p: { xs: 1.5, sm: 2.5 },
-              height: '100%',
-              "&:last-child": {
-                paddingBottom: { xs: 2, sm: 3 }
-              }
-            }}>
+            <CardContent
+              sx={{
+                p: { xs: 1.5, sm: 2.5 },
+                height: '100%',
+                '&:last-child': {
+                  paddingBottom: { xs: 2, sm: 3 },
+                },
+              }}
+            >
               {children}
             </CardContent>
           </Collapse>
@@ -300,4 +296,4 @@ export const DraggableModuleCard: React.FC<DraggableModuleCardProps> = ({
       )}
     </Draggable>
   );
-}; 
+};

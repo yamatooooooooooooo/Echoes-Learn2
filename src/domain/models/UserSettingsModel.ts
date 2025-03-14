@@ -4,11 +4,11 @@
  */
 export interface UserSettings {
   id: string;
-  maxConcurrentSubjects: number;   // 同時に学習する最大科目数
-  dailyStudyHours: number;         // 1日あたりの学習時間（時間）
-  studyDaysPerWeek: number;        // 週あたりの学習日数
-  averagePageReadingTime: number;  // 1ページあたりの平均読了時間（分）
-  examBufferDays: number;          // 試験前の余裕日数
+  maxConcurrentSubjects: number; // 同時に学習する最大科目数
+  dailyStudyHours: number; // 1日あたりの学習時間（時間）
+  studyDaysPerWeek: number; // 週あたりの学習日数
+  averagePageReadingTime: number; // 1ページあたりの平均読了時間（分）
+  examBufferDays: number; // 試験前の余裕日数
   themeMode: 'light' | 'dark' | 'system';
   createdAt: Date;
   updatedAt: Date;
@@ -20,7 +20,7 @@ export interface UserSettings {
 export enum ModuleVisibility {
   VISIBLE = 'visible',
   HIDDEN = 'hidden',
-  COLLAPSED = 'collapsed'
+  COLLAPSED = 'collapsed',
 }
 
 /**
@@ -57,4 +57,4 @@ export const DEFAULT_USER_SETTINGS = {
   averagePageReadingTime: 3, // 1ページあたり3分
   examBufferDays: 7, // 試験日の1週間前までにノルマを完了
   themeMode: 'system' as 'light' | 'dark' | 'system',
-}; 
+};

@@ -110,11 +110,11 @@ export const isSafariOrIOS = (): boolean => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') {
     return false;
   }
-  
+
   const ua = navigator.userAgent.toLowerCase();
   const isSafari = ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1;
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  
+
   return isSafari || isIOS;
 };
 
@@ -125,4 +125,4 @@ export default {
   responsiveDataVisStyles,
   responsiveTextStyles,
   isSafariOrIOS,
-}; 
+};

@@ -42,7 +42,13 @@ export interface Achievement {
 
 // アチーブメント達成条件
 export interface AchievementRequirement {
-  type: 'pagesRead' | 'studyStreak' | 'studyTime' | 'subjectsCompleted' | 'sessionsCompleted' | 'custom';
+  type:
+    | 'pagesRead'
+    | 'studyStreak'
+    | 'studyTime'
+    | 'subjectsCompleted'
+    | 'sessionsCompleted'
+    | 'custom';
   threshold: number; // 必要な閾値
   timeFrame?: 'day' | 'week' | 'month' | 'allTime'; // 期間（該当する場合）
 }
@@ -96,13 +102,14 @@ export interface Reward {
 
 // 学習アクティビティのポイント計算ルール
 export const ACTIVITY_POINTS = {
-  PAGE_READ: 5,          // 1ページ読むごとに獲得
-  STUDY_SESSION: 50,     // 学習セッション完了ごとに獲得
-  STREAK_DAY: 20,        // 連続学習日ごとに獲得
-  STREAK_BONUS: {        // 連続学習日数に応じたボーナス
-    7: 100,              // 1週間連続
-    30: 500,             // 1ヶ月連続
-    100: 2000,           // 100日連続
+  PAGE_READ: 5, // 1ページ読むごとに獲得
+  STUDY_SESSION: 50, // 学習セッション完了ごとに獲得
+  STREAK_DAY: 20, // 連続学習日ごとに獲得
+  STREAK_BONUS: {
+    // 連続学習日数に応じたボーナス
+    7: 100, // 1週間連続
+    30: 500, // 1ヶ月連続
+    100: 2000, // 100日連続
   },
   SUBJECT_COMPLETION: 1000, // 科目完了時に獲得
 };
@@ -124,4 +131,4 @@ export const USER_LEVELS: UserLevel[] = [
   { level: 13, title: '学術の大家', requiredExp: 150000 },
   { level: 14, title: '知識の達人', requiredExp: 200000 },
   { level: 15, title: '知識の王', requiredExp: 250000 },
-]; 
+];

@@ -14,13 +14,9 @@ import {
   Slider,
   TextField,
   Grid,
-  Tooltip
+  Tooltip,
 } from '@mui/material';
-import {
-  Close as CloseIcon,
-  Refresh as RefreshIcon,
-  Info as InfoIcon
-} from '@mui/icons-material';
+import { Close as CloseIcon, Refresh as RefreshIcon, Info as InfoIcon } from '@mui/icons-material';
 import { DASHBOARD_MODULES, DashboardModule } from '../../../../config/dashboardModules';
 import { ModuleSettings } from '../hooks/useDashboardSettings';
 import { useServices } from '../../../../hooks/useServices';
@@ -46,7 +42,7 @@ export const DashboardSettingsDialog: React.FC<DashboardSettingsDialogProps> = (
   toggleModuleEnabled,
   resetToDefaults,
   saveSettings,
-  isSaving
+  isSaving,
 }) => {
   const { userSettingsRepository } = useServices();
 
@@ -54,14 +50,14 @@ export const DashboardSettingsDialog: React.FC<DashboardSettingsDialogProps> = (
   const [maxConcurrentSubjects, setMaxConcurrentSubjects] = useState<number>(3);
   const [examBufferDays, setExamBufferDays] = useState<number>(7);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
+
   // ダイアログ表示時にユーザー設定を読み込む
   useEffect(() => {
     if (open) {
       loadUserSettings();
     }
   }, [open]);
-  
+
   // ユーザー設定を読み込む
   const loadUserSettings = async () => {
     try {
@@ -75,17 +71,17 @@ export const DashboardSettingsDialog: React.FC<DashboardSettingsDialogProps> = (
       setIsLoading(false);
     }
   };
-  
+
   // 設定を保存して閉じる
   const handleSave = async () => {
     try {
       // ユーザー設定の更新
       const userSettingsUpdate: UserSettingsUpdateInput = {
         maxConcurrentSubjects,
-        examBufferDays
+        examBufferDays,
       };
       await userSettingsRepository.updateUserSettings(userSettingsUpdate);
-      
+
       // ダッシュボードの表示設定を保存
       saveSettings();
       onClose();
@@ -93,24 +89,19 @@ export const DashboardSettingsDialog: React.FC<DashboardSettingsDialogProps> = (
       console.error('設定の保存に失敗しました:', error);
     }
   };
-  
+
   // バッファ日数の変更ハンドラ
   const handleBufferDaysChange = (_event: Event, newValue: number | number[]) => {
     setExamBufferDays(newValue as number);
   };
-  
+
   // 同時進行科目数の変更ハンドラ
   const handleMaxConcurrentChange = (_event: Event, newValue: number | number[]) => {
     setMaxConcurrentSubjects(newValue as number);
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose}
-      maxWidth="sm"
-      fullWidth
-    >
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         ダッシュボード設定
         <IconButton
@@ -142,9 +133,9 @@ export const DashboardSettingsDialog: React.FC<DashboardSettingsDialogProps> = (
             />
           ))}
         </Box>
-        
+
         <Divider sx={{ my: 3 }} />
-        
+
         {/* ノルマ計算設定 */}
         <Typography variant="subtitle1" gutterBottom>
           ノルマ計算設定
@@ -154,7 +145,7 @@ export const DashboardSettingsDialog: React.FC<DashboardSettingsDialogProps> = (
             </IconButton>
           </Tooltip>
         </Typography>
-        
+
         {/* 同時進行科目数の設定 */}
         <Box sx={{ mb: 3, mt: 2 }}>
           <Typography id="max-concurrent-slider" gutterBottom>
@@ -194,7 +185,7 @@ export const DashboardSettingsDialog: React.FC<DashboardSettingsDialogProps> = (
             一度に進行する科目数を制限します。試験日が近い順に優先されます。
           </Typography>
         </Box>
-        
+
         {/* バッファ日数の設定 */}
         <Box sx={{ mb: 2 }}>
           <Typography id="buffer-days-slider" gutterBottom>
@@ -234,9 +225,9 @@ export const DashboardSettingsDialog: React.FC<DashboardSettingsDialogProps> = (
             試験日の何日前までに学習を完了するかを設定します。これはデフォルト値であり、科目ごとに個別設定も可能です。
           </Typography>
         </Box>
-        
+
         <Divider sx={{ my: 3 }} />
-        
+
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Typography variant="body2" color="text.secondary">
             すべての設定をリセット
@@ -256,9 +247,9 @@ export const DashboardSettingsDialog: React.FC<DashboardSettingsDialogProps> = (
         <Button onClick={onClose} disabled={isLoading || isSaving}>
           キャンセル
         </Button>
-        <Button 
-          onClick={handleSave} 
-          variant="contained" 
+        <Button
+          onClick={handleSave}
+          variant="contained"
           color="primary"
           disabled={isLoading || isSaving}
         >
@@ -267,4 +258,4 @@ export const DashboardSettingsDialog: React.FC<DashboardSettingsDialogProps> = (
       </DialogActions>
     </Dialog>
   );
-}; 
+};

@@ -32,4 +32,4 @@ export const useSubjects = () => {
   }, [subjectRepository, auth]);
 
   return { subjects, loading, error };
-}; 
+};

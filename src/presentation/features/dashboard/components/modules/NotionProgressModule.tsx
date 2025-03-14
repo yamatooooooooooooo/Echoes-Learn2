@@ -39,13 +39,13 @@ export const NotionProgressModule: React.FC<NotionProgressModuleProps> = ({
   isDraggingEnabled = true,
   canHide = true,
   isFirst = false,
-  isLast = false
+  isLast = false,
 }) => {
   const theme = useTheme();
-  
+
   // 進捗率の計算
   const progress = total > 0 ? (value / total) * 100 : 0;
-  
+
   // カードの内部コンテンツ
   const content = (
     <Box
@@ -62,56 +62,55 @@ export const NotionProgressModule: React.FC<NotionProgressModuleProps> = ({
             {description}
           </Typography>
         )}
-        
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, alignItems: 'center' }}>
-          <Typography 
-            variant="h6" 
+          <Typography
+            variant="h6"
             component="div"
-            sx={{ 
+            sx={{
               fontWeight: 600,
               fontSize: '1.125rem',
-              color: theme.palette.text.primary
+              color: theme.palette.text.primary,
             }}
           >
             {value} / {total}
           </Typography>
-          
-          <Typography 
-            variant="body2" 
-            sx={{ 
+
+          <Typography
+            variant="body2"
+            sx={{
               fontWeight: 500,
-              color: color || theme.palette.primary.main
+              color: color || theme.palette.primary.main,
             }}
           >
             {Math.round(progress)}%
           </Typography>
         </Box>
-        
-        <LinearProgress 
-          variant="determinate" 
-          value={progress} 
-          sx={{ 
-            height: 8, 
+
+        <LinearProgress
+          variant="determinate"
+          value={progress}
+          sx={{
+            height: 8,
             borderRadius: 4,
-            backgroundColor: theme.palette.mode === 'dark' 
-              ? 'rgba(255, 255, 255, 0.1)' 
-              : 'rgba(0, 0, 0, 0.05)',
+            backgroundColor:
+              theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
             '& .MuiLinearProgress-bar': {
               backgroundColor: color || theme.palette.primary.main,
-              borderRadius: 4
-            }
+              borderRadius: 4,
+            },
           }}
         />
       </Box>
-      
+
       {footer && (
-        <Typography 
-          variant="body2" 
+        <Typography
+          variant="body2"
           color="text.secondary"
-          sx={{ 
-            mt: 'auto', 
-            pt: 1, 
-            fontSize: '0.75rem'
+          sx={{
+            mt: 'auto',
+            pt: 1,
+            fontSize: '0.75rem',
           }}
         >
           {footer}
@@ -138,4 +137,4 @@ export const NotionProgressModule: React.FC<NotionProgressModuleProps> = ({
       {content}
     </NotionModuleCard>
   );
-}; 
+};

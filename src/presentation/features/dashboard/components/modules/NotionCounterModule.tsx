@@ -39,10 +39,10 @@ export const NotionCounterModule: React.FC<NotionCounterModuleProps> = ({
   isDraggingEnabled = true,
   canHide = true,
   isFirst = false,
-  isLast = false
+  isLast = false,
 }) => {
   const theme = useTheme();
-  
+
   // カードの内部コンテンツ
   const content = (
     <Box
@@ -54,7 +54,9 @@ export const NotionCounterModule: React.FC<NotionCounterModuleProps> = ({
       }}
     >
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
+        <Box
+          sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}
+        >
           <CircularProgress size={40} thickness={4} />
         </Box>
       ) : (
@@ -66,30 +68,30 @@ export const NotionCounterModule: React.FC<NotionCounterModuleProps> = ({
               </Typography>
             )}
           </Box>
-          
-          <Typography 
-            variant="h3" 
+
+          <Typography
+            variant="h3"
             component="div"
-            sx={{ 
-              fontWeight: 600, 
+            sx={{
+              fontWeight: 600,
               my: 2,
               fontSize: { xs: '2rem', sm: '2.5rem' },
               color: color || theme.palette.primary.main,
-              textAlign: 'center'
+              textAlign: 'center',
             }}
           >
             {value}
           </Typography>
-          
+
           {footer && (
-            <Typography 
-              variant="body2" 
+            <Typography
+              variant="body2"
               color="text.secondary"
-              sx={{ 
-                mt: 'auto', 
-                pt: 1, 
+              sx={{
+                mt: 'auto',
+                pt: 1,
                 textAlign: 'center',
-                fontSize: '0.75rem'
+                fontSize: '0.75rem',
               }}
             >
               {footer}
@@ -118,4 +120,4 @@ export const NotionCounterModule: React.FC<NotionCounterModuleProps> = ({
       {content}
     </NotionModuleCard>
   );
-}; 
+};

@@ -1,4 +1,8 @@
-import { AnalysisResult, AnalysisPeriod, AnalysisMetric } from '../../models/LearningAnalyticsModel';
+import {
+  AnalysisResult,
+  AnalysisPeriod,
+  AnalysisMetric,
+} from '../../models/LearningAnalyticsModel';
 
 /**
  * 学習進捗分析のリポジトリインターフェース
@@ -14,14 +18,14 @@ export interface ILearningAnalyticsRepository {
    * @param subjectId 特定の科目に絞る場合の科目ID（省略可）
    */
   analyzeProgress(
-    userId: string, 
-    period: AnalysisPeriod, 
+    userId: string,
+    period: AnalysisPeriod,
     metric: AnalysisMetric,
     startDate: Date,
     endDate: Date,
     subjectId?: string
   ): Promise<AnalysisResult>;
-  
+
   /**
    * 学習分析データを取得する
    * @param userId ユーザーID
@@ -35,4 +39,4 @@ export interface ILearningAnalyticsRepository {
     metric?: AnalysisMetric,
     subjectId?: string
   ): Promise<AnalysisResult>;
-} 
+}

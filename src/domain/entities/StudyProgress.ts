@@ -11,4 +11,4 @@ export interface StudyProgress {
   timestamp: Date | string;
   notes?: string;
   timeSpentMinutes?: number;
-} 
+}

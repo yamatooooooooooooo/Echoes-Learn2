@@ -39,7 +39,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   auth,
   firestore,
   storage,
-  functions
+  functions,
 }) => {
   const gamificationRepository = new GamificationRepository(firestore, auth);
 
@@ -51,7 +51,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         firestore,
         storage,
         functions,
-        gamificationRepository
+        gamificationRepository,
       }}
     >
       {children}
@@ -70,4 +70,4 @@ export const useFirebase = (): FirebaseContextType => {
   return context;
 };
 
-export default FirebaseContext; 
+export default FirebaseContext;

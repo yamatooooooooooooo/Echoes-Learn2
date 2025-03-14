@@ -21,7 +21,7 @@ export class GamificationRepository {
       level: 1,
       experience: 150,
       nextLevelExperience: 300,
-      totalExperience: 150
+      totalExperience: 150,
     };
   }
 
@@ -39,16 +39,9 @@ export class GamificationRepository {
       streakDays: 5,
       pointsToday: 120,
       pointsThisWeek: 450,
-      achievements: [
-        'first-login',
-        'first-subject',
-        'first-progress'
-      ],
-      badges: [
-        'beginner',
-        'consistent'
-      ],
-      updatedAt: new Date()
+      achievements: ['first-login', 'first-subject', 'first-progress'],
+      badges: ['beginner', 'consistent'],
+      updatedAt: new Date(),
     };
   }
 
@@ -67,13 +60,33 @@ export class GamificationRepository {
     console.log('実績を取得中...', userId);
     // 実際の実装はここに記述
     return [
-      { id: 'first-login', title: '初めてのログイン', description: 'アプリに初めてログインしました', unlocked: true },
-      { id: 'first-subject', title: '学習開始', description: '最初の科目を登録しました', unlocked: true },
-      { id: 'first-progress', title: '進捗記録', description: '最初の進捗を記録しました', unlocked: true },
-      { id: 'study-streak-3', title: '3日連続学習', description: '3日連続で学習しました', unlocked: false }
+      {
+        id: 'first-login',
+        title: '初めてのログイン',
+        description: 'アプリに初めてログインしました',
+        unlocked: true,
+      },
+      {
+        id: 'first-subject',
+        title: '学習開始',
+        description: '最初の科目を登録しました',
+        unlocked: true,
+      },
+      {
+        id: 'first-progress',
+        title: '進捗記録',
+        description: '最初の進捗を記録しました',
+        unlocked: true,
+      },
+      {
+        id: 'study-streak-3',
+        title: '3日連続学習',
+        description: '3日連続で学習しました',
+        unlocked: false,
+      },
     ];
   }
 }
 
 // モック用のインスタンス
-export const gamificationRepository = new GamificationRepository({} as Firestore, {} as Auth); 
+export const gamificationRepository = new GamificationRepository({} as Firestore, {} as Auth);

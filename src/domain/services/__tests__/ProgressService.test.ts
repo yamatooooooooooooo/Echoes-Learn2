@@ -12,7 +12,7 @@ const mockProgressRepository = {
   getAllProgress: jest.fn(),
   getSubjectProgress: jest.fn(),
   updateProgress: jest.fn(),
-  deleteProgress: jest.fn()
+  deleteProgress: jest.fn(),
 } as jest.Mocked<IProgressRepository>;
 
 const mockSubjectRepository = {
@@ -20,7 +20,7 @@ const mockSubjectRepository = {
   getSubject: jest.fn(),
   addSubject: jest.fn(),
   updateSubject: jest.fn(),
-  deleteSubject: jest.fn()
+  deleteSubject: jest.fn(),
 } as jest.Mocked<ISubjectRepository>;
 
 describe('ProgressService', () => {
@@ -40,7 +40,7 @@ describe('ProgressService', () => {
       name: 'テスト科目',
       currentPage: 10,
       totalPages: 100,
-      examDate: new Date()
+      examDate: new Date(),
     };
 
     test('有効な進捗を記録する', async () => {
@@ -53,7 +53,7 @@ describe('ProgressService', () => {
         startPage: 11,
         endPage: 20,
         pagesRead: 10,
-        recordDate: new Date()
+        recordDate: new Date(),
       };
 
       const result = await progressService.recordProgress(userId, progressData);
@@ -65,7 +65,7 @@ describe('ProgressService', () => {
       expect(mockSubjectRepository.updateSubject).toHaveBeenCalledWith(
         'subject-1',
         expect.objectContaining({
-          currentPage: 20
+          currentPage: 20,
         })
       );
     });
@@ -79,13 +79,13 @@ describe('ProgressService', () => {
         startPage: 1,
         endPage: 10,
         pagesRead: 10,
-        recordDate: new Date()
+        recordDate: new Date(),
       };
 
       // メソッド実行時にエラーが発生することを確認
-      await expect(
-        progressService.recordProgress(userId, progressData)
-      ).rejects.toThrow(ProgressError);
+      await expect(progressService.recordProgress(userId, progressData)).rejects.toThrow(
+        ProgressError
+      );
 
       // モックが適切に呼ばれていることを確認
       expect(mockSubjectRepository.getSubject).toHaveBeenCalledWith('non-existent-subject');
@@ -101,12 +101,12 @@ describe('ProgressService', () => {
         startPage: 90,
         endPage: 110, // 総ページ数(100)を超えている
         pagesRead: 21,
-        recordDate: new Date()
+        recordDate: new Date(),
       };
 
-      await expect(
-        progressService.recordProgress(userId, progressData)
-      ).rejects.toThrow(ProgressError);
+      await expect(progressService.recordProgress(userId, progressData)).rejects.toThrow(
+        ProgressError
+      );
 
       expect(mockSubjectRepository.getSubject).toHaveBeenCalledWith('subject-1');
       expect(mockProgressRepository.addProgress).not.toHaveBeenCalled();
@@ -119,12 +119,12 @@ describe('ProgressService', () => {
         startPage: 20,
         endPage: 10, // 開始ページより小さい
         pagesRead: 0,
-        recordDate: new Date()
+        recordDate: new Date(),
       };
 
-      await expect(
-        progressService.recordProgress(userId, progressData)
-      ).rejects.toThrow(ProgressError);
+      await expect(progressService.recordProgress(userId, progressData)).rejects.toThrow(
+        ProgressError
+      );
 
       expect(mockSubjectRepository.getSubject).not.toHaveBeenCalled();
       expect(mockProgressRepository.addProgress).not.toHaveBeenCalled();
@@ -146,7 +146,7 @@ describe('ProgressService', () => {
           pagesRead: 10,
           recordDate: new Date(),
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           id: 'progress-2',
@@ -157,8 +157,8 @@ describe('ProgressService', () => {
           pagesRead: 10,
           recordDate: new Date(),
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       ];
 
       mockProgressRepository.getSubjectProgress.mockResolvedValue(mockProgressList);
@@ -175,11 +175,11 @@ describe('ProgressService', () => {
 
       mockProgressRepository.getSubjectProgress.mockRejectedValue(new Error('DB error'));
 
-      await expect(
-        progressService.getSubjectProgress(userId, subjectId)
-      ).rejects.toThrow(ProgressError);
+      await expect(progressService.getSubjectProgress(userId, subjectId)).rejects.toThrow(
+        ProgressError
+      );
 
       expect(mockProgressRepository.getSubjectProgress).toHaveBeenCalledWith(userId, subjectId);
     });
   });
-}); 
+});

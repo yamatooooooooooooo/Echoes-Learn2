@@ -31,4 +31,4 @@ export class QuotaService {
     // 実際の実装はここに記述
     return {};
   }
-} 
+}

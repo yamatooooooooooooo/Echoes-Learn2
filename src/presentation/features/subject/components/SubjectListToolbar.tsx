@@ -1,33 +1,30 @@
 import React from 'react';
-import { 
-  Box, 
-  Typography, 
-  FormControl, 
-  Select, 
-  MenuItem, 
-  SelectChangeEvent, 
-  Toolbar, 
-  Switch, 
-  FormControlLabel, 
-  Tooltip 
+import {
+  Box,
+  Typography,
+  FormControl,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+  Toolbar,
+  Switch,
+  FormControlLabel,
+  Tooltip,
 } from '@mui/material';
-import { 
-  Sort as SortIcon,
-  Info as InfoIcon 
-} from '@mui/icons-material';
+import { Sort as SortIcon, Info as InfoIcon } from '@mui/icons-material';
 
 // 並び替えの種類
-export type SortOption = 
-  | 'priority-high' 
-  | 'priority-low' 
-  | 'exam-date' 
-  | 'exam-date-asc' 
-  | 'exam-date-desc' 
-  | 'name' 
-  | 'name-asc' 
-  | 'name-desc' 
-  | 'progress' 
-  | 'progress-asc' 
+export type SortOption =
+  | 'priority-high'
+  | 'priority-low'
+  | 'exam-date'
+  | 'exam-date-asc'
+  | 'exam-date-desc'
+  | 'name'
+  | 'name-asc'
+  | 'name-desc'
+  | 'progress'
+  | 'progress-asc'
   | 'progress-desc';
 
 interface SubjectListToolbarProps {
@@ -46,19 +43,19 @@ export const SubjectListToolbar: React.FC<SubjectListToolbarProps> = ({
   onSortChange,
   autoPriority,
   onAutoPriorityChange,
-  disabled = false
+  disabled = false,
 }) => {
   return (
-    <Toolbar 
-      variant="dense" 
-      sx={{ 
-        mb: 2, 
-        px: 2, 
-        bgcolor: 'background.paper', 
+    <Toolbar
+      variant="dense"
+      sx={{
+        mb: 2,
+        px: 2,
+        bgcolor: 'background.paper',
         borderRadius: 1,
         boxShadow: 1,
         display: 'flex',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -66,7 +63,7 @@ export const SubjectListToolbar: React.FC<SubjectListToolbarProps> = ({
         <Typography variant="body2" sx={{ mr: 2, color: 'text.secondary' }}>
           並び替え:
         </Typography>
-        
+
         <FormControl variant="standard" size="small" sx={{ minWidth: 200 }}>
           <Select
             value={sortBy}
@@ -83,12 +80,12 @@ export const SubjectListToolbar: React.FC<SubjectListToolbarProps> = ({
           </Select>
         </FormControl>
       </Box>
-      
+
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <FormControlLabel
           control={
-            <Switch 
-              checked={autoPriority} 
+            <Switch
+              checked={autoPriority}
               onChange={onAutoPriorityChange}
               color="primary"
               disabled={disabled}
@@ -102,4 +99,4 @@ export const SubjectListToolbar: React.FC<SubjectListToolbarProps> = ({
       </Box>
     </Toolbar>
   );
-}; 
+};

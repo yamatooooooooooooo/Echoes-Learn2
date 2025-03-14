@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useServices } from '../../../../hooks/useServices';
 import { Subject } from '../../../../domain/models/SubjectModel';
-import { Progress, ProgressCreateInput, ProgressUpdateInput } from '../../../../domain/models/ProgressModel';
+import {
+  Progress,
+  ProgressCreateInput,
+  ProgressUpdateInput,
+} from '../../../../domain/models/ProgressModel';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
 import { ProgressService } from '../../../../domain/services/ProgressService';
 import { calculateProgress } from '../utils/subjectUtils';
@@ -19,7 +23,7 @@ const initialProgressForm: ProgressFormData = {
   startPage: 0,
   endPage: 0,
   pagesRead: 0,
-  recordDate: new Date().toISOString().split('T')[0]
+  recordDate: new Date().toISOString().split('T')[0],
 };
 
 export const useSubjectProgress = (
@@ -40,7 +44,7 @@ export const useSubjectProgress = (
   const [message, setMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
   const [error, setError] = useState('');
-  
+
   // 進捗記録データを保持するための状態を追加
   const [progressRecords, setProgressRecords] = useState<Progress[]>([]);
   const [loadingProgressRecords, setLoadingProgressRecords] = useState(false);
@@ -50,10 +54,10 @@ export const useSubjectProgress = (
   useEffect(() => {
     const fetchProgressRecords = async () => {
       if (!subject.id || !auth.currentUser) return;
-      
+
       setLoadingProgressRecords(true);
       setProgressRecordsError(null);
-      
+
       try {
         const records = await progressRepository.getSubjectProgress(
           auth.currentUser.uid,
@@ -62,12 +66,14 @@ export const useSubjectProgress = (
         setProgressRecords(records);
       } catch (error) {
         console.error('進捗記録の取得に失敗しました:', error);
-        setProgressRecordsError(error instanceof Error ? error : new Error('進捗記録の取得に失敗しました'));
+        setProgressRecordsError(
+          error instanceof Error ? error : new Error('進捗記録の取得に失敗しました')
+        );
       } finally {
         setLoadingProgressRecords(false);
       }
     };
-    
+
     fetchProgressRecords();
   }, [subject.id, auth.currentUser, progressRepository]);
 
@@ -78,7 +84,7 @@ export const useSubjectProgress = (
     if (!isAdding) {
       setProgressForm({
         ...progressForm,
-        startPage: subject.currentPage || 0
+        startPage: subject.currentPage || 0,
       });
     }
   };
@@ -92,9 +98,10 @@ export const useSubjectProgress = (
       startPage: progress.startPage,
       endPage: progress.endPage,
       pagesRead: progress.pagesRead,
-      recordDate: typeof progress.recordDate === 'string' 
-        ? progress.recordDate 
-        : progress.recordDate.toISOString().split('T')[0]
+      recordDate:
+        typeof progress.recordDate === 'string'
+          ? progress.recordDate
+          : progress.recordDate.toISOString().split('T')[0],
     });
   };
 
@@ -113,20 +120,20 @@ export const useSubjectProgress = (
   // 進捗記録を削除
   const deleteProgress = async () => {
     if (!progressToDelete) return;
-    
+
     try {
       const progressService = new ProgressService(progressRepository, subjectRepository);
       await progressService.deleteProgress(progressToDelete);
-      
+
       closeDeleteDialog();
       setMessage('進捗記録を削除しました');
       setShowMessage(true);
-      
+
       // 削除完了後のコールバック実行
       if (onProgressDeleted) {
         onProgressDeleted();
       }
-      
+
       // メッセージを3秒後に消す
       setTimeout(() => {
         setShowMessage(false);
@@ -141,20 +148,24 @@ export const useSubjectProgress = (
     const { name, value } = e.target;
     const newProgressForm = {
       ...progressForm,
-      [name]: value
+      [name]: value,
     };
-    
+
     if (name === 'startPage' || name === 'endPage') {
-      const startPage = name === 'startPage' ? parseInt(value) || 0 : parseInt(progressForm.startPage.toString()) || 0;
-      const endPage = name === 'endPage' ? parseInt(value) || 0 : parseInt(progressForm.endPage.toString()) || 0;
-      
+      const startPage =
+        name === 'startPage'
+          ? parseInt(value) || 0
+          : parseInt(progressForm.startPage.toString()) || 0;
+      const endPage =
+        name === 'endPage' ? parseInt(value) || 0 : parseInt(progressForm.endPage.toString()) || 0;
+
       if (startPage >= 0 && endPage >= startPage) {
         newProgressForm.pagesRead = endPage - startPage + 1;
       } else {
         newProgressForm.pagesRead = 0;
       }
     }
-    
+
     setProgressForm(newProgressForm);
   };
 
@@ -166,23 +177,23 @@ export const useSubjectProgress = (
         recordDate: new Date().toISOString().split('T')[0],
         startPage: subject.currentPage || 0,
         endPage: (subject.currentPage || 0) + pages,
-        pagesRead: pages
+        pagesRead: pages,
       };
-      
+
       await progressRepository.addProgress(auth.currentUser?.uid || '', progressData);
-      
+
       // 科目のcurrentPageも更新
       if (onSubjectUpdated) {
         const updatedSubject = {
           ...subject,
-          currentPage: (subject.currentPage || 0) + pages
+          currentPage: (subject.currentPage || 0) + pages,
         };
         onSubjectUpdated(updatedSubject);
       }
-      
+
       setMessage(`${pages}ページの進捗を記録しました`);
       setShowMessage(true);
-      
+
       // メッセージを3秒後に消す
       setTimeout(() => {
         setShowMessage(false);
@@ -198,7 +209,7 @@ export const useSubjectProgress = (
       setError('開始ページと終了ページを入力してください');
       return;
     }
-    
+
     try {
       // 進捗データを作成
       const progressData: ProgressCreateInput | ProgressUpdateInput = {
@@ -206,77 +217,80 @@ export const useSubjectProgress = (
         recordDate: progressForm.recordDate,
         startPage: Number(progressForm.startPage),
         endPage: Number(progressForm.endPage),
-        pagesRead: Number(progressForm.pagesRead)
+        pagesRead: Number(progressForm.pagesRead),
       };
-      
+
       const progressService = new ProgressService(progressRepository, subjectRepository);
-      
+
       if (isEditing && currentProgressId) {
         // 進捗を更新
         await progressService.updateProgress(currentProgressId, progressData);
-        
+
         // 科目のcurrentPageを更新（必要な場合）
         if (Number(progressForm.endPage) > (subject.currentPage || 0)) {
           const newCurrentPage = Number(progressForm.endPage);
           const completionRate = calculateProgress(newCurrentPage, subject.totalPages);
-          
+
           const updatedSubject = {
             ...subject,
             currentPage: newCurrentPage,
-            completionRate: completionRate
+            completionRate: completionRate,
           };
-          
+
           // completionRateを更新
           await subjectRepository.updateCompletionRate(subject.id, completionRate);
-          
+
           if (onSubjectUpdated) {
             onSubjectUpdated(updatedSubject);
           }
         }
-        
+
         setMessage('進捗を更新しました');
-        
+
         // 更新完了後のコールバック実行
         if (onProgressUpdated) {
           onProgressUpdated();
         }
       } else {
         // 新規進捗を追加
-        await progressRepository.addProgress(auth.currentUser?.uid || '', progressData as ProgressCreateInput);
-        
+        await progressRepository.addProgress(
+          auth.currentUser?.uid || '',
+          progressData as ProgressCreateInput
+        );
+
         // 科目のcurrentPageも更新
         if (Number(progressForm.endPage) > (subject.currentPage || 0)) {
           const newCurrentPage = Number(progressForm.endPage);
           const completionRate = calculateProgress(newCurrentPage, subject.totalPages);
-          
+
           const updatedSubject = {
             ...subject,
             currentPage: newCurrentPage,
-            completionRate: completionRate
+            completionRate: completionRate,
           };
-          
+
           // completionRateを更新
           await subjectRepository.updateCompletionRate(subject.id, completionRate);
-          
+
           if (onSubjectUpdated) {
             onSubjectUpdated(updatedSubject);
           }
         }
-        
+
         setMessage('進捗を記録しました');
-        
+
         // 追加完了後のコールバック実行
         if (onProgressAdded) {
           onProgressAdded();
         }
       }
-      
+
       setProgressForm(initialProgressForm);
       setIsAdding(false);
       setIsEditing(false);
       setCurrentProgressId(null);
       setShowMessage(true);
-      
+
       // メッセージを3秒後に消す
       setTimeout(() => {
         setShowMessage(false);
@@ -307,6 +321,6 @@ export const useSubjectProgress = (
     // 進捗記録データ関連のプロパティを追加
     progressRecords,
     loadingProgressRecords,
-    progressRecordsError
+    progressRecordsError,
   };
-}; 
+};

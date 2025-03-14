@@ -14,7 +14,7 @@ interface DashboardState {
 export const useDashboardState = () => {
   const [dashboardState, setDashboardState] = useState<DashboardState>({
     lastRefreshed: null,
-    isExpanded: false
+    isExpanded: false,
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +34,10 @@ export const useDashboardState = () => {
     try {
       // ここで実際のデータリフレッシュロジックを実装します
       // この例では単純に最終更新日時を更新します
-      setDashboardState(prev => ({
+      setDashboardState((prev) => ({
         ...prev,
-        lastRefreshed: new Date()
+        lastRefreshed: new Date(),
       }));
-
     } catch (err) {
       console.error('ダッシュボード状態の更新中にエラーが発生しました:', err);
       setError('ダッシュボードの更新に失敗しました');
@@ -49,9 +48,9 @@ export const useDashboardState = () => {
 
   // 折りたたみ状態の切り替え
   const toggleExpanded = () => {
-    setDashboardState(prev => ({
+    setDashboardState((prev) => ({
       ...prev,
-      isExpanded: !prev.isExpanded
+      isExpanded: !prev.isExpanded,
     }));
   };
 
@@ -67,6 +66,6 @@ export const useDashboardState = () => {
     isLoading,
     error,
     handleRefresh,
-    toggleExpanded
+    toggleExpanded,
   };
-}; 
+};

@@ -17,7 +17,7 @@ import {
   Switch,
   useTheme,
   CircularProgress,
-  Grid
+  Grid,
 } from '@mui/material';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -36,7 +36,7 @@ export const ThemeSettings: React.FC = () => {
   const { mode, setMode } = useAppTheme();
   const muiTheme = useTheme();
   const { userSettingsRepository } = useServices();
-  
+
   const [infoOpen, setInfoOpen] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,20 +47,20 @@ export const ThemeSettings: React.FC = () => {
     setLoading(true);
     setError(null);
     setSuccess(null);
-    
+
     try {
       // ローカルの状態を先に更新して即時反映
       setMode(newMode);
-      
+
       // ユーザー設定にも保存
       if (userSettingsRepository) {
         await userSettingsRepository.updateUserSettings({
-          themeMode: newMode
+          themeMode: newMode,
         });
       }
-      
+
       setSuccess('テーマ設定を保存しました');
-      
+
       // 成功メッセージを5秒後に消す
       setTimeout(() => {
         setSuccess(null);
@@ -91,7 +91,7 @@ export const ThemeSettings: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     loadSettings();
   }, [setMode]); // userSettingsRepositoryを依存配列から除外（意図的）
 
@@ -101,89 +101,109 @@ export const ThemeSettings: React.FC = () => {
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {/* ライトモードカード */}
         <Grid item xs={12} sm={6}>
-          <Card 
-            variant="outlined" 
-            sx={{ 
+          <Card
+            variant="outlined"
+            sx={{
               borderColor: mode === 'light' ? 'primary.main' : 'divider',
               boxShadow: mode === 'light' ? 2 : 0,
               height: '100%',
-              transition: theme => theme.transitions.create(['box-shadow', 'transform', 'border-color'], {
-                duration: theme.transitions.duration.standard,
-              }),
+              transition: (theme) =>
+                theme.transitions.create(['box-shadow', 'transform', 'border-color'], {
+                  duration: theme.transitions.duration.standard,
+                }),
               '&:hover': {
                 boxShadow: 4,
-                transform: 'translateY(-2px)'
-              }
+                transform: 'translateY(-2px)',
+              },
             }}
           >
-            <CardActionArea 
-              onClick={() => handleModeChange('light')} 
+            <CardActionArea
+              onClick={() => handleModeChange('light')}
               disabled={loading}
               sx={{ height: '100%' }}
             >
-              <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: { xs: 1.5, sm: 2 } }}>
-                <Box 
-                  sx={{ 
-                    bgcolor: '#FAFAFA', 
-                    color: '#333333', 
-                    width: '100%', 
-                    height: { xs: 80, sm: 100 }, 
-                    display: 'flex', 
-                    justifyContent: 'center', 
+              <CardContent
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  p: { xs: 1.5, sm: 2 },
+                }}
+              >
+                <Box
+                  sx={{
+                    bgcolor: '#FAFAFA',
+                    color: '#333333',
+                    width: '100%',
+                    height: { xs: 80, sm: 100 },
+                    display: 'flex',
+                    justifyContent: 'center',
                     alignItems: 'center',
                     borderRadius: 1,
                     mb: 1,
-                    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)'
+                    boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
                   }}
                 >
                   <LightModeIcon sx={{ fontSize: { xs: 28, sm: 36 } }} />
                 </Box>
-                <Typography variant="subtitle2" align="center">ライトモード</Typography>
+                <Typography variant="subtitle2" align="center">
+                  ライトモード
+                </Typography>
               </CardContent>
             </CardActionArea>
           </Card>
         </Grid>
-        
+
         {/* ダークモードカード */}
         <Grid item xs={12} sm={6}>
-          <Card 
-            variant="outlined" 
-            sx={{ 
+          <Card
+            variant="outlined"
+            sx={{
               borderColor: mode === 'dark' ? 'primary.main' : 'divider',
               boxShadow: mode === 'dark' ? 2 : 0,
               height: '100%',
-              transition: theme => theme.transitions.create(['box-shadow', 'transform', 'border-color'], {
-                duration: theme.transitions.duration.standard,
-              }),
+              transition: (theme) =>
+                theme.transitions.create(['box-shadow', 'transform', 'border-color'], {
+                  duration: theme.transitions.duration.standard,
+                }),
               '&:hover': {
                 boxShadow: 4,
-                transform: 'translateY(-2px)'
-              }
+                transform: 'translateY(-2px)',
+              },
             }}
           >
-            <CardActionArea 
-              onClick={() => handleModeChange('dark')} 
+            <CardActionArea
+              onClick={() => handleModeChange('dark')}
               disabled={loading}
               sx={{ height: '100%' }}
             >
-              <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: { xs: 1.5, sm: 2 } }}>
-                <Box 
-                  sx={{ 
-                    bgcolor: '#121212', 
-                    color: '#E2E8F0', 
-                    width: '100%', 
-                    height: { xs: 80, sm: 100 }, 
-                    display: 'flex', 
-                    justifyContent: 'center', 
+              <CardContent
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  p: { xs: 1.5, sm: 2 },
+                }}
+              >
+                <Box
+                  sx={{
+                    bgcolor: '#121212',
+                    color: '#E2E8F0',
+                    width: '100%',
+                    height: { xs: 80, sm: 100 },
+                    display: 'flex',
+                    justifyContent: 'center',
                     alignItems: 'center',
                     borderRadius: 1,
                     mb: 1,
-                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)'
+                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
                   }}
                 >
                   <DarkModeIcon sx={{ fontSize: { xs: 28, sm: 36 } }} />
                 </Box>
-                <Typography variant="subtitle2" align="center">ダークモード</Typography>
+                <Typography variant="subtitle2" align="center">
+                  ダークモード
+                </Typography>
               </CardContent>
             </CardActionArea>
           </Card>
@@ -203,7 +223,7 @@ export const ThemeSettings: React.FC = () => {
   return (
     <Box sx={{ maxWidth: '100%' }}>
       {success && (
-        <Alert 
+        <Alert
           severity="success"
           action={
             <IconButton
@@ -219,9 +239,9 @@ export const ThemeSettings: React.FC = () => {
           {success}
         </Alert>
       )}
-      
+
       {error && (
-        <Alert 
+        <Alert
           severity="error"
           action={
             <IconButton
@@ -245,17 +265,20 @@ export const ThemeSettings: React.FC = () => {
             <InfoIcon fontSize="small" />
           </IconButton>
         </Box>
-        
+
         {infoOpen && (
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              p: 2, 
-              mb: 2, 
-              bgcolor: muiTheme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              mb: 2,
+              bgcolor:
+                muiTheme.palette.mode === 'dark'
+                  ? 'rgba(255, 255, 255, 0.05)'
+                  : 'rgba(0, 0, 0, 0.02)',
               border: '1px solid',
               borderColor: 'divider',
-              borderRadius: 1
+              borderRadius: 1,
             }}
           >
             <Typography variant="body2">
@@ -268,24 +291,23 @@ export const ThemeSettings: React.FC = () => {
 
         {themeCards}
       </Box>
-      
+
       <Divider sx={{ my: 3 }} />
-      
+
       <FormControl component="fieldset" sx={{ width: '100%' }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>自動設定</Typography>
-        
-        <RadioGroup 
-          value={mode} 
-          onChange={(e) => handleModeChange(e.target.value)}
-        >
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              mb: 2, 
-              border: '1px solid', 
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          自動設定
+        </Typography>
+
+        <RadioGroup value={mode} onChange={(e) => handleModeChange(e.target.value)}>
+          <Paper
+            elevation={0}
+            sx={{
+              mb: 2,
+              border: '1px solid',
               borderColor: mode === 'system' ? 'primary.main' : 'divider',
               borderRadius: 1,
-              overflow: 'hidden'
+              overflow: 'hidden',
             }}
           >
             <FormControlLabel
@@ -302,22 +324,27 @@ export const ThemeSettings: React.FC = () => {
                   </Box>
                 </Box>
               }
-              sx={{ 
-                width: '100%', 
-                m: 0, 
+              sx={{
+                width: '100%',
+                m: 0,
                 p: 2,
-                '&:hover': { bgcolor: muiTheme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)' }
+                '&:hover': {
+                  bgcolor:
+                    muiTheme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.02)',
+                },
               }}
             />
           </Paper>
-          
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              border: '1px solid', 
+
+          <Paper
+            elevation={0}
+            sx={{
+              border: '1px solid',
               borderColor: mode === 'system' ? 'primary.main' : 'divider',
               borderRadius: 1,
-              overflow: 'hidden'
+              overflow: 'hidden',
             }}
           >
             <FormControlLabel
@@ -334,11 +361,16 @@ export const ThemeSettings: React.FC = () => {
                   </Box>
                 </Box>
               }
-              sx={{ 
-                width: '100%', 
-                m: 0, 
+              sx={{
+                width: '100%',
+                m: 0,
                 p: 2,
-                '&:hover': { bgcolor: muiTheme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)' }
+                '&:hover': {
+                  bgcolor:
+                    muiTheme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.02)',
+                },
               }}
             />
           </Paper>
@@ -346,4 +378,4 @@ export const ThemeSettings: React.FC = () => {
       </FormControl>
     </Box>
   );
-}; 
+};

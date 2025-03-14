@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
-  User, 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  signInWithPopup, 
+import {
+  User,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signOut,
-  sendPasswordResetEmail 
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirebase } from './FirebaseContext';
@@ -27,11 +27,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   currentUser: null,
   isLoading: true,
-  login: async () => { throw new Error('Not implemented'); },
-  loginWithGoogle: async () => { throw new Error('Not implemented'); },
-  signup: async () => { throw new Error('Not implemented'); },
-  logout: async () => { throw new Error('Not implemented'); },
-  resetPassword: async () => { throw new Error('Not implemented'); }
+  login: async () => {
+    throw new Error('Not implemented');
+  },
+  loginWithGoogle: async () => {
+    throw new Error('Not implemented');
+  },
+  signup: async () => {
+    throw new Error('Not implemented');
+  },
+  logout: async () => {
+    throw new Error('Not implemented');
+  },
+  resetPassword: async () => {
+    throw new Error('Not implemented');
+  },
 });
 
 // プロバイダーのプロパティ型
@@ -65,7 +75,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // ユーザードキュメントを作成
       const userDocRef = doc(firestore, 'users', user.uid);
       const userSnapshot = await getDoc(userDocRef);
-      
+
       // ユーザードキュメントが存在しない場合のみ作成
       if (!userSnapshot.exists()) {
         await setDoc(userDocRef, {
@@ -73,9 +83,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           displayName: user.displayName || user.email?.split('@')[0] || '名前なし',
           photoURL: user.photoURL,
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         });
-        
+
         // ユーザー設定ドキュメントを作成
         const settingsDocRef = doc(firestore, 'users', user.uid, 'settings', 'general');
         await setDoc(settingsDocRef, {
@@ -84,9 +94,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           dailyReminder: true,
           reminderTime: '20:00',
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         });
-        
+
         console.log('ユーザードキュメントを作成しました:', user.uid);
       }
     } catch (error) {
@@ -111,10 +121,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
+
       // 新規ユーザーの場合はドキュメントを作成
       await createUserDocument(result.user);
-      
+
       return result.user;
     } catch (error) {
       console.error('Googleログインに失敗しました:', error);
@@ -126,10 +136,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signup = async (email: string, password: string): Promise<User> => {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      
+
       // ユーザードキュメントを作成
       await createUserDocument(result.user);
-      
+
       return result.user;
     } catch (error) {
       console.error('サインアップに失敗しました:', error);
@@ -164,14 +174,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loginWithGoogle,
     signup,
     logout,
-    resetPassword
+    resetPassword,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 /**
@@ -185,4 +191,4 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-export default AuthContext; 
+export default AuthContext;

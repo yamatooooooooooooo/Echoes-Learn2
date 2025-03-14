@@ -20,9 +20,9 @@ import {
   Avatar,
   Tooltip,
   Button,
-  alpha
+  alpha,
 } from '@mui/material';
-import { 
+import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
   MenuBook as MenuBookIcon,
@@ -41,7 +41,7 @@ import {
   MoreHoriz as MoreHorizIcon,
   DragIndicator as DragIndicatorIcon,
   ExpandMore,
-  ExpandLess
+  ExpandLess,
 } from '@mui/icons-material';
 
 // サイドバーのプロパティ型
@@ -70,8 +70,14 @@ const sidebarItems: SidebarItem[] = [
     icon: <StarIcon />,
     type: 'section',
     children: [
-      { id: 'dashboard', text: 'ダッシュボード', icon: <DashboardIcon />, type: 'page', starred: true },
-    ]
+      {
+        id: 'dashboard',
+        text: 'ダッシュボード',
+        icon: <DashboardIcon />,
+        type: 'page',
+        starred: true,
+      },
+    ],
   },
   {
     id: 'workspace',
@@ -81,14 +87,14 @@ const sidebarItems: SidebarItem[] = [
     children: [
       { id: 'subjects', text: '科目管理', icon: <MenuBookIcon />, type: 'page' },
       { id: 'gamification', text: '学習成果', icon: <EmojiEventsIcon />, type: 'page' },
-    ]
+    ],
   },
   {
     id: 'settings',
     text: '設定',
     icon: <SettingsIcon />,
-    type: 'page'
-  }
+    type: 'page',
+  },
 ];
 
 // アクセシビリティ対応: aria-hiddenの代わりにinert属性を使用
@@ -104,12 +110,7 @@ const applyAccessibility = (element: HTMLElement, shouldBeHidden: boolean) => {
  * Notion風サイドバーコンポーネント
  * アプリケーションのナビゲーションメニューを提供する
  */
-export const Sidebar: React.FC<SidebarProps> = ({
-  open,
-  onToggle,
-  onMenuSelect,
-  selectedMenu
-}) => {
+export const Sidebar: React.FC<SidebarProps> = ({ open, onToggle, onMenuSelect, selectedMenu }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
@@ -118,15 +119,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [resizing, setResizing] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
     favorites: true,
-    workspace: true
+    workspace: true,
   });
   const [searchQuery, setSearchQuery] = useState('');
 
   // フォルダの開閉状態を切り替える
   const toggleFolder = (folderId: string) => {
-    setExpandedFolders(prev => ({
+    setExpandedFolders((prev) => ({
       ...prev,
-      [folderId]: !prev[folderId]
+      [folderId]: !prev[folderId],
     }));
   };
 
@@ -140,22 +141,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // サイドバーのリサイズを開始
   const startResize = (e: React.MouseEvent) => {
     if (isMobile) return;
-    
+
     e.preventDefault();
     setResizing(true);
-    
+
     const onMouseMove = (e: MouseEvent) => {
       // 最小幅と最大幅を設定
       const newWidth = Math.max(240, Math.min(400, e.clientX));
       setSidebarWidth(newWidth);
     };
-    
+
     const onMouseUp = () => {
       setResizing(false);
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
     };
-    
+
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
   };
@@ -167,16 +168,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
       const isExpanded = expandedFolders[item.id] || false;
       const hasChildren = item.children && item.children.length > 0;
       const paddingLeft = level * 16 + 8;
-      
+
       // セクションヘッダー
       if (item.type === 'section') {
         return (
           <React.Fragment key={item.id}>
-            <ListItem 
+            <ListItem
               disablePadding
-              sx={{ 
-                mt: level === 0 ? 2 : 1, 
-                mb: 0.5
+              sx={{
+                mt: level === 0 ? 2 : 1,
+                mb: 0.5,
               }}
             >
               <ListItemButton
@@ -187,7 +188,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   borderRadius: '4px',
                   '&:hover': {
                     backgroundColor: 'transparent',
-                  }
+                  },
                 }}
               >
                 {hasChildren && (
@@ -213,7 +214,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 />
               </ListItemButton>
             </ListItem>
-            
+
             {hasChildren && item.children && (
               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                 {renderMenuItems(item.children, level + 1)}
@@ -222,16 +223,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </React.Fragment>
         );
       }
-      
+
       // フォルダ
       if (item.type === 'folder') {
         return (
           <React.Fragment key={item.id}>
-            <ListItem 
+            <ListItem
               disablePadding
-              sx={{ 
+              sx={{
                 mb: 0.5,
-                pl: `${paddingLeft}px`
+                pl: `${paddingLeft}px`,
               }}
             >
               <ListItemButton
@@ -242,7 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   borderRadius: '4px',
                   '&:hover': {
                     backgroundColor: alpha(theme.palette.primary.main, 0.08),
-                  }
+                  },
                 }}
               >
                 <ListItemIcon
@@ -259,16 +260,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     fontSize: '0.9rem',
                   }}
                 />
-                {hasChildren && (
-                  isExpanded ? (
+                {hasChildren &&
+                  (isExpanded ? (
                     <ExpandLess sx={{ color: theme.palette.text.secondary }} />
                   ) : (
                     <ExpandMore sx={{ color: theme.palette.text.secondary }} />
-                  )
-                )}
+                  ))}
               </ListItemButton>
             </ListItem>
-            
+
             {hasChildren && item.children && (
               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                 {renderMenuItems(item.children, level + 1)}
@@ -277,15 +277,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </React.Fragment>
         );
       }
-      
+
       // 通常のページ
       return (
-        <ListItem 
+        <ListItem
           key={item.id}
           disablePadding
-          sx={{ 
+          sx={{
             mb: 0.5,
-            pl: `${paddingLeft}px`
+            pl: `${paddingLeft}px`,
           }}
         >
           <ListItemButton
@@ -295,19 +295,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
               py: 0.8,
               px: 2,
               borderRadius: '4px',
-              backgroundColor: isSelected ? 
-                alpha(theme.palette.primary.main, 0.12) : 'transparent',
+              backgroundColor: isSelected ? alpha(theme.palette.primary.main, 0.12) : 'transparent',
               '&:hover': {
-                backgroundColor: isSelected ? 
-                  alpha(theme.palette.primary.main, 0.16) : 
-                  alpha(theme.palette.primary.main, 0.08),
+                backgroundColor: isSelected
+                  ? alpha(theme.palette.primary.main, 0.16)
+                  : alpha(theme.palette.primary.main, 0.08),
               },
               '&.Mui-selected': {
                 backgroundColor: alpha(theme.palette.primary.main, 0.12),
                 '&:hover': {
                   backgroundColor: alpha(theme.palette.primary.main, 0.16),
-                }
-              }
+                },
+              },
             }}
           >
             <ListItemIcon
@@ -329,10 +328,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <IconButton
               onClick={(e) => toggleStar(e, item.id)}
               size="small"
-              sx={{ 
+              sx={{
                 opacity: item.starred || isSelected ? 1 : 0,
                 '&:hover': { opacity: 1 },
-                ml: 1
+                ml: 1,
               }}
             >
               {item.starred ? (
@@ -348,34 +347,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const drawerContent = (
-    <Box 
-      sx={{ 
-        width: isMobile ? '85%' : sidebarWidth, 
+    <Box
+      sx={{
+        width: isMobile ? '85%' : sidebarWidth,
         maxWidth: isMobile ? 280 : '100%',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        pt: 5
-      }} 
+        pt: 5,
+      }}
       role="navigation"
       ref={drawerRef}
     >
       {/* サイドバーヘッダー */}
-      <Box sx={{ 
-        p: 2,
-        display: 'flex', 
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar 
-            sx={{ 
-              width: 32, 
-              height: 32, 
+          <Avatar
+            sx={{
+              width: 32,
+              height: 32,
               mr: 1,
               bgcolor: theme.palette.primary.main,
-              fontSize: '1rem'
+              fontSize: '1rem',
             }}
           >
             E
@@ -388,19 +389,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <MoreHorizIcon />
         </IconButton>
       </Box>
-      
+
       {/* 検索ボックス */}
       <Box sx={{ px: 2, pb: 1 }}>
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.08) : alpha(theme.palette.common.black, 0.04),
+            backgroundColor:
+              theme.palette.mode === 'dark'
+                ? alpha(theme.palette.common.white, 0.08)
+                : alpha(theme.palette.common.black, 0.04),
             borderRadius: '6px',
             p: '4px 8px',
             '&:hover': {
-              backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.12) : alpha(theme.palette.common.black, 0.06),
-            }
+              backgroundColor:
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.common.white, 0.12)
+                  : alpha(theme.palette.common.black, 0.06),
+            },
           }}
         >
           <SearchIcon sx={{ color: theme.palette.text.secondary, mr: 1, fontSize: '1.2rem' }} />
@@ -413,14 +420,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               flex: 1,
               '& .MuiInputBase-input': {
                 p: '4px 0',
-              }
+              },
             }}
           />
-          <Typography 
-            variant="caption" 
-            color="text.secondary" 
-            sx={{ 
-              backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.1) : alpha(theme.palette.common.black, 0.08),
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              backgroundColor:
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.common.white, 0.1)
+                  : alpha(theme.palette.common.black, 0.08),
               p: '1px 4px',
               borderRadius: '4px',
               fontSize: '0.7rem',
@@ -430,42 +440,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </Typography>
         </Box>
       </Box>
-      
+
       <Divider sx={{ mx: 2, my: 0.5 }} />
-      
+
       {/* メニューリスト */}
       <Box sx={{ flex: 1, overflowY: 'auto', px: 1 }}>
-        <List disablePadding>
-          {renderMenuItems(sidebarItems)}
-        </List>
+        <List disablePadding>{renderMenuItems(sidebarItems)}</List>
       </Box>
-      
+
       <Divider sx={{ mx: 2, my: 0.5 }} />
-      
+
       {/* ページ作成ボタン */}
       <Box sx={{ p: 2 }}>
-        <Button 
-          variant="outlined" 
+        <Button
+          variant="outlined"
           startIcon={<AddIcon />}
           fullWidth
           size="small"
-          sx={{ 
+          sx={{
             justifyContent: 'flex-start',
             textTransform: 'none',
             borderRadius: '6px',
             py: 0.8,
-            borderColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.1) : alpha(theme.palette.common.black, 0.1),
+            borderColor:
+              theme.palette.mode === 'dark'
+                ? alpha(theme.palette.common.white, 0.1)
+                : alpha(theme.palette.common.black, 0.1),
             color: theme.palette.text.primary,
             '&:hover': {
-              borderColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.2) : alpha(theme.palette.common.black, 0.2),
-              backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.05) : alpha(theme.palette.common.black, 0.03),
-            }
+              borderColor:
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.common.white, 0.2)
+                  : alpha(theme.palette.common.black, 0.2),
+              backgroundColor:
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.common.white, 0.05)
+                  : alpha(theme.palette.common.black, 0.03),
+            },
           }}
         >
           新しいページ
         </Button>
       </Box>
-      
+
       {/* リサイズハンドル */}
       {!isMobile && (
         <Box
@@ -481,7 +498,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             },
             ...(resizing && {
               backgroundColor: theme.palette.primary.main,
-            })
+            }),
           }}
           onMouseDown={startResize}
         />
@@ -505,14 +522,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       {/* AppBarを削除 */}
-      
+
       {/* メニューボタンを独立して配置 */}
       <IconButton
         color="inherit"
         aria-label={open ? 'メニューを閉じる' : 'メニューを開く'}
         edge="start"
         onClick={onToggle}
-        sx={{ 
+        sx={{
           position: 'fixed',
           top: 16,
           left: 16,
@@ -521,12 +538,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
           '&:hover': {
             backgroundColor: alpha(theme.palette.primary.main, 0.08),
-          }
+          },
         }}
       >
         <MenuIcon />
       </IconButton>
-      
+
       {/* モバイル用ドロワー */}
       {isMobile ? (
         <SwipeableDrawer
@@ -538,14 +555,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             keepMounted: true,
           }}
           sx={{
-            '& .MuiDrawer-paper': { 
+            '& .MuiDrawer-paper': {
               width: '85%',
-              maxWidth: 280, 
+              maxWidth: 280,
               boxSizing: 'border-box',
               backgroundColor: theme.palette.background.paper,
               borderRight: '1px solid',
               borderColor: theme.palette.divider,
-              boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)'
+              boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)',
             },
             zIndex: theme.zIndex.drawer + 2,
           }}
@@ -562,18 +579,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
             width: sidebarWidth,
             flexShrink: 0,
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { 
-              width: sidebarWidth, 
+            '& .MuiDrawer-paper': {
+              width: sidebarWidth,
               boxSizing: 'border-box',
               backgroundColor: theme.palette.background.paper,
               borderRight: '1px solid',
               borderColor: theme.palette.divider,
               height: '100%',
               boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
-              transition: resizing ? 'none' : theme.transitions.create('width', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
+              transition: resizing
+                ? 'none'
+                : theme.transitions.create('width', {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.enteringScreen,
+                  }),
             },
             zIndex: theme.zIndex.drawer,
           }}
@@ -583,4 +602,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
     </>
   );
-}; 
+};

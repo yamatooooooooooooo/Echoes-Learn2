@@ -29,7 +29,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultCollapsed: false,
     defaultEnabled: true,
     order: 1,
-    canDisable: false
+    canDisable: false,
   },
   dailyQuota: {
     id: 'dailyQuota',
@@ -40,7 +40,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultCollapsed: false,
     defaultEnabled: true,
     order: 2,
-    canDisable: true
+    canDisable: true,
   },
   normaDisplay: {
     id: 'normaDisplay',
@@ -51,7 +51,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultCollapsed: false,
     defaultEnabled: true,
     order: 3,
-    canDisable: true
+    canDisable: true,
   },
   exams: {
     id: 'exams',
@@ -62,7 +62,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultCollapsed: false,
     defaultEnabled: true,
     order: 4,
-    canDisable: true
+    canDisable: true,
   },
   reports: {
     id: 'reports',
@@ -73,7 +73,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultCollapsed: false,
     defaultEnabled: true,
     order: 5,
-    canDisable: true
+    canDisable: true,
   },
   recentProgress: {
     id: 'recentProgress',
@@ -84,7 +84,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultCollapsed: false,
     defaultEnabled: true,
     order: 6,
-    canDisable: true
+    canDisable: true,
   },
   learningAnalytics: {
     id: 'learningAnalytics',
@@ -95,23 +95,25 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultCollapsed: false,
     defaultEnabled: true,
     order: 7,
-    canDisable: true
-  }
+    canDisable: true,
+  },
 };
 
 /**
  * モジュールのデフォルト設定を取得
  */
-export const getDefaultModuleSettings = (): {[key: string]: {enabled: boolean, collapsed: boolean, order: number}} => {
-  const settings: {[key: string]: {enabled: boolean, collapsed: boolean, order: number}} = {};
-  
+export const getDefaultModuleSettings = (): {
+  [key: string]: { enabled: boolean; collapsed: boolean; order: number };
+} => {
+  const settings: { [key: string]: { enabled: boolean; collapsed: boolean; order: number } } = {};
+
   Object.entries(DASHBOARD_MODULES).forEach(([key, module]) => {
     settings[key] = {
       enabled: module.defaultEnabled,
       collapsed: module.defaultCollapsed,
-      order: module.order
+      order: module.order,
     };
   });
-  
+
   return settings;
-}; 
+};

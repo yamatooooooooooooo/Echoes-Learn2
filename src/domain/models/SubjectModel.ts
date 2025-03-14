@@ -45,4 +45,4 @@ export interface SubjectUpdateInput {
   importance?: 'high' | 'medium' | 'low';
   bufferDays?: number;
   completionRate?: number;
-} 
+}

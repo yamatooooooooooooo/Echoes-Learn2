@@ -351,11 +351,11 @@ const lightTheme = createTheme({
   },
   breakpoints: {
     values: {
-      xs: 0,      // スマートフォン（縦向き）
-      sm: 600,    // スマートフォン（横向き）、小型タブレット
-      md: 900,    // タブレット
-      lg: 1200,   // デスクトップ
-      xl: 1536    // 大型デスクトップ
+      xs: 0, // スマートフォン（縦向き）
+      sm: 600, // スマートフォン（横向き）、小型タブレット
+      md: 900, // タブレット
+      lg: 1200, // デスクトップ
+      xl: 1536, // 大型デスクトップ
     },
   },
 });
@@ -415,4 +415,4 @@ const getTheme = (mode) => {
 };
 
 export { getTheme };
-export default lightTheme; // 後方互換性のため、デフォルトでlightThemeをエクスポート 
+export default lightTheme; // 後方互換性のため、デフォルトでlightThemeをエクスポート

@@ -22,4 +22,4 @@ export const UpcomingExamsCard: React.FC<UpcomingExamsCardProps> = ({ subjects }
       </CardContent>
     </NotionStyleCard>
   );
-}; 
+};

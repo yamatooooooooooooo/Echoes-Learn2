@@ -13,5 +13,5 @@ const GamificationPage: React.FC = () => {
 export default withMaintenanceOverlay(GamificationPage, {
   message: 'ゲーミフィケーション機能は現在メンテナンス中です。近日中に実装予定です。',
   title: 'ゲーミフィケーション機能準備中',
-  severity: 'info'
-}); 
+  severity: 'info',
+});

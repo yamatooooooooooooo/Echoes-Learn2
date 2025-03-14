@@ -75,4 +75,4 @@ export interface QuickProgressInput {
   subjectId: string;
   pages: number;
   duration?: number;
-} 
+}

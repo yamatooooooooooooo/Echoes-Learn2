@@ -11,22 +11,19 @@ import reportWebVitals from './reportWebVitals';
 
 // サービス層の初期化
 import { initializeServices } from './application/services';
-import { initializeFirebase } from './config/firebase';
 
-// Firebaseの初期化
-const { app, auth, firestore, storage, functions } = initializeFirebase();
+// Firebaseサービスをimport
+import { app, auth, firestore, storage, functions } from './config/firebase';
 
 // サービス層の初期化
 const services = initializeServices({
   firestore,
   auth,
   functions,
-  storage
+  storage,
 });
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
 root.render(
   <React.StrictMode>
@@ -56,4 +53,4 @@ serviceWorkerRegistration.unregister();
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals(); 
+reportWebVitals();

@@ -22,45 +22,87 @@ import { ApplicationServices } from '../application/services';
  */
 export const useServices = () => {
   const context = useContext(ServicesContext);
-  
+
   if (!context) {
     throw new Error('useServices must be used within a ServicesProvider');
   }
-  
+
   return context.services;
 };
 
 export const ServicesProvider: React.FC<ServicesProviderProps> = ({ children, services = {} }) => {
   const { firestore, auth } = useFirebase();
-  
+
   // リポジトリの初期化
-  const userRepository = useMemo(() => services.userRepository || new UserRepository(firestore, auth), [services.userRepository, firestore, auth]);
-  const subjectRepository = useMemo(() => services.subjectRepository || new SubjectRepository(firestore, auth), [services.subjectRepository, firestore, auth]);
-  const progressRepository = useMemo(() => services.progressRepository || new ProgressRepository(firestore, auth), [services.progressRepository, firestore, auth]);
-  const userSettingsRepository = useMemo(() => services.userSettingsRepository || new FirebaseUserSettingsRepository(firestore, auth), [services.userSettingsRepository, firestore, auth]);
-  const studyAnalyticsRepository = useMemo(() => services.studyAnalyticsRepository || new StudyAnalyticsRepository(firestore, auth), [services.studyAnalyticsRepository, firestore, auth]);
-  const learningAnalyticsRepository = useMemo(() => services.learningAnalyticsRepository || new LearningAnalyticsRepository(firestore), [services.learningAnalyticsRepository, firestore]);
-  
+  const userRepository = useMemo(
+    () => services.userRepository || new UserRepository(firestore, auth),
+    [services.userRepository, firestore, auth]
+  );
+  const subjectRepository = useMemo(
+    () => services.subjectRepository || new SubjectRepository(firestore, auth),
+    [services.subjectRepository, firestore, auth]
+  );
+  const progressRepository = useMemo(
+    () => services.progressRepository || new ProgressRepository(firestore, auth),
+    [services.progressRepository, firestore, auth]
+  );
+  const userSettingsRepository = useMemo(
+    () => services.userSettingsRepository || new FirebaseUserSettingsRepository(firestore, auth),
+    [services.userSettingsRepository, firestore, auth]
+  );
+  const studyAnalyticsRepository = useMemo(
+    () => services.studyAnalyticsRepository || new StudyAnalyticsRepository(firestore, auth),
+    [services.studyAnalyticsRepository, firestore, auth]
+  );
+  const learningAnalyticsRepository = useMemo(
+    () => services.learningAnalyticsRepository || new LearningAnalyticsRepository(firestore),
+    [services.learningAnalyticsRepository, firestore]
+  );
+
   // サービスの初期化
-  const quotaService = useMemo(() => services.quotaService || new QuotaService(subjectRepository, progressRepository, userSettingsRepository), [services.quotaService, subjectRepository, progressRepository, userSettingsRepository]);
-  const priorityService = useMemo(() => services.priorityService || new PriorityService(subjectRepository, progressRepository), [services.priorityService, subjectRepository, progressRepository]);
-  const analyticsService = useMemo(() => services.analyticsService || new AnalyticsService(subjectRepository, progressRepository), [services.analyticsService, subjectRepository, progressRepository]);
-  
-  const servicesValue = useMemo(() => ({
-    userRepository,
-    subjectRepository,
-    progressRepository,
-    userSettingsRepository,
-    studyAnalyticsRepository,
-    learningAnalyticsRepository,
-    quotaService,
-    priorityService,
-    analyticsService
-  }), [userRepository, subjectRepository, progressRepository, userSettingsRepository, studyAnalyticsRepository, learningAnalyticsRepository, quotaService, priorityService, analyticsService]);
-  
+  const quotaService = useMemo(
+    () =>
+      services.quotaService ||
+      new QuotaService(subjectRepository, progressRepository, userSettingsRepository),
+    [services.quotaService, subjectRepository, progressRepository, userSettingsRepository]
+  );
+  const priorityService = useMemo(
+    () => services.priorityService || new PriorityService(subjectRepository, progressRepository),
+    [services.priorityService, subjectRepository, progressRepository]
+  );
+  const analyticsService = useMemo(
+    () => services.analyticsService || new AnalyticsService(subjectRepository, progressRepository),
+    [services.analyticsService, subjectRepository, progressRepository]
+  );
+
+  const servicesValue = useMemo(
+    () => ({
+      userRepository,
+      subjectRepository,
+      progressRepository,
+      userSettingsRepository,
+      studyAnalyticsRepository,
+      learningAnalyticsRepository,
+      quotaService,
+      priorityService,
+      analyticsService,
+    }),
+    [
+      userRepository,
+      subjectRepository,
+      progressRepository,
+      userSettingsRepository,
+      studyAnalyticsRepository,
+      learningAnalyticsRepository,
+      quotaService,
+      priorityService,
+      analyticsService,
+    ]
+  );
+
   return (
     <ServicesContext.Provider value={{ services: servicesValue }}>
       {children}
     </ServicesContext.Provider>
   );
-}; 
+};

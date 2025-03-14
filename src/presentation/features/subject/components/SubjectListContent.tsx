@@ -21,7 +21,7 @@ export const SubjectListContent: React.FC<SubjectListContentProps> = ({
   formatDate,
   onSubjectUpdated,
   onSubjectEdit,
-  onSubjectDelete
+  onSubjectDelete,
 }) => {
   if (loading) {
     return (
@@ -57,4 +57,4 @@ export const SubjectListContent: React.FC<SubjectListContentProps> = ({
       ))}
     </Grid>
   );
-}; 
+};

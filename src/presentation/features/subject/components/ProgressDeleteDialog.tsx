@@ -6,7 +6,7 @@ import {
   DialogContentText,
   DialogActions,
   Button,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 
 interface ProgressDeleteDialogProps {
@@ -23,7 +23,7 @@ export const ProgressDeleteDialog: React.FC<ProgressDeleteDialogProps> = ({
   open,
   onClose,
   onConfirm,
-  isDeleting = false
+  isDeleting = false,
 }) => {
   return (
     <Dialog
@@ -32,26 +32,19 @@ export const ProgressDeleteDialog: React.FC<ProgressDeleteDialogProps> = ({
       aria-labelledby="delete-dialog-title"
       aria-describedby="delete-dialog-description"
     >
-      <DialogTitle id="delete-dialog-title">
-        進捗記録の削除
-      </DialogTitle>
+      <DialogTitle id="delete-dialog-title">進捗記録の削除</DialogTitle>
       <DialogContent>
         <DialogContentText id="delete-dialog-description">
-          この進捗記録を削除してもよろしいですか？
-          この操作は元に戻すことができません。
+          この進捗記録を削除してもよろしいですか？ この操作は元に戻すことができません。
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button 
-          onClick={onClose} 
-          color="primary"
-          disabled={isDeleting}
-        >
+        <Button onClick={onClose} color="primary" disabled={isDeleting}>
           キャンセル
         </Button>
-        <Button 
-          onClick={onConfirm} 
-          color="error" 
+        <Button
+          onClick={onConfirm}
+          color="error"
           variant="contained"
           disabled={isDeleting}
           startIcon={isDeleting && <CircularProgress size={20} color="inherit" />}
@@ -61,4 +54,4 @@ export const ProgressDeleteDialog: React.FC<ProgressDeleteDialogProps> = ({
       </DialogActions>
     </Dialog>
   );
-}; 
+};

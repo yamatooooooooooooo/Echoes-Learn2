@@ -18,17 +18,13 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = '読み�
         alignItems: 'center',
         height: '100%',
         minHeight: '300px',
-        p: 3
+        p: 3,
       }}
     >
       <CircularProgress size={40} thickness={4} />
-      <Typography
-        variant="body1"
-        color="text.secondary"
-        sx={{ mt: 2 }}
-      >
+      <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
         {message}
       </Typography>
     </Box>
   );
-}; 
+};

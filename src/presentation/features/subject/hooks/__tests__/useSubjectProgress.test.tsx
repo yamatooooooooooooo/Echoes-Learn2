@@ -11,20 +11,20 @@ jest.mock('../../../../../hooks/useServices', () => ({
     progressRepository: {
       addProgress: jest.fn().mockResolvedValue('progress-id-1'),
       updateProgress: jest.fn().mockResolvedValue(undefined),
-      deleteProgress: jest.fn().mockResolvedValue(undefined)
+      deleteProgress: jest.fn().mockResolvedValue(undefined),
     },
     subjectRepository: {
-      updateSubject: jest.fn().mockResolvedValue(undefined)
-    }
-  })
+      updateSubject: jest.fn().mockResolvedValue(undefined),
+    },
+  }),
 }));
 
 jest.mock('../../../../../contexts/FirebaseContext', () => ({
   useFirebase: () => ({
     auth: {
-      currentUser: { uid: 'user-id-1' }
-    }
-  })
+      currentUser: { uid: 'user-id-1' },
+    },
+  }),
 }));
 
 describe('useSubjectProgress', () => {
@@ -35,7 +35,7 @@ describe('useSubjectProgress', () => {
     currentPage: 30,
     createdAt: new Date(),
     updatedAt: new Date(),
-    examDate: new Date()
+    examDate: new Date(),
   };
 
   const mockProgress: Progress = {
@@ -47,7 +47,7 @@ describe('useSubjectProgress', () => {
     pagesRead: 11,
     recordDate: '2023-01-01',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 
   const mockOnProgressAdded = jest.fn();
@@ -121,7 +121,7 @@ describe('useSubjectProgress', () => {
 
     act(() => {
       result.current.handleProgressChange({
-        target: { name: 'startPage', value: '20' }
+        target: { name: 'startPage', value: '20' },
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
@@ -129,7 +129,7 @@ describe('useSubjectProgress', () => {
 
     act(() => {
       result.current.handleProgressChange({
-        target: { name: 'endPage', value: '30' }
+        target: { name: 'endPage', value: '30' },
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
@@ -138,22 +138,18 @@ describe('useSubjectProgress', () => {
   });
 
   it('should save progress (new record)', async () => {
-    const { result } = renderHook(() => 
-      useSubjectProgress(
-        mockSubject, 
-        mockOnProgressAdded, 
-        mockOnSubjectUpdated
-      )
+    const { result } = renderHook(() =>
+      useSubjectProgress(mockSubject, mockOnProgressAdded, mockOnSubjectUpdated)
     );
 
     // フォームデータを設定
     act(() => {
       result.current.handleProgressChange({
-        target: { name: 'startPage', value: '30' }
+        target: { name: 'startPage', value: '30' },
       } as React.ChangeEvent<HTMLInputElement>);
-      
+
       result.current.handleProgressChange({
-        target: { name: 'endPage', value: '40' }
+        target: { name: 'endPage', value: '40' },
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
@@ -162,16 +158,18 @@ describe('useSubjectProgress', () => {
     });
 
     expect(mockOnProgressAdded).toHaveBeenCalled();
-    expect(mockOnSubjectUpdated).toHaveBeenCalledWith(expect.objectContaining({
-      currentPage: 40
-    }));
+    expect(mockOnSubjectUpdated).toHaveBeenCalledWith(
+      expect.objectContaining({
+        currentPage: 40,
+      })
+    );
   });
 
   it('should delete progress', async () => {
-    const { result } = renderHook(() => 
+    const { result } = renderHook(() =>
       useSubjectProgress(
-        mockSubject, 
-        mockOnProgressAdded, 
+        mockSubject,
+        mockOnProgressAdded,
         mockOnSubjectUpdated,
         mockOnProgressUpdated,
         mockOnProgressDeleted
@@ -195,43 +193,45 @@ describe('useSubjectProgress', () => {
     const mockProgressRepository = {
       getSubjectProgress: jest.fn().mockResolvedValue([
         { id: 'progress1', subjectId: 'subject1', userId: 'user1' },
-        { id: 'progress2', subjectId: 'subject1', userId: 'user1' }
+        { id: 'progress2', subjectId: 'subject1', userId: 'user1' },
       ]),
       addProgress: jest.fn(),
       updateProgress: jest.fn(),
-      deleteProgress: jest.fn()
+      deleteProgress: jest.fn(),
     };
-    
-    const mockSubjectRepository = { /* モックの実装 */ };
-    
+
+    const mockSubjectRepository = {
+      /* モックの実装 */
+    };
+
     // useServicesのモック
     (useServices as jest.Mock).mockReturnValue({
       progressRepository: mockProgressRepository,
-      subjectRepository: mockSubjectRepository
+      subjectRepository: mockSubjectRepository,
     });
-    
+
     // useFirebaseのモック
     (useFirebase as jest.Mock).mockReturnValue({
-      auth: { currentUser: { uid: 'user1' } }
+      auth: { currentUser: { uid: 'user1' } },
     });
-    
-    const mockSubject = { 
+
+    const mockSubject = {
       id: 'subject1',
       name: 'テスト科目',
       currentPage: 0,
       totalPages: 100,
-      examDate: new Date()
+      examDate: new Date(),
     } as Subject;
-    
+
     const { result, waitForNextUpdate } = renderHook(() => useSubjectProgress(mockSubject));
-    
+
     // 初期状態では空の配列
     expect(result.current.progressRecords).toEqual([]);
     expect(result.current.loadingProgressRecords).toBe(true);
-    
+
     // 非同期処理の完了を待つ
     await waitForNextUpdate();
-    
+
     // データが取得されていることを確認
     expect(mockProgressRepository.getSubjectProgress).toHaveBeenCalledWith('user1', 'subject1');
     expect(result.current.progressRecords).toHaveLength(2);

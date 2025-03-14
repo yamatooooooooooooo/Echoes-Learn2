@@ -18,4 +18,4 @@ export class PriorityService {
     console.log('優先順位を計算中...', userId);
     // 実際の実装はここに記述
   }
-} 
+}

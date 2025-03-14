@@ -19,7 +19,7 @@ interface NavigationContextType {
 
 // コンテキストの作成
 export const NavigationContext = createContext<NavigationContextType>({
-  navigateTo: () => {}
+  navigateTo: () => {},
 });
 
 // 独自フックでコンテキストを使用
@@ -29,14 +29,14 @@ export const useNavigation = () => useContext(NavigationContext);
 const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
   console.error('アプリケーションエラー:', error);
   console.error('コンポーネントスタック:', errorInfo.componentStack);
-  
+
   // Firebaseアナリティクスにエラーを送信
   try {
     const analytics = getAnalytics();
     logEvent(analytics, 'app_exception', {
       description: `${error.name}: ${error.message}`,
       stackTrace: errorInfo.componentStack,
-      fatal: true
+      fatal: true,
     });
   } catch (analyticsError) {
     console.error('エラーログの送信に失敗しました:', analyticsError);
@@ -48,7 +48,7 @@ const App: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [drawerOpen, setDrawerOpen] = useState(!isMobile);
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
-  
+
   // 画面サイズが変更されたときにドロワーの状態を調整
   useEffect(() => {
     setDrawerOpen(!isMobile);
@@ -56,38 +56,44 @@ const App: React.FC = () => {
 
   // メモ化したドロワートグル処理
   const handleDrawerToggle = useCallback(() => {
-    setDrawerOpen(prevState => !prevState);
+    setDrawerOpen((prevState) => !prevState);
   }, []);
 
   // メモ化したメニュー選択処理
-  const handleMenuSelect = useCallback((menu: string) => {
-    // 現在は「ダッシュボード」と「科目管理」のみ有効
-    if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings') {
-      setSelectedMenu(menu);
-    } else {
-      setSelectedMenu('dashboard');
-    }
-    
-    // モバイルでは自動的にドロワーを閉じる
-    if (isMobile) {
-      setDrawerOpen(false);
-    }
-  }, [isMobile]);
+  const handleMenuSelect = useCallback(
+    (menu: string) => {
+      // 現在は「ダッシュボード」と「科目管理」のみ有効
+      if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings') {
+        setSelectedMenu(menu);
+      } else {
+        setSelectedMenu('dashboard');
+      }
+
+      // モバイルでは自動的にドロワーを閉じる
+      if (isMobile) {
+        setDrawerOpen(false);
+      }
+    },
+    [isMobile]
+  );
 
   // ナビゲーション関数（メモ化）
-  const navigateTo = useCallback((menu: string) => {
-    // 現在は「ダッシュボード」と「科目管理」のみ有効
-    if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings') {
-      setSelectedMenu(menu);
-    } else {
-      setSelectedMenu('dashboard');
-    }
-    
-    // モバイルでは自動的にドロワーを閉じる
-    if (isMobile) {
-      setDrawerOpen(false);
-    }
-  }, [isMobile]);
+  const navigateTo = useCallback(
+    (menu: string) => {
+      // 現在は「ダッシュボード」と「科目管理」のみ有効
+      if (menu === 'dashboard' || menu === 'subjects' || menu === 'settings') {
+        setSelectedMenu(menu);
+      } else {
+        setSelectedMenu('dashboard');
+      }
+
+      // モバイルでは自動的にドロワーを閉じる
+      if (isMobile) {
+        setDrawerOpen(false);
+      }
+    },
+    [isMobile]
+  );
 
   // 日付フォーマット関数（メモ化して一貫性を保つ）
   const formatDate = useCallback((date: Date | string | undefined): string => {
@@ -95,7 +101,7 @@ const App: React.FC = () => {
     return new Date(date).toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   }, []);
 
@@ -122,14 +128,16 @@ const App: React.FC = () => {
   // メモ化されたフッターコンポーネント
   const footerContent = useMemo(() => {
     return (
-      <Box 
-        component="footer" 
-        sx={{ 
-          padding: 2, 
+      <Box
+        component="footer"
+        sx={{
+          padding: 2,
           textAlign: 'center',
           borderTop: '1px solid',
-          borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-          bgcolor: theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+          borderColor:
+            theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+          bgcolor:
+            theme.palette.mode === 'dark' ? 'rgba(18, 18, 18, 0.8)' : 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(8px)',
           position: 'fixed',
           bottom: 0,
@@ -140,15 +148,15 @@ const App: React.FC = () => {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
           }),
-          zIndex: 10
+          zIndex: 10,
         }}
       >
-        <Typography 
-          variant="body2" 
-          color="text.secondary" 
-          sx={{ 
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
             fontSize: '0.75rem',
-            opacity: 0.8
+            opacity: 0.8,
           }}
         >
           &copy; 2024 Echoes Learn
@@ -210,12 +218,12 @@ const App: React.FC = () => {
               flexDirection: 'column',
               position: 'relative',
               paddingTop: { xs: 0, sm: 0, md: 0 },
-              marginTop: 0
+              marginTop: 0,
             }}
           >
             {/* スクロール可能なコンテンツエリア - シンプルに変更 */}
-            <Box 
-              sx={{ 
+            <Box
+              sx={{
                 padding: { xs: 1, sm: 2, md: 3 },
                 paddingTop: { xs: 12, sm: 12, md: 12 }, // パディングを調整
                 paddingBottom: { xs: 80, sm: 40, md: 20 }, // パディングを調整
@@ -224,23 +232,20 @@ const App: React.FC = () => {
                 flexDirection: 'column',
                 position: 'relative',
                 minHeight: '100vh',
-                overflow: 'visible' // 内部コンテナではスクロールを無効化
+                overflow: 'visible', // 内部コンテナではスクロールを無効化
               }}
             >
               <NavigationContext.Provider value={navigationContextValue}>
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/signup" element={<SignupPage />} />
-                  <Route
-                    path="/"
-                    element={<PrivateRoute />}
-                  >
+                  <Route path="/" element={<PrivateRoute />}>
                     <Route index element={<>{renderContent}</>} />
                   </Route>
                 </Routes>
               </NavigationContext.Provider>
             </Box>
-            
+
             {/* グローバルフッター */}
             {footerContent}
           </Box>
@@ -250,4 +255,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App; 
+export default App;

@@ -11,4 +11,4 @@ export class ProgressError extends Error {
     super(message);
     this.name = 'ProgressError';
   }
-} 
+}

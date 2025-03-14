@@ -18,7 +18,7 @@ import {
   LinearProgress,
   ToggleButtonGroup,
   ToggleButton,
-  Tooltip
+  Tooltip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Subject } from '../../../../domain/models/SubjectModel';
@@ -44,120 +44,133 @@ interface ProgressFormProps {
 }
 
 // 満足度選択コンポーネントをメモ化
-const SatisfactionSelector = memo(({ 
-  value, 
-  onChange, 
-  disabled, 
-  fieldError 
-}: { 
-  value: number; 
-  onChange: (value: string) => void; 
-  disabled: boolean;
-  fieldError?: string;
-}) => {
-  // メモ化によりフォームの他の部分が更新されても再レンダリングされない
-  return (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      mb: 1,
-      border: (theme) => `1px solid ${theme.palette.divider}`,
-      borderRadius: 1,
-      p: 2
-    }}>
-      <Typography variant="body2" color="text.secondary" gutterBottom>
-        学習の満足度 (学習効率の分析に活用されます)
-      </Typography>
-      
-      <ToggleButtonGroup
-        value={String(value || 2)}
-        exclusive
-        onChange={(e, newValue) => {
-          if (newValue !== null) {
-            onChange(newValue);
-          }
+const SatisfactionSelector = memo(
+  ({
+    value,
+    onChange,
+    disabled,
+    fieldError,
+  }: {
+    value: number;
+    onChange: (value: string) => void;
+    disabled: boolean;
+    fieldError?: string;
+  }) => {
+    // メモ化によりフォームの他の部分が更新されても再レンダリングされない
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          mb: 1,
+          border: (theme) => `1px solid ${theme.palette.divider}`,
+          borderRadius: 1,
+          p: 2,
         }}
-        aria-label="満足度"
-        sx={{ mt: 1, justifyContent: 'center' }}
-        disabled={disabled}
       >
-        <ToggleButton value="1" aria-label="不満">
-          <Tooltip title="不満">
-            <SentimentDissatisfiedIcon 
-              fontSize="large"
-              sx={{ 
-                color: (theme) => String(value) === "1" ? theme.palette.error.main : 'inherit' 
-              }}
-            />
-          </Tooltip>
-        </ToggleButton>
-        <ToggleButton value="2" aria-label="普通">
-          <Tooltip title="普通">
-            <SentimentSatisfiedIcon 
-              fontSize="large"
-              sx={{ 
-                color: (theme) => String(value) === "2" ? theme.palette.warning.main : 'inherit' 
-              }}
-            />
-          </Tooltip>
-        </ToggleButton>
-        <ToggleButton value="3" aria-label="満足">
-          <Tooltip title="満足">
-            <SentimentVerySatisfiedIcon 
-              fontSize="large"
-              sx={{ 
-                color: (theme) => String(value) === "3" ? theme.palette.success.main : 'inherit' 
-              }}
-            />
-          </Tooltip>
-        </ToggleButton>
-      </ToggleButtonGroup>
-      
-      {fieldError && (
-        <Typography variant="caption" color="error.main" sx={{ mt: 1 }}>
-          {fieldError}
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          学習の満足度 (学習効率の分析に活用されます)
         </Typography>
-      )}
-    </Box>
-  );
-});
+
+        <ToggleButtonGroup
+          value={String(value || 2)}
+          exclusive
+          onChange={(e, newValue) => {
+            if (newValue !== null) {
+              onChange(newValue);
+            }
+          }}
+          aria-label="満足度"
+          sx={{ mt: 1, justifyContent: 'center' }}
+          disabled={disabled}
+        >
+          <ToggleButton value="1" aria-label="不満">
+            <Tooltip title="不満">
+              <SentimentDissatisfiedIcon
+                fontSize="large"
+                sx={{
+                  color: (theme) => (String(value) === '1' ? theme.palette.error.main : 'inherit'),
+                }}
+              />
+            </Tooltip>
+          </ToggleButton>
+          <ToggleButton value="2" aria-label="普通">
+            <Tooltip title="普通">
+              <SentimentSatisfiedIcon
+                fontSize="large"
+                sx={{
+                  color: (theme) =>
+                    String(value) === '2' ? theme.palette.warning.main : 'inherit',
+                }}
+              />
+            </Tooltip>
+          </ToggleButton>
+          <ToggleButton value="3" aria-label="満足">
+            <Tooltip title="満足">
+              <SentimentVerySatisfiedIcon
+                fontSize="large"
+                sx={{
+                  color: (theme) =>
+                    String(value) === '3' ? theme.palette.success.main : 'inherit',
+                }}
+              />
+            </Tooltip>
+          </ToggleButton>
+        </ToggleButtonGroup>
+
+        {fieldError && (
+          <Typography variant="caption" color="error.main" sx={{ mt: 1 }}>
+            {fieldError}
+          </Typography>
+        )}
+      </Box>
+    );
+  }
+);
+
+// displayNameを設定
+SatisfactionSelector.displayName = 'SatisfactionSelector';
 
 // クイック入力ボタンコンポーネントをメモ化
-const QuickInputButtons = memo(({ 
-  handleQuickIncrement, 
-  isSubmitting 
-}: { 
-  handleQuickIncrement: (pages: number) => void,
-  isSubmitting: boolean
-}) => (
-  <Box sx={{ 
-    display: 'flex', 
-    flexWrap: 'wrap', 
-    gap: 1,
-    my: 2
-  }}>
-    <Typography variant="body2" color="text.secondary" sx={{ width: '100%', mb: 0.5 }}>
-      クイック入力:
-    </Typography>
-    {[1, 5, 10, 20, 50].map(pages => (
-      <Button 
-        key={pages} 
-        variant="outlined" 
-        size="small"
-        onClick={() => handleQuickIncrement(pages)}
-        disabled={isSubmitting}
-        sx={{ 
-          minWidth: { xs: '60px', sm: '48px' },
-          minHeight: { xs: '48px', sm: '36px' },
-          borderRadius: 2,
-          fontWeight: 'bold'
-        }}
-      >
-        +{pages}
-      </Button>
-    ))}
-  </Box>
-));
+const QuickInputButtons = memo(
+  ({
+    handleQuickIncrement,
+    isSubmitting,
+  }: {
+    handleQuickIncrement: (pages: number) => void;
+    isSubmitting: boolean;
+  }) => (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 1,
+        my: 2,
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" sx={{ width: '100%', mb: 0.5 }}>
+        クイック入力:
+      </Typography>
+      {[1, 5, 10, 20, 50].map((pages) => (
+        <Button
+          key={pages}
+          variant="outlined"
+          size="small"
+          onClick={() => handleQuickIncrement(pages)}
+          disabled={isSubmitting}
+          sx={{
+            minWidth: { xs: '60px', sm: '48px' },
+            minHeight: { xs: '48px', sm: '36px' },
+            borderRadius: 2,
+            fontWeight: 'bold',
+          }}
+        >
+          +{pages}
+        </Button>
+      ))}
+    </Box>
+  )
+);
 
 /**
  * 進捗記録フォームコンポーネント
@@ -168,7 +181,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
   open,
   onClose,
   onSuccess,
-  isEditMode = false
+  isEditMode = false,
 }) => {
   const {
     formData,
@@ -179,7 +192,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
     handleDateChange,
     handleSubmit,
     resetForm,
-    setFormDataFromProgress
+    setFormDataFromProgress,
   } = useProgressForm({
     subject,
     progress,
@@ -187,7 +200,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
     onSuccess: (progressId) => {
       onSuccess(progressId);
       onClose();
-    }
+    },
   });
 
   // 編集モードの場合、フォームデータを設定
@@ -206,36 +219,42 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
   };
 
   // クイック入力用の関数をメモ化
-  const handleQuickIncrement = useCallback((pages: number) => {
-    const newEndPage = Math.min(
-      (formData.endPage || 0) + pages,
-      subject?.totalPages || Number.MAX_SAFE_INTEGER
-    );
-    
-    handleChange({
-      target: {
-        name: 'endPage',
-        value: newEndPage.toString(),
-        type: 'number'
-      }
-    } as React.ChangeEvent<HTMLInputElement>);
-  }, [formData.endPage, subject?.totalPages, handleChange]);
+  const handleQuickIncrement = useCallback(
+    (pages: number) => {
+      const newEndPage = Math.min(
+        (formData.endPage || 0) + pages,
+        subject?.totalPages || Number.MAX_SAFE_INTEGER
+      );
+
+      handleChange({
+        target: {
+          name: 'endPage',
+          value: newEndPage.toString(),
+          type: 'number',
+        },
+      } as React.ChangeEvent<HTMLInputElement>);
+    },
+    [formData.endPage, subject?.totalPages, handleChange]
+  );
 
   // 満足度変更ハンドラー - メモ化されたコンポーネントに渡すため
-  const handleSatisfactionChange = useCallback((newValue: string) => {
-    handleChange({
-      target: {
-        name: 'satisfactionLevel',
-        value: newValue,
-        type: 'number'
-      }
-    } as React.ChangeEvent<HTMLInputElement>);
-  }, [handleChange]);
+  const handleSatisfactionChange = useCallback(
+    (newValue: string) => {
+      handleChange({
+        target: {
+          name: 'satisfactionLevel',
+          value: newValue,
+          type: 'number',
+        },
+      } as React.ChangeEvent<HTMLInputElement>);
+    },
+    [handleChange]
+  );
 
   // 日付入力値の安全な変換
   const getSafeDate = useCallback((dateValue: string | Date | undefined): Date => {
     if (!dateValue) return new Date();
-    
+
     try {
       // 文字列の場合は日付オブジェクトに変換
       if (typeof dateValue === 'string') {
@@ -275,16 +294,16 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      
+
       <DialogContent dividers>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
           {subject && (
             <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper', mb: 2 }}>
-              <Typography variant="body2">
-                科目名: {subject.name}
-              </Typography>
+              <Typography variant="body2">科目名: {subject.name}</Typography>
               <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box
+                  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                     現在の進捗:
                   </Typography>
@@ -292,24 +311,24 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
                     {subject.currentPage || 0} / {subject.totalPages} ページ
                   </Typography>
                 </Box>
-                
+
                 <Box sx={{ mt: 1 }}>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={calculateProgress(subject.currentPage || 0, subject.totalPages)} 
-                    sx={{ 
-                      height: 8, 
+                  <LinearProgress
+                    variant="determinate"
+                    value={calculateProgress(subject.currentPage || 0, subject.totalPages)}
+                    sx={{
+                      height: 8,
                       borderRadius: 4,
                       '& .MuiLinearProgress-bar': {
-                        borderRadius: 4
-                      }
-                    }} 
+                        borderRadius: 4,
+                      },
+                    }}
                   />
                 </Box>
               </Box>
             </Paper>
           )}
-          
+
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <FormControl fullWidth>
@@ -323,14 +342,14 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
                         fullWidth: true,
                         variant: 'outlined',
                         error: !!fieldErrors.recordDate,
-                        helperText: fieldErrors.recordDate
-                      }
+                        helperText: fieldErrors.recordDate,
+                      },
                     }}
                   />
                 </LocalizationProvider>
               </FormControl>
             </Grid>
-            
+
             <Grid item xs={6}>
               <TextField
                 label="開始ページ"
@@ -344,12 +363,12 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
                 helperText={fieldErrors.startPage}
                 disabled={isSubmitting}
                 InputProps={{
-                  inputProps: { min: 0, max: formData.endPage }
+                  inputProps: { min: 0, max: formData.endPage },
                 }}
                 sx={{ '& input': { fontSize: { xs: '1.1rem', sm: '1rem' } } }}
               />
             </Grid>
-            
+
             <Grid item xs={6}>
               <TextField
                 label="終了ページ"
@@ -363,19 +382,19 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
                 helperText={fieldErrors.endPage}
                 disabled={isSubmitting}
                 InputProps={{
-                  inputProps: { min: formData.startPage }
+                  inputProps: { min: formData.startPage },
                 }}
                 sx={{ '& input': { fontSize: { xs: '1.1rem', sm: '1rem' } } }}
               />
             </Grid>
-            
+
             <Grid item xs={12}>
-              <QuickInputButtons 
+              <QuickInputButtons
                 handleQuickIncrement={handleQuickIncrement}
                 isSubmitting={isSubmitting}
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               <TextField
                 label="学習メモ"
@@ -391,7 +410,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
                 disabled={isSubmitting}
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               <TextField
                 label="レポート進捗"
@@ -407,7 +426,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
                 disabled={isSubmitting}
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               <TextField
                 label="学習時間 (分)"
@@ -421,12 +440,12 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
                 helperText={fieldErrors.studyDuration || '学習効率の分析に活用されます'}
                 InputProps={{
                   endAdornment: <InputAdornment position="end">分</InputAdornment>,
-                  inputProps: { min: 0, max: 1440 }
+                  inputProps: { min: 0, max: 1440 },
                 }}
                 disabled={isSubmitting}
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               {/* 満足度セレクターをメモ化されたコンポーネントに置き換え */}
               <SatisfactionSelector
@@ -437,7 +456,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
               />
             </Grid>
           </Grid>
-          
+
           {error && (
             <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
               {error}
@@ -445,12 +464,9 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
           )}
         </Box>
       </DialogContent>
-      
+
       <DialogActions>
-        <Button
-          onClick={handleClose}
-          disabled={isSubmitting}
-        >
+        <Button onClick={handleClose} disabled={isSubmitting}>
           キャンセル
         </Button>
         <Button
@@ -465,4 +481,9 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
       </DialogActions>
     </Dialog>
   );
-}; 
+};
+
+// displayNameを設定
+ProgressForm.displayName = 'ProgressForm';
+
+export default ProgressForm;

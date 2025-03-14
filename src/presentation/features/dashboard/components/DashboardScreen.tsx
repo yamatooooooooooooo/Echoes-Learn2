@@ -14,12 +14,12 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
-  Tooltip
+  Tooltip,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
   Settings as SettingsIcon,
-  Visibility as VisibilityIcon
+  Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -36,7 +36,7 @@ const DashboardScreen: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { currentUser } = useAuth();
   const { dashboardData, isLoading, error, formatDate, refreshData } = useDashboardData();
-  const { settings, toggleCard } = useDashboardSettings();
+  const { moduleSettings, toggleCard } = useDashboardSettings();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
 
@@ -52,7 +52,7 @@ const DashboardScreen: React.FC = () => {
     handleCloseMenu();
     setSettingsDialogOpen(true);
   };
-  
+
   const handleCloseSettingsDialog = () => {
     setSettingsDialogOpen(false);
   };
@@ -109,14 +109,14 @@ const DashboardScreen: React.FC = () => {
 
   // メインのダッシュボード表示
   return (
-    <Box 
-      sx={{ 
-        width: '100%', 
+    <Box
+      sx={{
+        width: '100%',
         minHeight: '100vh',
-        backgroundColor: '#f9f9fa' 
+        backgroundColor: '#f9f9fa',
       }}
     >
-      <NotionDashboard 
+      <NotionDashboard
         formatDate={formatDate}
         dashboardData={dashboardData}
         isLoading={isLoading}

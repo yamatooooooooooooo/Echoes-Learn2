@@ -11,19 +11,19 @@ interface UseSubjectFormProps {
 export const useSubjectForm = ({ subject, onSuccess }: UseSubjectFormProps = {}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { subjectRepository } = useServices();
   const { currentUser } = useAuth();
-  
+
   const handleSubmit = async (data: SubjectCreateInput) => {
     if (!currentUser) {
       setError('認証エラーが発生しました。再度ログインしてください。');
       return;
     }
-    
+
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       if (subject) {
         // 既存の科目を更新
@@ -41,16 +41,16 @@ export const useSubjectForm = ({ subject, onSuccess }: UseSubjectFormProps = {})
       setIsSubmitting(false);
     }
   };
-  
+
   const deleteSubject = async (subjectId: string) => {
     if (!currentUser) {
       setError('認証エラーが発生しました。再度ログインしてください。');
       return;
     }
-    
+
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       await subjectRepository.deleteSubject(subjectId);
     } catch (err) {
@@ -61,11 +61,11 @@ export const useSubjectForm = ({ subject, onSuccess }: UseSubjectFormProps = {})
       setIsSubmitting(false);
     }
   };
-  
+
   return {
     handleSubmit,
     deleteSubject,
     isSubmitting,
-    error
+    error,
   };
-}; 
+};

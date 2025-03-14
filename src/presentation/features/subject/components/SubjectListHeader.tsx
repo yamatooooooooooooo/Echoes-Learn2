@@ -1,9 +1,6 @@
 import React from 'react';
 import { Box, Typography, Button, Tooltip, Badge } from '@mui/material';
-import { 
-  Add as AddIcon, 
-  LibraryBooks as LibraryBooksIcon
-} from '@mui/icons-material';
+import { Add as AddIcon, LibraryBooks as LibraryBooksIcon } from '@mui/icons-material';
 
 interface SubjectListHeaderProps {
   onAddSubject: () => void;
@@ -16,52 +13,50 @@ interface SubjectListHeaderProps {
  */
 export const SubjectListHeader: React.FC<SubjectListHeaderProps> = ({
   onAddSubject,
-  totalSubjects
+  totalSubjects,
 }) => {
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center',
-      mb: 2,
-      px: { xs: 1, sm: 2 },
-      py: 2,
-      backgroundColor: 'background.paper',
-      borderRadius: 2,
-      border: '1px solid',
-      borderColor: 'divider',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-    }}>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mb: 2,
+        px: { xs: 1, sm: 2 },
+        py: 2,
+        backgroundColor: 'background.paper',
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+      }}
+    >
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <LibraryBooksIcon 
-          sx={{ 
-            mr: 1.5, 
+        <LibraryBooksIcon
+          sx={{
+            mr: 1.5,
             color: 'primary.main',
-            fontSize: '2rem'
-          }} 
+            fontSize: '2rem',
+          }}
         />
         <Box>
-          <Typography 
-            variant="h5" 
-            sx={{ 
+          <Typography
+            variant="h5"
+            sx={{
               fontWeight: 600,
-              fontSize: { xs: '1.5rem', sm: '1.8rem' }
+              fontSize: { xs: '1.5rem', sm: '1.8rem' },
             }}
           >
             科目管理
           </Typography>
-          <Typography 
-            variant="body2" 
-            color="text.secondary"
-            sx={{ mt: 0.5 }}
-          >
-            {totalSubjects > 0 
-              ? `${totalSubjects}科目登録されています` 
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            {totalSubjects > 0
+              ? `${totalSubjects}科目登録されています`
               : '科目を登録して学習を始めましょう'}
           </Typography>
         </Box>
       </Box>
-      
+
       <Button
         variant="contained"
         startIcon={<AddIcon />}
@@ -69,11 +64,11 @@ export const SubjectListHeader: React.FC<SubjectListHeaderProps> = ({
         sx={{
           borderRadius: 2,
           px: 2,
-          boxShadow: 1
+          boxShadow: 1,
         }}
       >
         新しい科目
       </Button>
     </Box>
   );
-}; 
+};

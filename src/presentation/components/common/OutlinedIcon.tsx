@@ -74,7 +74,7 @@ export const OutlinedIcon: React.FC<OutlinedIconProps> = ({
         '&:hover': {
           backgroundColor: `${color || 'primary.main'}08`,
         },
-        ...sx
+        ...sx,
       }}
     >
       <IconComponent
@@ -91,4 +91,4 @@ export const OutlinedIcon: React.FC<OutlinedIconProps> = ({
       />
     </Box>
   );
-}; 
+};

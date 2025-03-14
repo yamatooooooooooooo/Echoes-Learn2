@@ -128,4 +128,4 @@ export function unregister() {
         console.error(error.message);
       });
   }
-} 
+}

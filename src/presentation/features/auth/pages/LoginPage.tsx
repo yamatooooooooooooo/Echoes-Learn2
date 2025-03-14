@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
-  TextField, 
-  Button, 
-  Paper, 
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
   Container,
   Grid,
   Divider,
@@ -12,12 +12,12 @@ import {
   CircularProgress,
   IconButton,
   InputAdornment,
-  Link
+  Link,
 } from '@mui/material';
-import { 
+import {
   Google as GoogleIcon,
   Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon
+  VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -31,22 +31,22 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
-  
+
   // メールアドレスとパスワードでログイン
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     try {
       await login(email, password);
       navigate('/');
     } catch (err: any) {
       console.error('ログインエラー:', err);
-      
+
       // エラーメッセージの日本語化
       if (err.code === 'auth/invalid-credential') {
         setError('メールアドレスまたはパスワードが正しくありません。');
@@ -63,27 +63,31 @@ const LoginPage: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   // Googleでログイン
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       await loginWithGoogle();
       navigate('/');
     } catch (err: any) {
       console.error('Googleログインエラー:', err);
-      
+
       // エラーメッセージの日本語化
       if (err.code === 'auth/operation-not-allowed') {
-        setError('この認証方法は現在無効になっています。Firebase Consoleで設定を確認してください。');
+        setError(
+          'この認証方法は現在無効になっています。Firebase Consoleで設定を確認してください。'
+        );
       } else if (err.code === 'auth/popup-closed-by-user') {
         setError('認証ポップアップが閉じられました。もう一度お試しください。');
       } else if (err.code === 'auth/cancelled-popup-request') {
         setError('認証リクエストがキャンセルされました。もう一度お試しください。');
       } else if (err.code === 'auth/popup-blocked') {
-        setError('認証ポップアップがブラウザによってブロックされました。ポップアップを許可してください。');
+        setError(
+          '認証ポップアップがブラウザによってブロックされました。ポップアップを許可してください。'
+        );
       } else {
         setError(`Googleログインに失敗しました: ${err.message}`);
       }
@@ -91,29 +95,32 @@ const LoginPage: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   // パスワードの表示/非表示を切り替え
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-  
+
   return (
     <Container maxWidth="sm">
       <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Paper elevation={0} sx={{ p: 4, width: '100%', borderRadius: 2, border: '1px solid #E0E0E0' }}>
+        <Paper
+          elevation={0}
+          sx={{ p: 4, width: '100%', borderRadius: 2, border: '1px solid #E0E0E0' }}
+        >
           <Typography variant="h4" component="h1" align="center" gutterBottom>
             Echoes Learn
           </Typography>
           <Typography variant="h5" component="h2" align="center" gutterBottom>
             ログイン
           </Typography>
-          
+
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
-          
+
           <Box component="form" onSubmit={handleEmailLogin} sx={{ mt: 2 }}>
             <TextField
               margin="normal"
@@ -154,7 +161,7 @@ const LoginPage: React.FC = () => {
                 ),
               }}
             />
-            
+
             <Button
               type="submit"
               fullWidth
@@ -164,9 +171,9 @@ const LoginPage: React.FC = () => {
             >
               {loading ? <CircularProgress size={24} /> : 'ログイン'}
             </Button>
-            
+
             <Divider sx={{ my: 3 }}>または</Divider>
-            
+
             <Button
               fullWidth
               variant="outlined"
@@ -177,7 +184,7 @@ const LoginPage: React.FC = () => {
             >
               Googleでログイン
             </Button>
-            
+
             <Box sx={{ mt: 3, textAlign: 'center' }}>
               <Typography variant="body2">
                 アカウントをお持ちでないですか？{' '}
@@ -193,4 +200,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

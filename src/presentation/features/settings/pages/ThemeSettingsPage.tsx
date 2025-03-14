@@ -15,7 +15,7 @@ import {
   Radio,
   useTheme as useMuiTheme,
   Alert,
-  IconButton
+  IconButton,
 } from '@mui/material';
 import {
   LightMode as LightModeIcon,
@@ -23,7 +23,7 @@ import {
   Computer as ComputerIcon,
   Schedule as ScheduleIcon,
   Info as InfoIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useTheme, ThemeMode } from '../../../../contexts/ThemeContext';
 
@@ -39,7 +39,7 @@ export const ThemeSettingsPage: React.FC = () => {
   const handleModeChange = (newMode: ThemeMode) => {
     setMode(newMode);
     setSuccess('テーマ設定を保存しました');
-    
+
     // 3秒後に成功メッセージを消す
     setTimeout(() => {
       setSuccess(null);
@@ -51,10 +51,10 @@ export const ThemeSettingsPage: React.FC = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         テーマ設定
       </Typography>
-      
+
       {success && (
-        <Alert 
-          severity="success" 
+        <Alert
+          severity="success"
           sx={{ mb: 2 }}
           action={
             <IconButton
@@ -70,7 +70,7 @@ export const ThemeSettingsPage: React.FC = () => {
           {success}
         </Alert>
       )}
-      
+
       <Paper sx={{ p: 3, mb: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6">アピアランス</Typography>
@@ -78,7 +78,7 @@ export const ThemeSettingsPage: React.FC = () => {
             <InfoIcon fontSize="small" />
           </IconButton>
         </Box>
-        
+
         {infoOpen && (
           <Alert severity="info" sx={{ mb: 3 }}>
             アプリケーションの表示モードを選択できます。「システム設定に従う」を選択すると、
@@ -86,93 +86,100 @@ export const ThemeSettingsPage: React.FC = () => {
             6時〜18時はライトモード、18時〜6時はダークモードが適用されます。
           </Alert>
         )}
-        
+
         <Grid container spacing={2} sx={{ mb: 4 }}>
           <Grid item xs={6}>
-            <Card 
-              variant="outlined" 
-              sx={{ 
+            <Card
+              variant="outlined"
+              sx={{
                 borderColor: currentTheme === 'light' ? 'primary.main' : 'divider',
-                boxShadow: currentTheme === 'light' ? 2 : 0
+                boxShadow: currentTheme === 'light' ? 2 : 0,
               }}
             >
               <CardActionArea onClick={() => handleModeChange('light')}>
-                <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
-                  <Box 
-                    sx={{ 
-                      bgcolor: '#FAFAFA', 
-                      color: '#333333', 
-                      width: '100%', 
-                      height: 100, 
-                      display: 'flex', 
-                      justifyContent: 'center', 
+                <CardContent
+                  sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}
+                >
+                  <Box
+                    sx={{
+                      bgcolor: '#FAFAFA',
+                      color: '#333333',
+                      width: '100%',
+                      height: 100,
+                      display: 'flex',
+                      justifyContent: 'center',
                       alignItems: 'center',
                       borderRadius: 1,
-                      mb: 1
+                      mb: 1,
                     }}
                   >
                     <LightModeIcon sx={{ fontSize: 32 }} />
                   </Box>
-                  <Typography variant="subtitle2" align="center">ライトモード</Typography>
+                  <Typography variant="subtitle2" align="center">
+                    ライトモード
+                  </Typography>
                 </CardContent>
               </CardActionArea>
             </Card>
           </Grid>
-          
+
           <Grid item xs={6}>
-            <Card 
-              variant="outlined" 
-              sx={{ 
+            <Card
+              variant="outlined"
+              sx={{
                 borderColor: currentTheme === 'dark' ? 'primary.main' : 'divider',
-                boxShadow: currentTheme === 'dark' ? 2 : 0
+                boxShadow: currentTheme === 'dark' ? 2 : 0,
               }}
             >
               <CardActionArea onClick={() => handleModeChange('dark')}>
-                <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
-                  <Box 
-                    sx={{ 
-                      bgcolor: '#121212', 
-                      color: '#E2E8F0', 
-                      width: '100%', 
-                      height: 100, 
-                      display: 'flex', 
-                      justifyContent: 'center', 
+                <CardContent
+                  sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}
+                >
+                  <Box
+                    sx={{
+                      bgcolor: '#121212',
+                      color: '#E2E8F0',
+                      width: '100%',
+                      height: 100,
+                      display: 'flex',
+                      justifyContent: 'center',
                       alignItems: 'center',
                       borderRadius: 1,
-                      mb: 1
+                      mb: 1,
                     }}
                   >
                     <DarkModeIcon sx={{ fontSize: 32 }} />
                   </Box>
-                  <Typography variant="subtitle2" align="center">ダークモード</Typography>
+                  <Typography variant="subtitle2" align="center">
+                    ダークモード
+                  </Typography>
                 </CardContent>
               </CardActionArea>
             </Card>
           </Grid>
         </Grid>
-        
+
         <Divider sx={{ my: 3 }} />
-        
-        <Typography variant="h6" sx={{ mb: 2 }}>自動設定</Typography>
-        
+
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          自動設定
+        </Typography>
+
         <FormControl component="fieldset" fullWidth>
-          <RadioGroup 
-            value={mode} 
-            onChange={(e) => handleModeChange(e.target.value as ThemeMode)}
-          >
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                mb: 2, 
+          <RadioGroup value={mode} onChange={(e) => handleModeChange(e.target.value as ThemeMode)}>
+            <Paper
+              elevation={0}
+              sx={{
+                mb: 2,
                 p: 2,
-                border: '1px solid', 
+                border: '1px solid',
                 borderColor: mode === 'system' ? 'primary.main' : 'divider',
                 borderRadius: 1,
               }}
             >
-              <FormControlLabel 
-                value="system" 
-                control={<Radio />} 
+              <FormControlLabel
+                value="system"
+                control={<Radio />}
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <ComputerIcon sx={{ mr: 1, color: 'text.secondary' }} />
@@ -181,19 +188,19 @@ export const ThemeSettingsPage: React.FC = () => {
                 }
               />
             </Paper>
-            
-            <Paper 
-              elevation={0} 
-              sx={{ 
+
+            <Paper
+              elevation={0}
+              sx={{
                 p: 2,
-                border: '1px solid', 
+                border: '1px solid',
                 borderColor: mode === 'auto' ? 'primary.main' : 'divider',
                 borderRadius: 1,
               }}
             >
-              <FormControlLabel 
-                value="auto" 
-                control={<Radio />} 
+              <FormControlLabel
+                value="auto"
+                control={<Radio />}
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <ScheduleIcon sx={{ mr: 1, color: 'text.secondary' }} />
@@ -207,4 +214,4 @@ export const ThemeSettingsPage: React.FC = () => {
       </Paper>
     </Container>
   );
-}; 
+};

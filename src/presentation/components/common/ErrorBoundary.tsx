@@ -33,30 +33,30 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // エラー情報をログに記録
     console.error('エラーバウンダリーでエラーをキャッチしました:', error, errorInfo);
-    
+
     // カスタムエラーハンドラが提供されていれば呼び出す
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
-    
+
     // Firebaseアナリティクスにエラーをログ
     try {
       const analytics = getAnalytics();
       logEvent(analytics, 'app_exception', {
         description: `${error.name}: ${error.message}`,
-        fatal: true
+        fatal: true,
       });
     } catch (analyticsError) {
       console.error('エラーのログ記録に失敗しました:', analyticsError);
     }
-    
+
     this.setState({ errorInfo });
   }
 
   handleReload = (): void => {
     // アプリケーションをリロード
     window.location.reload();
-  }
+  };
 
   render(): ReactNode {
     if (this.state.hasError) {
@@ -64,16 +64,18 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       if (this.props.fallbackComponent) {
         return this.props.fallbackComponent;
       }
-      
+
       // デフォルトのエラー表示
       return (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '100vh',
-          p: 2
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+            p: 2,
+          }}
+        >
           <Paper elevation={3} sx={{ p: 4, maxWidth: 600, width: '100%' }}>
             <Typography variant="h5" color="error" gutterBottom>
               問題が発生しました
@@ -85,11 +87,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               エラー: {this.state.error?.message}
             </Typography>
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                onClick={this.handleReload}
-              >
+              <Button variant="contained" color="primary" onClick={this.handleReload}>
                 ページをリロードする
               </Button>
             </Box>
@@ -102,4 +100,4 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-export default ErrorBoundary; 
+export default ErrorBoundary;

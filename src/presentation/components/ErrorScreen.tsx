@@ -14,7 +14,7 @@ interface ErrorScreenProps {
 export const ErrorScreen: React.FC<ErrorScreenProps> = ({
   message = 'エラーが発生しました',
   details,
-  onRetry
+  onRetry,
 }) => {
   return (
     <Box
@@ -25,7 +25,7 @@ export const ErrorScreen: React.FC<ErrorScreenProps> = ({
         alignItems: 'center',
         height: '100%',
         minHeight: '300px',
-        p: 3
+        p: 3,
       }}
     >
       <Paper
@@ -34,31 +34,26 @@ export const ErrorScreen: React.FC<ErrorScreenProps> = ({
           p: 3,
           maxWidth: '600px',
           width: '100%',
-          textAlign: 'center'
+          textAlign: 'center',
         }}
       >
         <ReportProblemIcon color="error" sx={{ fontSize: 48, mb: 2 }} />
         <Typography variant="h5" component="h2" gutterBottom>
           {message}
         </Typography>
-        
+
         {details && (
           <Alert severity="error" sx={{ mt: 2, mb: 2, textAlign: 'left' }}>
             {details}
           </Alert>
         )}
-        
+
         {onRetry && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={onRetry}
-            sx={{ mt: 2 }}
-          >
+          <Button variant="contained" color="primary" onClick={onRetry} sx={{ mt: 2 }}>
             再試行
           </Button>
         )}
-        
+
         <Button
           variant="outlined"
           color="primary"
@@ -70,4 +65,4 @@ export const ErrorScreen: React.FC<ErrorScreenProps> = ({
       </Paper>
     </Box>
   );
-}; 
+};

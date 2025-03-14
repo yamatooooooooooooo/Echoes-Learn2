@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Subject } from '../../../../domain/models/SubjectModel';
-import { 
-  getRadarChartData, 
-  getCountdownData, 
-  RadarChartData, 
-  CountdownData 
+import {
+  getRadarChartData,
+  getCountdownData,
+  RadarChartData,
+  CountdownData,
 } from '../../../../domain/services/visualizationService';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { SubjectRepository } from '../../../../infrastructure/repositories/subjectRepository';
@@ -45,7 +45,7 @@ export const useVisualizationData = () => {
       const subjectRepository = new SubjectRepository(firestore, auth);
       const fetchedSubjects = await subjectRepository.getAllSubjects(user.uid);
       setSubjects(fetchedSubjects);
-      
+
       const { radarData, countdown } = processData(fetchedSubjects);
       setRadarChartData(radarData);
       setCountdownData(countdown);
@@ -65,10 +65,13 @@ export const useVisualizationData = () => {
 
   // 定期的にデータを更新（5分ごと）
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      fetchData();
-    }, 5 * 60 * 1000); // 5分ごとに更新
-    
+    const intervalId = setInterval(
+      () => {
+        fetchData();
+      },
+      5 * 60 * 1000
+    ); // 5分ごとに更新
+
     return () => clearInterval(intervalId);
   }, [fetchData]);
 
@@ -84,10 +87,10 @@ export const useVisualizationData = () => {
     radarChartData,
     countdownData,
     lastUpdated,
-    refreshData: fetchData,  // 手動更新のための関数をエクスポート
+    refreshData: fetchData, // 手動更新のための関数をエクスポート
     // 新しいインターフェース（DashboardScreenで使用）
     data,
     isLoading: loading,
-    handleRefresh: fetchData
+    handleRefresh: fetchData,
   };
-}; 
+};

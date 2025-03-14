@@ -13,7 +13,9 @@ const PrivateRoute: React.FC = () => {
   // 認証状態の読み込み中
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box
+        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -28,4 +30,4 @@ const PrivateRoute: React.FC = () => {
   return <Outlet />;
 };
 
-export default PrivateRoute; 
+export default PrivateRoute;

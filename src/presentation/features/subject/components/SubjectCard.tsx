@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
+import {
   Paper,
   Box,
   IconButton,
@@ -9,15 +9,15 @@ import {
   Tooltip,
   Chip,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
 } from '@mui/material';
-import { 
+import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   MenuBook as MenuBookIcon,
   Event as EventIcon,
   AccessTime as AccessTimeIcon,
-  AssignmentTurnedIn as AssignmentTurnedInIcon
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
 } from '@mui/icons-material';
 import { Subject } from '../../../../domain/models/SubjectModel';
 import { Progress } from '../../../../domain/models/ProgressModel';
@@ -54,36 +54,36 @@ const cardStyles = {
     transition: 'all 0.3s ease',
     '&:hover': {
       transform: 'translateY(-4px)',
-      boxShadow: (theme: any) => theme.palette.mode === 'dark' 
-        ? '0 8px 24px rgba(0, 0, 0, 0.3)' 
-        : '0 8px 24px rgba(0, 0, 0, 0.1)'
+      boxShadow: (theme: any) =>
+        theme.palette.mode === 'dark'
+          ? '0 8px 24px rgba(0, 0, 0, 0.3)'
+          : '0 8px 24px rgba(0, 0, 0, 0.1)',
     },
     overflow: 'hidden',
     borderRadius: 3,
     border: '1px solid',
-    borderColor: (theme: any) => theme.palette.mode === 'dark' 
-      ? 'rgba(255, 255, 255, 0.1)' 
-      : 'rgba(0, 0, 0, 0.08)',
-    backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
-      ? 'rgba(30, 30, 30, 0.7)' 
-      : 'rgba(255, 255, 255, 0.8)',
+    borderColor: (theme: any) =>
+      theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: (theme: any) =>
+      theme.palette.mode === 'dark' ? 'rgba(30, 30, 30, 0.7)' : 'rgba(255, 255, 255, 0.8)',
     backdropFilter: 'blur(10px)',
-    boxShadow: (theme: any) => theme.palette.mode === 'dark'
-      ? '0 4px 12px rgba(0, 0, 0, 0.2)'
-      : '0 4px 12px rgba(0, 0, 0, 0.05)',
+    boxShadow: (theme: any) =>
+      theme.palette.mode === 'dark'
+        ? '0 4px 12px rgba(0, 0, 0, 0.2)'
+        : '0 4px 12px rgba(0, 0, 0, 0.05)',
   },
   contentArea: {
     p: { xs: 2, sm: 2.5 },
     pt: { xs: 3, sm: 3.5 },
     flexGrow: 1,
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
   },
   title: {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    mb: 2
+    mb: 2,
   },
   priorityBadge: {
     position: 'absolute',
@@ -91,7 +91,7 @@ const cardStyles = {
     left: 0,
     right: 0,
     height: '6px',
-    zIndex: 1
+    zIndex: 1,
   },
   actionArea: {
     display: 'flex',
@@ -101,26 +101,23 @@ const cardStyles = {
     pt: { xs: 1, sm: 1.5 },
     pb: { xs: 1, sm: 1.5 },
     borderTop: '1px solid',
-    borderColor: (theme: any) => theme.palette.mode === 'dark' 
-      ? 'rgba(255, 255, 255, 0.08)' 
-      : 'rgba(0, 0, 0, 0.05)',
-    backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
-      ? 'rgba(255, 255, 255, 0.03)' 
-      : 'rgba(0, 0, 0, 0.01)'
+    borderColor: (theme: any) =>
+      theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: (theme: any) =>
+      theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.01)',
   },
   progressSection: {
     mt: 2,
     mb: 1,
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
   },
   progressBar: {
     height: 8,
     borderRadius: 4,
     my: 1,
-    backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
-      ? 'rgba(255, 255, 255, 0.1)' 
-      : 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: (theme: any) =>
+      theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
   },
   recordProgressButton: {
     width: 'auto',
@@ -131,28 +128,26 @@ const cardStyles = {
     fontWeight: 500,
     boxShadow: 'none',
     '&:hover': {
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
-    }
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+    },
   },
   tabPanel: {
     p: 2,
-    pt: 3
+    pt: 3,
   },
   expandButton: {
     transform: 'rotate(0deg)',
     transition: 'transform 0.2s',
     '&.expanded': {
-      transform: 'rotate(180deg)'
+      transform: 'rotate(180deg)',
     },
-    backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
-      ? 'rgba(255, 255, 255, 0.05)' 
-      : 'rgba(0, 0, 0, 0.04)',
+    backgroundColor: (theme: any) =>
+      theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
     '&:hover': {
-      backgroundColor: (theme: any) => theme.palette.mode === 'dark' 
-        ? 'rgba(255, 255, 255, 0.1)' 
-        : 'rgba(0, 0, 0, 0.08)',
-    }
-  }
+      backgroundColor: (theme: any) =>
+        theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+    },
+  },
 };
 
 /**
@@ -166,7 +161,7 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
   onEdit,
   onDelete,
   formatDate,
-  onRecordProgress
+  onRecordProgress,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
@@ -178,20 +173,20 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
   const [loadingProgressRecords, setLoadingProgressRecords] = useState(false);
   const [progressRecordsError, setProgressRecordsError] = useState<string | null>(null);
   const [editingProgress, setEditingProgress] = useState<Progress | null>(null);
-  
+
   const { firestore, auth } = useFirebase();
   const { progressRepository } = useServices();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [isHovered, setIsHovered] = useState(false);
-  
+
   // 計算値
   const daysRemaining = calculateDaysRemaining(subject?.examDate);
   const progress = calculateProgress(subject?.currentPage || 0, subject?.totalPages || 0);
-  
+
   // 進捗操作のためのカスタムフックを使用
-  const { 
+  const {
     progressForm,
     isAdding: isAddingFromHook,
     isEditing,
@@ -210,12 +205,8 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
     error,
     progressRecords: recordsFromHook,
     loadingProgressRecords: loadingRecordsFromHook,
-    progressRecordsError: errorRecordsFromHook
-  } = useSubjectProgress(
-    subject, 
-    onProgressAdded, 
-    onSubjectUpdated
-  );
+    progressRecordsError: errorRecordsFromHook,
+  } = useSubjectProgress(subject, onProgressAdded, onSubjectUpdated);
 
   // タッチイベントの調整
   useEffect(() => {
@@ -230,7 +221,7 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
     };
 
     currentCard.addEventListener('touchstart', preventZoom, { passive: false });
-    
+
     return () => {
       currentCard.removeEventListener('touchstart', preventZoom);
     };
@@ -240,7 +231,7 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
   const toggleExpanded = () => {
     setExpanded(!expanded);
   };
-  
+
   // タブの切り替え
   const handleTabChange = (_event: React.SyntheticEvent, newValue: TabType) => {
     setActiveTab(newValue);
@@ -252,7 +243,7 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
       onEdit(subject);
     }
   };
-  
+
   // 削除ボタンクリック
   const handleDeleteClick = () => {
     if (onDelete) {
@@ -272,20 +263,28 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
   // 優先度に応じた色を取得
   const getPriorityColor = (): string => {
     switch (subject.priority) {
-      case 'high': return 'error.main';
-      case 'medium': return 'warning.main';
-      case 'low': return 'success.main';
-      default: return 'text.disabled';
+      case 'high':
+        return 'error.main';
+      case 'medium':
+        return 'warning.main';
+      case 'low':
+        return 'success.main';
+      default:
+        return 'text.disabled';
     }
   };
 
   // 優先度のラベルを取得
   const getPriorityLabel = (): string => {
     switch (subject.priority) {
-      case 'high': return '高';
-      case 'medium': return '中';
-      case 'low': return '低';
-      default: return '未設定';
+      case 'high':
+        return '高';
+      case 'medium':
+        return '中';
+      case 'low':
+        return '低';
+      default:
+        return '未設定';
     }
   };
 
@@ -308,15 +307,12 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
   };
 
   return (
-    <Paper
-      elevation={0}
-      sx={cardStyles.root}
-    >
+    <Paper elevation={0} sx={cardStyles.root}>
       {/* 優先度を示すトップバー */}
       <Box
         sx={{
           ...cardStyles.priorityBadge,
-          bgcolor: getPriorityColor()
+          bgcolor: getPriorityColor(),
         }}
       />
 
@@ -326,47 +322,49 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
           <Box sx={{ width: '100%' }}>
             <Typography
               variant="h6"
-              sx={{ 
-                fontWeight: 600, 
+              sx={{
+                fontWeight: 600,
                 fontSize: { xs: '1.2rem', sm: '1.3rem' },
                 lineHeight: 1.4,
                 mb: 1,
-                pr: { xs: 5, sm: 4 } // 右側のボタンのスペースを確保
+                pr: { xs: 5, sm: 4 }, // 右側のボタンのスペースを確保
               }}
             >
               {subject.name}
             </Typography>
-            
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              flexWrap: 'wrap',
-              gap: 1.5 
-            }}>
+
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1.5,
+              }}
+            >
               <Chip
                 label={getPriorityLabel()}
                 size="small"
                 color={getPriorityColor() as any}
                 icon={<MenuBookIcon fontSize="small" />}
                 variant="outlined"
-                sx={{ 
+                sx={{
                   height: { xs: 28, sm: 24 },
                   fontSize: { xs: '0.8rem', sm: '0.75rem' },
-                  px: 0.5
+                  px: 0.5,
                 }}
               />
-              
+
               {subject.examDate && (
                 <Chip
                   icon={<EventIcon fontSize="small" />}
                   label={`試験日: ${formatDate(subject.examDate)}`}
                   size="small"
                   variant="outlined"
-                  sx={{ 
-                    height: { xs: 28, sm: 24 }, 
+                  sx={{
+                    height: { xs: 28, sm: 24 },
                     fontSize: { xs: '0.8rem', sm: '0.75rem' },
                     borderColor: getDaysRemainingColor(daysRemaining),
-                    px: 0.5
+                    px: 0.5,
                   }}
                 />
               )}
@@ -376,23 +374,25 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
 
         {/* 残り日数表示 */}
         {subject.examDate && daysRemaining !== null && (
-          <Box sx={{ 
-            mb: 2.5, 
-            display: 'flex', 
-            alignItems: 'center',
-            mt: 1.5,
-            py: 1,
-            px: 1.5,
-            borderRadius: 1.5,
-            bgcolor: 'background.default'
-          }}>
+          <Box
+            sx={{
+              mb: 2.5,
+              display: 'flex',
+              alignItems: 'center',
+              mt: 1.5,
+              py: 1,
+              px: 1.5,
+              borderRadius: 1.5,
+              bgcolor: 'background.default',
+            }}
+          >
             <Tooltip title="試験までの残り日数">
-              <AccessTimeIcon 
-                fontSize="small" 
-                sx={{ 
-                  mr: 1, 
-                  color: getDaysRemainingColor(daysRemaining)
-                }} 
+              <AccessTimeIcon
+                fontSize="small"
+                sx={{
+                  mr: 1,
+                  color: getDaysRemainingColor(daysRemaining),
+                }}
               />
             </Tooltip>
             <Typography
@@ -400,32 +400,34 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
               sx={{
                 fontWeight: daysRemaining <= 14 ? 'bold' : 'medium',
                 color: getDaysRemainingColor(daysRemaining),
-                fontSize: { xs: '0.9rem', sm: '0.875rem' }
+                fontSize: { xs: '0.9rem', sm: '0.875rem' },
               }}
             >
               {daysRemaining <= 0
                 ? '試験日を過ぎています'
                 : daysRemaining === 1
-                ? '明日が試験日です！'
-                : `試験まであと ${daysRemaining} 日`}
+                  ? '明日が試験日です！'
+                  : `試験まであと ${daysRemaining} 日`}
             </Typography>
           </Box>
         )}
 
         {/* 進捗状況 */}
         <Box sx={cardStyles.progressSection}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            mb: 1,
-            flexWrap: 'wrap'
-          }}>
-            <Typography 
-              variant="body2" 
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 1,
+              flexWrap: 'wrap',
+            }}
+          >
+            <Typography
+              variant="body2"
               color="text.secondary"
-              sx={{ 
-                fontSize: { xs: '0.9rem', sm: '0.875rem' }
+              sx={{
+                fontSize: { xs: '0.9rem', sm: '0.875rem' },
               }}
             >
               進捗状況
@@ -435,20 +437,20 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
               sx={{
                 fontWeight: 'medium',
                 color: subject.currentPage >= subject.totalPages ? 'success.main' : 'text.primary',
-                fontSize: { xs: '0.9rem', sm: '0.875rem' }
+                fontSize: { xs: '0.9rem', sm: '0.875rem' },
               }}
             >
               {subject.currentPage} / {subject.totalPages} ページ
             </Typography>
           </Box>
-          
-          <NotionProgressBar 
-            value={progress} 
+
+          <NotionProgressBar
+            value={progress}
             height={8}
             label=""
             color={getProgressColor(progress)}
           />
-          
+
           {/* 既存のLinearProgressをコメントアウトまたは削除
           <LinearProgress
             variant="determinate"
@@ -490,25 +492,25 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
           onClick={handleToggleProgressForm}
           variant="contained"
           color="primary"
-          sx={{ 
+          sx={{
             borderRadius: 4,
             px: { xs: 2.5, sm: 2 },
             py: { xs: 1, sm: 0.75 },
-            fontSize: { xs: '0.9rem', sm: '0.875rem' }
+            fontSize: { xs: '0.9rem', sm: '0.875rem' },
           }}
         >
           進捗記録
         </Button>
-        
+
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title="編集">
             <IconButton
               size="small"
               onClick={handleEditClick}
               color="default"
-              sx={{ 
-                width: { xs: 40, sm: 36 }, 
-                height: { xs: 40, sm: 36 } 
+              sx={{
+                width: { xs: 40, sm: 36 },
+                height: { xs: 40, sm: 36 },
               }}
             >
               <EditIcon fontSize="small" />
@@ -519,9 +521,9 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
               size="small"
               onClick={handleDeleteClick}
               color="default"
-              sx={{ 
-                width: { xs: 40, sm: 36 }, 
-                height: { xs: 40, sm: 36 } 
+              sx={{
+                width: { xs: 40, sm: 36 },
+                height: { xs: 40, sm: 36 },
               }}
             >
               <DeleteIcon fontSize="small" />
@@ -543,7 +545,7 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
               if (onProgressAdded) onProgressAdded();
             }}
           />
-          
+
           {/* 進捗削除確認ダイアログ */}
           <ProgressDeleteDialog
             open={isDeleteDialogOpen}
@@ -558,4 +560,4 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
 };
 
 // React.memoでコンポーネントをラップしてパフォーマンスを最適化
-export const SubjectCard = React.memo(SubjectCardComponent); 
+export const SubjectCard = React.memo(SubjectCardComponent);

@@ -1,27 +1,27 @@
 import React, { useMemo } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Divider, 
-  useTheme, 
-  ToggleButtonGroup, 
+import {
+  Box,
+  Typography,
+  Paper,
+  Divider,
+  useTheme,
+  ToggleButtonGroup,
   ToggleButton,
   CircularProgress,
-  Alert
+  Alert,
 } from '@mui/material';
 import {
-  BarChart, 
-  Bar, 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
-  ReferenceLine
+  ReferenceLine,
 } from 'recharts';
 import { format, parseISO, isValid, subDays } from 'date-fns';
 import { ja } from 'date-fns/locale';
@@ -45,7 +45,7 @@ export const ProgressCharts: React.FC<ProgressChartsProps> = ({
   progressRecords,
   subject,
   loading,
-  error
+  error,
 }) => {
   const theme = useTheme();
   const [filter, setFilter] = React.useState<FilterType>('week');
@@ -65,31 +65,31 @@ export const ProgressCharts: React.FC<ProgressChartsProps> = ({
     if (!progressRecords.length) return [];
 
     let records = [...progressRecords];
-    
+
     // 日付でソート（古い順）
     records = records.sort((a, b) => {
       const dateA = new Date(a.recordDate).getTime();
       const dateB = new Date(b.recordDate).getTime();
       return dateA - dateB;
     });
-    
+
     // フィルタリング
     if (filter === 'week') {
       const today = new Date();
       const oneWeekAgo = subDays(today, 7);
-      records = records.filter(record => {
+      records = records.filter((record) => {
         const recordDate = new Date(record.recordDate);
         return recordDate >= oneWeekAgo;
       });
     } else if (filter === 'month') {
       const today = new Date();
       const oneMonthAgo = subDays(today, 30);
-      records = records.filter(record => {
+      records = records.filter((record) => {
         const recordDate = new Date(record.recordDate);
         return recordDate >= oneMonthAgo;
       });
     }
-    
+
     return records;
   }, [progressRecords, filter]);
 
@@ -97,20 +97,21 @@ export const ProgressCharts: React.FC<ProgressChartsProps> = ({
   const dailyProgressData = useMemo(() => {
     // 日付ごとにグループ化
     const dailyMap = new Map<string, number>();
-    
-    filteredData.forEach(record => {
-      const dateStr = typeof record.recordDate === 'string' 
-        ? record.recordDate.split('T')[0]
-        : format(record.recordDate, 'yyyy-MM-dd');
-      
+
+    filteredData.forEach((record) => {
+      const dateStr =
+        typeof record.recordDate === 'string'
+          ? record.recordDate.split('T')[0]
+          : format(record.recordDate, 'yyyy-MM-dd');
+
       const currentValue = dailyMap.get(dateStr) || 0;
       dailyMap.set(dateStr, currentValue + record.pagesRead);
     });
-    
+
     // Map を配列に変換
     return Array.from(dailyMap.entries()).map(([date, pagesRead]) => ({
       date,
-      pagesRead
+      pagesRead,
     }));
   }, [filteredData]);
 
@@ -121,33 +122,42 @@ export const ProgressCharts: React.FC<ProgressChartsProps> = ({
     // startPageは存在しないので、0を使用
     const startPage = 0;
     const totalPages = subject.totalPages || 0;
-    const totalDaysFromStart = subject.examDate ? 
-      Math.ceil((new Date(subject.examDate).getTime() - new Date(subject.createdAt || new Date()).getTime()) / (1000 * 60 * 60 * 24)) : 
-      0;
-    
+    const totalDaysFromStart = subject.examDate
+      ? Math.ceil(
+          (new Date(subject.examDate).getTime() -
+            new Date(subject.createdAt || new Date()).getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+      : 0;
+
     // 日付ごとに累積を計算
-    const result = filteredData.map(record => {
+    const result = filteredData.map((record) => {
       cumulativePages += record.pagesRead;
-      const date = typeof record.recordDate === 'string' 
-        ? record.recordDate.split('T')[0] 
-        : format(record.recordDate, 'yyyy-MM-dd');
-      
+      const date =
+        typeof record.recordDate === 'string'
+          ? record.recordDate.split('T')[0]
+          : format(record.recordDate, 'yyyy-MM-dd');
+
       // 理想的な進捗ライン
-      const recordDaysFromStart = subject.createdAt ? 
-        Math.ceil((new Date(record.recordDate).getTime() - new Date(subject.createdAt).getTime()) / (1000 * 60 * 60 * 24)) : 
-        0;
-      
-      const idealProgress = totalDaysFromStart > 0 ? 
-        startPage + (totalPages - startPage) * (recordDaysFromStart / totalDaysFromStart) : 
-        0;
-      
+      const recordDaysFromStart = subject.createdAt
+        ? Math.ceil(
+            (new Date(record.recordDate).getTime() - new Date(subject.createdAt).getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        : 0;
+
+      const idealProgress =
+        totalDaysFromStart > 0
+          ? startPage + (totalPages - startPage) * (recordDaysFromStart / totalDaysFromStart)
+          : 0;
+
       return {
         date,
         cumulativePages: startPage + cumulativePages,
-        idealProgress: Math.round(idealProgress)
+        idealProgress: Math.round(idealProgress),
       };
     });
-    
+
     return result;
   }, [filteredData, subject]);
 
@@ -221,23 +231,16 @@ export const ProgressCharts: React.FC<ProgressChartsProps> = ({
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={dailyProgressData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
-              tickFormatter={formatDateTick}
-              tick={{ fontSize: 12 }}
-            />
-            <YAxis 
-              tickFormatter={(value) => `${value}P`}
-              tick={{ fontSize: 12 }}
-            />
-            <Tooltip 
+            <XAxis dataKey="date" tickFormatter={formatDateTick} tick={{ fontSize: 12 }} />
+            <YAxis tickFormatter={(value) => `${value}P`} tick={{ fontSize: 12 }} />
+            <Tooltip
               formatter={(value: any) => [`${value}ページ`, '読了ページ数']}
               labelFormatter={(label) => `${formatDateTick(label.toString())}`}
             />
-            <Bar 
-              dataKey="pagesRead" 
-              name="読了ページ数" 
-              fill={theme.palette.primary.main} 
+            <Bar
+              dataKey="pagesRead"
+              name="読了ページ数"
+              fill={theme.palette.primary.main}
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
@@ -249,46 +252,47 @@ export const ProgressCharts: React.FC<ProgressChartsProps> = ({
           累積学習曲線
         </Typography>
         <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={cumulativeProgressData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <LineChart
+            data={cumulativeProgressData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="date" 
-              tickFormatter={formatDateTick}
-              tick={{ fontSize: 12 }}
-            />
-            <YAxis 
-              tickFormatter={(value) => `${value}P`}
-              tick={{ fontSize: 12 }}
-            />
-            <Tooltip 
+            <XAxis dataKey="date" tickFormatter={formatDateTick} tick={{ fontSize: 12 }} />
+            <YAxis tickFormatter={(value) => `${value}P`} tick={{ fontSize: 12 }} />
+            <Tooltip
               formatter={(value: any) => [`${value}ページ`, '']}
               labelFormatter={(label) => `${formatDateTick(label.toString())}`}
             />
             <Legend verticalAlign="top" height={36} />
-            <Line 
-              type="monotone" 
-              dataKey="cumulativePages" 
-              name="実績ページ数" 
-              stroke={theme.palette.primary.main} 
+            <Line
+              type="monotone"
+              dataKey="cumulativePages"
+              name="実績ページ数"
+              stroke={theme.palette.primary.main}
               strokeWidth={2}
               dot={{ r: 3 }}
               activeDot={{ r: 5 }}
             />
-            <Line 
-              type="monotone" 
-              dataKey="idealProgress" 
-              name="目標ライン" 
-              stroke={theme.palette.secondary.main} 
+            <Line
+              type="monotone"
+              dataKey="idealProgress"
+              name="目標ライン"
+              stroke={theme.palette.secondary.main}
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={false}
             />
             {subject.totalPages && (
-              <ReferenceLine y={subject.totalPages} label="総ページ数" stroke="#ff7300" strokeDasharray="3 3" />
+              <ReferenceLine
+                y={subject.totalPages}
+                label="総ページ数"
+                stroke="#ff7300"
+                strokeDasharray="3 3"
+              />
             )}
           </LineChart>
         </ResponsiveContainer>
       </Paper>
     </Box>
   );
-}; 
+};

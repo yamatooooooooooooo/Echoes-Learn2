@@ -11,4 +11,4 @@ export interface SubjectPerformance {
   productivity: number; // ページ数/時間の効率
   lastStudyDate: Date | string;
   studyFrequency: number; // 週あたりの学習日数
-} 
+}

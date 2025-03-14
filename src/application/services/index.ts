@@ -21,4 +21,4 @@ export interface ApplicationServices {
   quotaService: QuotaService;
   priorityService: PriorityService;
   analyticsService: AnalyticsService;
-} 
+}

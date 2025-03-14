@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  School as SchoolIcon, 
+import {
+  School as SchoolIcon,
   MenuBook as MenuBookIcon,
   BarChart as BarChartIcon,
   Timeline as TimelineIcon,
-  TrendingUp as TrendingUpIcon
+  TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 
 import { DashboardData } from '../../../../../domain/entities/Dashboard';
@@ -22,6 +22,12 @@ export enum NotionModuleType {
   WEEKLY_TREND = 'weeklyTrend',
   SUBJECT_BREAKDOWN = 'subjectBreakdown',
   RECENT_ACTIVITY = 'recentActivity',
+  LEARNING_ANALYSIS = 'learningAnalysis',
+  EXAM_COUNTDOWN = 'examCountdown',
+  REPORT_DEADLINE = 'reportDeadline',
+  DAILY_QUOTA = 'dailyQuota',
+  WEEKLY_QUOTA = 'weeklyQuota',
+  SUBJECT_PERFORMANCE = 'subjectPerformance',
 }
 
 // 各モジュールタイプの表示名
@@ -35,6 +41,12 @@ export const moduleNames: Record<NotionModuleType, string> = {
   [NotionModuleType.WEEKLY_TREND]: '週間トレンド',
   [NotionModuleType.SUBJECT_BREAKDOWN]: '教材内訳',
   [NotionModuleType.RECENT_ACTIVITY]: '最近の活動',
+  [NotionModuleType.LEARNING_ANALYSIS]: '学習効率分析',
+  [NotionModuleType.EXAM_COUNTDOWN]: '試験カウントダウン',
+  [NotionModuleType.REPORT_DEADLINE]: 'レポート締切',
+  [NotionModuleType.DAILY_QUOTA]: '今日のノルマ',
+  [NotionModuleType.WEEKLY_QUOTA]: '週間ノルマ',
+  [NotionModuleType.SUBJECT_PERFORMANCE]: '科目別成績',
 };
 
 export interface NotionModuleFactoryProps {
@@ -64,7 +76,7 @@ export const NotionModuleFactory: React.FC<NotionModuleFactoryProps> = ({
   isDraggingEnabled = true,
   canHide = true,
   isFirst = false,
-  isLast = false
+  isLast = false,
 }) => {
   // モジュールの共通プロパティ
   const moduleProps = {
@@ -77,7 +89,7 @@ export const NotionModuleFactory: React.FC<NotionModuleFactoryProps> = ({
     isDraggingEnabled,
     canHide,
     isFirst,
-    isLast
+    isLast,
   };
 
   // データの検証
@@ -166,4 +178,4 @@ export const NotionModuleFactory: React.FC<NotionModuleFactoryProps> = ({
     default:
       return null;
   }
-}; 
+};

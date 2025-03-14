@@ -8,110 +8,127 @@ import { UserSettings, DEFAULT_USER_SETTINGS } from '../models/UserSettingsModel
  * @param userSettings ユーザー設定（オプション）
  * @returns 今日のノルマ情報
  */
-export const calculateDailyQuota = (subjects: Subject[], userSettings?: Partial<UserSettings>): DailyQuota => {
+export const calculateDailyQuota = (
+  subjects: Subject[],
+  userSettings?: Partial<UserSettings>
+): DailyQuota => {
   console.log('calculateDailyQuota: 計算開始', { subjectsCount: subjects.length });
-  
+
   // 入力チェック
   if (!Array.isArray(subjects)) {
     console.error('calculateDailyQuota: 科目リストが配列ではありません');
     return createEmptyDailyQuota();
   }
-  
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const quotaItems: StudyQuota[] = [];
   let totalPages = 0;
   let totalMinutes = 0;
-  
+
   // ユーザー設定から値を取得、または既定値を使用
   const settings = {
-    maxConcurrentSubjects: userSettings?.maxConcurrentSubjects || DEFAULT_USER_SETTINGS.maxConcurrentSubjects,
+    maxConcurrentSubjects:
+      userSettings?.maxConcurrentSubjects || DEFAULT_USER_SETTINGS.maxConcurrentSubjects,
     examBufferDays: userSettings?.examBufferDays || DEFAULT_USER_SETTINGS.examBufferDays,
-    averagePageReadingTime: userSettings?.averagePageReadingTime || DEFAULT_USER_SETTINGS.averagePageReadingTime,
+    averagePageReadingTime:
+      userSettings?.averagePageReadingTime || DEFAULT_USER_SETTINGS.averagePageReadingTime,
     dailyStudyHours: userSettings?.dailyStudyHours || DEFAULT_USER_SETTINGS.dailyStudyHours,
-    studyDaysPerWeek: userSettings?.studyDaysPerWeek || DEFAULT_USER_SETTINGS.studyDaysPerWeek
+    studyDaysPerWeek: userSettings?.studyDaysPerWeek || DEFAULT_USER_SETTINGS.studyDaysPerWeek,
   };
-  
+
   console.log('calculateDailyQuota: 使用する設定', settings);
-  
+
   try {
     // 有効な科目のみを対象にする
-    const validSubjects = subjects.filter(subject => {
+    const validSubjects = subjects.filter((subject) => {
       // 基本的なプロパティチェック
       if (!subject || !subject.id || !subject.examDate) {
         return false;
       }
-      
+
       // 試験日が今日以降かチェック
       try {
         const examDate = new Date(subject.examDate);
         examDate.setHours(0, 0, 0, 0);
-        
+
         // 目標達成日を計算（試験日 - バッファ日）
         const targetDate = new Date(examDate);
         targetDate.setDate(targetDate.getDate() - (subject.bufferDays || settings.examBufferDays));
-        
+
         return targetDate >= today;
       } catch (error) {
         console.error(`科目ID ${subject.id} の試験日処理でエラー:`, error);
         return false;
       }
     });
-    
+
     console.log('calculateDailyQuota: 有効な科目数', validSubjects.length);
-    
+
     // 試験日の近い順にソート
     validSubjects.sort((a, b) => {
       const dateA = new Date(a.examDate);
       const dateB = new Date(b.examDate);
       return dateA.getTime() - dateB.getTime();
     });
-    
+
     // 同時に進行する科目数の上限（ユーザー設定から取得）
     const maxConcurrentSubjects = settings.maxConcurrentSubjects;
-    
+
     // 優先して学習する科目を選択（試験日が近い順に上限数まで）
     const prioritySubjects = validSubjects.slice(0, maxConcurrentSubjects);
-    
+
     // 各科目のノルマを計算
-    prioritySubjects.forEach(subject => {
+    prioritySubjects.forEach((subject) => {
       // 試験日が設定されていない場合はスキップ（念のため）
       if (!subject.examDate) return;
-      
+
       // 試験日
       const examDate = new Date(subject.examDate);
       examDate.setHours(0, 0, 0, 0);
-      
+
       // バッファ日数（科目個別設定または全体設定）
-      const bufferDays = subject.bufferDays !== undefined ? subject.bufferDays : settings.examBufferDays;
-      
+      const bufferDays =
+        subject.bufferDays !== undefined ? subject.bufferDays : settings.examBufferDays;
+
       // 目標達成日（試験日 - バッファ日）
       const targetDate = new Date(examDate);
       targetDate.setDate(targetDate.getDate() - bufferDays);
-      
+
       // 今日から目標達成日までの日数
-      const daysUntilTarget = Math.max(1, Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-      
+      const daysUntilTarget = Math.max(
+        1,
+        Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+      );
+
       // 残りのページ数
       const remainingPages = Math.max(0, subject.totalPages - (subject.currentPage || 0));
-      
+
       // 実際に学習する日数（週あたりの学習日数から計算）
       // 例: 週5日学習なら、実際の学習日数は全日数の(5/7)
       const studyDaysRatio = settings.studyDaysPerWeek / 7;
       const actualStudyDays = Math.max(1, Math.ceil(daysUntilTarget * studyDaysRatio));
-      
+
       // 1日あたりのノルマページ数（切り上げ）
-      const pagesPerDay = isNaN(remainingPages) || remainingPages <= 0 || isNaN(actualStudyDays) || actualStudyDays <= 0 
-        ? 0
-        : Math.ceil(remainingPages / actualStudyDays);
-      
+      const pagesPerDay =
+        isNaN(remainingPages) ||
+        remainingPages <= 0 ||
+        isNaN(actualStudyDays) ||
+        actualStudyDays <= 0
+          ? 0
+          : Math.ceil(remainingPages / actualStudyDays);
+
       // 推定学習時間（ユーザー設定の1ページあたりの時間を使用）
-      const estimatedMinutes = isNaN(pagesPerDay) ? 0 : pagesPerDay * settings.averagePageReadingTime;
-      
+      const estimatedMinutes = isNaN(pagesPerDay)
+        ? 0
+        : pagesPerDay * settings.averagePageReadingTime;
+
       // 残り日数の計算
-      const daysRemaining = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      
+      const daysRemaining = Math.ceil(
+        (examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
       quotaItems.push({
         subjectId: subject.id,
         subjectName: subject.name,
@@ -121,29 +138,29 @@ export const calculateDailyQuota = (subjects: Subject[], userSettings?: Partial<
         examDate: examDate,
         isCompleted: false,
         daysRemaining: daysRemaining,
-        daysUntilTarget: daysUntilTarget
+        daysUntilTarget: daysUntilTarget,
       });
-      
+
       totalPages += pagesPerDay;
       totalMinutes += estimatedMinutes;
     });
-    
+
     // 優先度順にソート（high > medium > low）
     quotaItems.sort((a, b) => {
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     });
-    
+
     // 1日の目標学習時間との比較
     const dailyStudyMinutes = settings.dailyStudyHours * 60;
     const isExceedingDailyLimit = totalMinutes > dailyStudyMinutes;
-    
-    console.log('calculateDailyQuota: 計算完了', { 
-      totalPages, 
-      totalMinutes, 
-      quotaItemsCount: quotaItems.length 
+
+    console.log('calculateDailyQuota: 計算完了', {
+      totalPages,
+      totalMinutes,
+      quotaItemsCount: quotaItems.length,
     });
-    
+
     return {
       date: today,
       totalPages,
@@ -152,7 +169,7 @@ export const calculateDailyQuota = (subjects: Subject[], userSettings?: Partial<
       isCompleted: false,
       activeSubjectsCount: prioritySubjects.length,
       isExceedingDailyLimit,
-      dailyStudyMinutes
+      dailyStudyMinutes,
     };
   } catch (error) {
     console.error('calculateDailyQuota: 予期せぬエラー', error);
@@ -172,7 +189,7 @@ const createEmptyDailyQuota = (): DailyQuota => {
     isCompleted: false,
     activeSubjectsCount: 0,
     isExceedingDailyLimit: false,
-    dailyStudyMinutes: 0
+    dailyStudyMinutes: 0,
   };
 };
 
@@ -182,104 +199,116 @@ const createEmptyDailyQuota = (): DailyQuota => {
  * @param userSettings ユーザー設定（オプション）
  * @returns 今週のノルマ情報
  */
-export const calculateWeeklyQuota = (subjects: Subject[], userSettings?: Partial<UserSettings>): WeeklyQuota => {
+export const calculateWeeklyQuota = (
+  subjects: Subject[],
+  userSettings?: Partial<UserSettings>
+): WeeklyQuota => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   // 今週の開始日（日曜日）を計算
   const startDate = new Date(today);
   const dayOfWeek = today.getDay();
   startDate.setDate(today.getDate() - dayOfWeek);
-  
+
   // 今週の終了日（土曜日）を計算
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + 6);
-  
+
   // ユーザー設定から値を取得、または既定値を使用
   const settings = {
-    maxConcurrentSubjects: userSettings?.maxConcurrentSubjects || DEFAULT_USER_SETTINGS.maxConcurrentSubjects,
+    maxConcurrentSubjects:
+      userSettings?.maxConcurrentSubjects || DEFAULT_USER_SETTINGS.maxConcurrentSubjects,
     examBufferDays: userSettings?.examBufferDays || DEFAULT_USER_SETTINGS.examBufferDays,
-    averagePageReadingTime: userSettings?.averagePageReadingTime || DEFAULT_USER_SETTINGS.averagePageReadingTime,
+    averagePageReadingTime:
+      userSettings?.averagePageReadingTime || DEFAULT_USER_SETTINGS.averagePageReadingTime,
     dailyStudyHours: userSettings?.dailyStudyHours || DEFAULT_USER_SETTINGS.dailyStudyHours,
-    studyDaysPerWeek: userSettings?.studyDaysPerWeek || DEFAULT_USER_SETTINGS.studyDaysPerWeek
+    studyDaysPerWeek: userSettings?.studyDaysPerWeek || DEFAULT_USER_SETTINGS.studyDaysPerWeek,
   };
-  
+
   const quotaItems: StudyQuota[] = [];
   const dailyDistribution: { [key: string]: number } = {};
   let totalPages = 0;
   let totalMinutes = 0;
-  
+
   // 有効な科目のみを対象にする
-  const validSubjects = subjects.filter(subject => {
+  const validSubjects = subjects.filter((subject) => {
     // 試験日が設定されていない場合は除外
     if (!subject.examDate) return false;
-    
+
     // 試験日が今日以降
     const examDate = new Date(subject.examDate);
     examDate.setHours(0, 0, 0, 0);
-    
+
     // 目標達成日を計算（試験日 - バッファ日）
     const targetDate = new Date(examDate);
     targetDate.setDate(targetDate.getDate() - (subject.bufferDays || settings.examBufferDays));
-    
+
     return targetDate >= today;
   });
-  
+
   // 試験日の近い順にソート
   validSubjects.sort((a, b) => {
     const dateA = new Date(a.examDate);
     const dateB = new Date(b.examDate);
     return dateA.getTime() - dateB.getTime();
   });
-  
+
   // 同時に進行する科目数の上限（ユーザー設定から取得）
   const maxConcurrentSubjects = settings.maxConcurrentSubjects;
-  
+
   // 優先して学習する科目を選択（試験日が近い順に上限数まで）
   const prioritySubjects = validSubjects.slice(0, maxConcurrentSubjects);
-  
+
   // 各科目のノルマを計算
-  prioritySubjects.forEach(subject => {
+  prioritySubjects.forEach((subject) => {
     // 試験日が設定されていない場合はスキップ（念のため）
     if (!subject.examDate) return;
-    
+
     // 試験日
     const examDate = new Date(subject.examDate);
     examDate.setHours(0, 0, 0, 0);
-    
+
     // バッファ日数（科目個別設定または全体設定）
-    const bufferDays = subject.bufferDays !== undefined ? subject.bufferDays : settings.examBufferDays;
-    
+    const bufferDays =
+      subject.bufferDays !== undefined ? subject.bufferDays : settings.examBufferDays;
+
     // 目標達成日（試験日 - バッファ日）
     const targetDate = new Date(examDate);
     targetDate.setDate(targetDate.getDate() - bufferDays);
-    
+
     // 今日から目標達成日までの日数
-    const daysUntilTarget = Math.max(1, Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-    
+    const daysUntilTarget = Math.max(
+      1,
+      Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    );
+
     // 残りのページ数
     const remainingPages = subject.totalPages - (subject.currentPage || 0);
-    
+
     // 実際に学習する日数（週あたりの学習日数から計算）
     const studyDaysRatio = settings.studyDaysPerWeek / 7;
     const actualStudyDays = Math.max(1, Math.ceil(daysUntilTarget * studyDaysRatio));
-    
+
     // 1日あたりのノルマページ数
-    const pagesPerDay = isNaN(remainingPages) || remainingPages <= 0 || isNaN(actualStudyDays) || actualStudyDays <= 0
-      ? 0
-      : Math.ceil(remainingPages / actualStudyDays);
-    
+    const pagesPerDay =
+      isNaN(remainingPages) || remainingPages <= 0 || isNaN(actualStudyDays) || actualStudyDays <= 0
+        ? 0
+        : Math.ceil(remainingPages / actualStudyDays);
+
     // 今週に含まれる日数（今日から目標日まで、または今週の終わりまでの短い方）
     // 実際に学習する日数を考慮
     const daysInWeek = Math.min(7 - dayOfWeek, daysUntilTarget);
     const actualStudyDaysInWeek = Math.max(1, Math.ceil(daysInWeek * studyDaysRatio));
-    
+
     // 今週のノルマページ数
     const pagesThisWeek = isNaN(pagesPerDay) ? 0 : pagesPerDay * actualStudyDaysInWeek;
-    
+
     // 推定学習時間（ユーザー設定の1ページあたりの時間を使用）
-    const estimatedMinutes = isNaN(pagesThisWeek) ? 0 : pagesThisWeek * settings.averagePageReadingTime;
-    
+    const estimatedMinutes = isNaN(pagesThisWeek)
+      ? 0
+      : pagesThisWeek * settings.averagePageReadingTime;
+
     quotaItems.push({
       subjectId: subject.id,
       subjectName: subject.name,
@@ -287,18 +316,18 @@ export const calculateWeeklyQuota = (subjects: Subject[], userSettings?: Partial
       estimatedMinutes: estimatedMinutes,
       priority: subject.priority || 'medium',
       examDate: examDate,
-      isCompleted: false
+      isCompleted: false,
     });
-    
+
     totalPages += pagesThisWeek;
     totalMinutes += estimatedMinutes;
-    
+
     // 日ごとの配分（設定された学習日数に均等に分配）
     // 週の中で指定された学習日数分だけ配分する
     const studyDaysCount = Math.min(daysInWeek, settings.studyDaysPerWeek);
     if (studyDaysCount > 0) {
       const pagesPerStudyDay = Math.ceil(pagesThisWeek / studyDaysCount);
-      
+
       // 今週の残りの日数から、設定された学習日数分だけ選んで均等に配分
       for (let i = 0; i < Math.min(daysInWeek, studyDaysCount); i++) {
         const date = new Date(today);
@@ -308,17 +337,17 @@ export const calculateWeeklyQuota = (subjects: Subject[], userSettings?: Partial
       }
     }
   });
-  
+
   // 優先度順にソート（high > medium > low）
   quotaItems.sort((a, b) => {
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
-  
+
   // 週間の目標学習時間との比較
   const weeklyStudyMinutes = settings.dailyStudyHours * 60 * settings.studyDaysPerWeek;
   const isExceedingWeeklyLimit = totalMinutes > weeklyStudyMinutes;
-  
+
   return {
     startDate,
     endDate,
@@ -329,6 +358,6 @@ export const calculateWeeklyQuota = (subjects: Subject[], userSettings?: Partial
     isCompleted: false,
     isExceedingWeeklyLimit,
     weeklyStudyMinutes,
-    studyDaysPerWeek: settings.studyDaysPerWeek
+    studyDaysPerWeek: settings.studyDaysPerWeek,
   };
-}; 
+};

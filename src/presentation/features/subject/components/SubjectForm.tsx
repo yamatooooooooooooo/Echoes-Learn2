@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  TextField, 
-  Button, 
-  Typography, 
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
   Paper,
   Grid,
   FormControl,
@@ -15,7 +15,7 @@ import {
   Chip,
   Switch,
   FormControlLabel,
-  InputAdornment
+  InputAdornment,
 } from '@mui/material';
 import { Flag as FlagIcon } from '@mui/icons-material';
 import { SubjectCreateInput, Subject } from '../../../../domain/models/SubjectModel';
@@ -29,12 +29,12 @@ interface SubjectFormProps {
   error?: string | null;
 }
 
-export const SubjectForm = ({ 
+export const SubjectForm = ({
   subject,
-  onSubmit, 
-  onCancel, 
+  onSubmit,
+  onCancel,
   isLoading = false,
-  error = null
+  error = null,
 }: SubjectFormProps) => {
   const [formData, setFormData] = useState<SubjectCreateInput>({
     name: '',
@@ -45,11 +45,11 @@ export const SubjectForm = ({
     deadlineType: 'report',
     reportDetails: '',
     priority: 'medium',
-    bufferDays: 7
+    bufferDays: 7,
   });
 
   const [manualPriority, setManualPriority] = useState(false);
-  
+
   const [errors, setErrors] = useState<{
     name?: string;
     totalPages?: string;
@@ -100,7 +100,7 @@ export const SubjectForm = ({
         deadlineType: subject.deadlineType || 'report',
         reportDetails: subject.reportDetails || '',
         priority: subject.priority || 'medium',
-        bufferDays: subject.bufferDays || 7
+        bufferDays: subject.bufferDays || 7,
       });
       // 既存の科目は優先順位が設定されているので手動モードに
       setManualPriority(true);
@@ -115,7 +115,7 @@ export const SubjectForm = ({
         deadlineType: 'report',
         reportDetails: '',
         priority: 'medium',
-        bufferDays: 7
+        bufferDays: 7,
       });
       setManualPriority(false);
     }
@@ -129,15 +129,15 @@ export const SubjectForm = ({
         subject?.currentPage || 0,
         formData.totalPages
       );
-      
+
       // 数値の優先度を文字列の優先度に変換
       let priority: 'high' | 'medium' | 'low' = 'low';
       if (calculatedPriority >= 7) priority = 'high';
       else if (calculatedPriority >= 4) priority = 'medium';
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        priority: priority
+        priority: priority,
       }));
     }
   }, [formData.examDate, formData.totalPages, formData.name, manualPriority, subject]);
@@ -145,9 +145,9 @@ export const SubjectForm = ({
   // フォームの入力を処理
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     let parsedValue: any = value;
-    
+
     // 日付フィールドの場合は適切に処理
     if (name === 'examDate' || name === 'reportDeadline') {
       try {
@@ -170,41 +170,41 @@ export const SubjectForm = ({
       // 数値フィールドの場合は数値に変換
       parsedValue = value === '' ? '' : parseInt(value);
     }
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: parsedValue
+      [name]: parsedValue,
     }));
-    
+
     // フィールドが変更されたらエラーをクリア
     if (errors[name as keyof typeof errors]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: undefined
+        [name]: undefined,
       }));
     }
   };
 
   const handleSelectChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // エラーをクリア
     if (errors[name as keyof typeof errors]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: undefined
+        [name]: undefined,
       }));
     }
   };
 
   const handlePriorityToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     setManualPriority(e.target.checked);
-    
+
     // 手動設定に切り替えるとき、現在の値をそのまま使用
     // 自動設定に切り替えるとき、再計算
     if (!e.target.checked && formData.examDate && formData.totalPages > 0) {
@@ -213,15 +213,15 @@ export const SubjectForm = ({
         subject?.currentPage || 0,
         formData.totalPages
       );
-      
+
       // 数値の優先度を文字列の優先度に変換
       let priority: 'high' | 'medium' | 'low' = 'low';
       if (calculatedPriority >= 7) priority = 'high';
       else if (calculatedPriority >= 4) priority = 'medium';
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        priority: priority
+        priority: priority,
       }));
     }
   };
@@ -237,24 +237,24 @@ export const SubjectForm = ({
       priority?: string;
       bufferDays?: string;
     } = {};
-    
+
     if (!formData.name) {
       newErrors.name = '科目名を入力してください';
     }
-    
+
     if (!formData.totalPages) {
       newErrors.totalPages = '総ページ数を入力してください';
     } else if (formData.totalPages <= 0) {
       newErrors.totalPages = '総ページ数は1以上である必要があります';
     }
-    
+
     // 試験日の検証
     if (!formData.examDate) {
       newErrors.examDate = '試験日を入力してください';
     } else if (!(formData.examDate instanceof Date) || isNaN(formData.examDate.getTime())) {
       newErrors.examDate = '有効な試験日を入力してください';
     }
-    
+
     // リポート締切日の検証（存在する場合のみ）
     if (formData.reportDeadline) {
       // 日付オブジェクトに変換されているか確認
@@ -276,11 +276,11 @@ export const SubjectForm = ({
         newErrors.reportDeadline = '有効なリポート締め切り日を入力してください';
       }
     }
-    
+
     if (!formData.priority) {
       newErrors.priority = '優先順位を選択してください';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -288,36 +288,43 @@ export const SubjectForm = ({
   // フォーム送信
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // デバッグログを追加
     console.log('フォーム送信開始', JSON.stringify(formData));
-    
+
     if (validateForm()) {
       console.log('バリデーション成功、onSubmit実行');
       try {
         // 日付が文字列の場合は変換
         const submissionData = {
           ...formData,
-          examDate: formData.examDate instanceof Date ? formData.examDate : new Date(formData.examDate),
-          reportDeadline: formData.reportDeadline instanceof Date ? 
-            formData.reportDeadline : 
-            (formData.reportDeadline ? new Date(formData.reportDeadline) : undefined)
+          examDate:
+            formData.examDate instanceof Date ? formData.examDate : new Date(formData.examDate),
+          reportDeadline:
+            formData.reportDeadline instanceof Date
+              ? formData.reportDeadline
+              : formData.reportDeadline
+                ? new Date(formData.reportDeadline)
+                : undefined,
         };
-        
-        console.log('送信データ:', JSON.stringify(submissionData, (key, value) => {
-          if (value instanceof Date) {
-            return value.toISOString();
-          }
-          return value;
-        }));
-        
+
+        console.log(
+          '送信データ:',
+          JSON.stringify(submissionData, (key, value) => {
+            if (value instanceof Date) {
+              return value.toISOString();
+            }
+            return value;
+          })
+        );
+
         onSubmit(submissionData);
         console.log('onSubmit成功完了');
       } catch (error) {
         console.error('onSubmit実行エラー:', error);
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          form: 'フォーム送信中にエラーが発生しました'
+          form: 'フォーム送信中にエラーが発生しました',
         }));
       }
     } else {
@@ -329,14 +336,14 @@ export const SubjectForm = ({
   const formatDateForInput = (date: Date | string | null | undefined): string => {
     try {
       if (!date) return '';
-      
+
       const dateObj = typeof date === 'string' ? new Date(date) : date;
-      
+
       // 日付が無効かどうかチェック
       if (isNaN(dateObj.getTime())) {
         return '';
       }
-      
+
       return dateObj.toISOString().split('T')[0];
     } catch (error) {
       console.error('Date formatting error:', error);
@@ -346,7 +353,7 @@ export const SubjectForm = ({
 
   // 優先順位に応じた色を取得
   const getPriorityColor = (priority: string): string => {
-    switch(priority) {
+    switch (priority) {
       case 'high':
         return '#f44336'; // 赤色
       case 'medium':
@@ -359,27 +366,27 @@ export const SubjectForm = ({
   };
 
   // 優先順位表示用のラベルとアイコンを取得
-  const getPriorityLabel = (priority: string): {label: string, icon: JSX.Element} => {
-    switch(priority) {
+  const getPriorityLabel = (priority: string): { label: string; icon: JSX.Element } => {
+    switch (priority) {
       case 'high':
-        return { 
-          label: '高', 
-          icon: <FlagIcon fontSize="small" style={{ color: getPriorityColor(priority) }} />
+        return {
+          label: '高',
+          icon: <FlagIcon fontSize="small" style={{ color: getPriorityColor(priority) }} />,
         };
       case 'medium':
-        return { 
-          label: '中', 
-          icon: <FlagIcon fontSize="small" style={{ color: getPriorityColor(priority) }} />
+        return {
+          label: '中',
+          icon: <FlagIcon fontSize="small" style={{ color: getPriorityColor(priority) }} />,
         };
       case 'low':
-        return { 
-          label: '低', 
-          icon: <FlagIcon fontSize="small" style={{ color: getPriorityColor(priority) }} />
+        return {
+          label: '低',
+          icon: <FlagIcon fontSize="small" style={{ color: getPriorityColor(priority) }} />,
         };
       default:
-        return { 
-          label: '未設定', 
-          icon: <FlagIcon fontSize="small" style={{ color: getPriorityColor(priority) }} />
+        return {
+          label: '未設定',
+          icon: <FlagIcon fontSize="small" style={{ color: getPriorityColor(priority) }} />,
         };
     }
   };
@@ -390,18 +397,19 @@ export const SubjectForm = ({
 
   return (
     <Box sx={{ p: { xs: 1, sm: 2 } }}>
-      <Paper 
-        elevation={0} 
-        sx={{ 
+      <Paper
+        elevation={0}
+        sx={{
           borderRadius: '12px',
           overflow: 'hidden',
           p: { xs: 2, sm: 3 },
           mb: 3,
           border: '1px solid',
           borderColor: 'divider',
-          background: (theme) => theme.palette.mode === 'dark' 
-            ? 'linear-gradient(to bottom right, rgba(50, 50, 50, 0.9), rgba(30, 30, 30, 0.9))' 
-            : 'linear-gradient(to bottom right, rgba(255, 255, 255, 0.9), rgba(240, 240, 240, 0.9))'
+          background: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'linear-gradient(to bottom right, rgba(50, 50, 50, 0.9), rgba(30, 30, 30, 0.9))'
+              : 'linear-gradient(to bottom right, rgba(255, 255, 255, 0.9), rgba(240, 240, 240, 0.9))',
         }}
       >
         <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
@@ -425,7 +433,7 @@ export const SubjectForm = ({
                 variant="outlined"
                 sx={{ mb: 2 }}
                 InputProps={{
-                  sx: { borderRadius: '8px' }
+                  sx: { borderRadius: '8px' },
                 }}
               />
             </Grid>
@@ -442,7 +450,7 @@ export const SubjectForm = ({
                 disabled={isLoading}
                 placeholder="使用する教科書や参考書の名前"
                 InputProps={{
-                  sx: { borderRadius: '8px' }
+                  sx: { borderRadius: '8px' },
                 }}
               />
             </Grid>
@@ -463,7 +471,7 @@ export const SubjectForm = ({
                 variant="outlined"
                 InputProps={{
                   sx: { borderRadius: '8px' },
-                  endAdornment: <InputAdornment position="end">ページ</InputAdornment>
+                  endAdornment: <InputAdornment position="end">ページ</InputAdornment>,
                 }}
               />
             </Grid>
@@ -481,7 +489,7 @@ export const SubjectForm = ({
                 variant="outlined"
                 InputProps={{
                   sx: { borderRadius: '8px' },
-                  endAdornment: <InputAdornment position="end">ページ</InputAdornment>
+                  endAdornment: <InputAdornment position="end">ページ</InputAdornment>,
                 }}
               />
             </Grid>
@@ -502,7 +510,7 @@ export const SubjectForm = ({
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
                 InputProps={{
-                  sx: { borderRadius: '8px' }
+                  sx: { borderRadius: '8px' },
                 }}
               />
             </Grid>
@@ -520,7 +528,7 @@ export const SubjectForm = ({
                 variant="outlined"
                 InputProps={{
                   sx: { borderRadius: '8px' },
-                  endAdornment: <InputAdornment position="end">日前</InputAdornment>
+                  endAdornment: <InputAdornment position="end">日前</InputAdornment>,
                 }}
               />
             </Grid>
@@ -540,7 +548,7 @@ export const SubjectForm = ({
                 variant="outlined"
                 InputLabelProps={{ shrink: true }}
                 InputProps={{
-                  sx: { borderRadius: '8px' }
+                  sx: { borderRadius: '8px' },
                 }}
               />
             </Grid>
@@ -578,24 +586,31 @@ export const SubjectForm = ({
                 disabled={isLoading}
                 placeholder="提出物の詳細情報（文字数制限、提出方法など）"
                 InputProps={{
-                  sx: { borderRadius: '8px' }
+                  sx: { borderRadius: '8px' },
                 }}
               />
             </Grid>
 
             {/* 優先度設定 */}
             <Grid item xs={12}>
-              <Paper 
+              <Paper
                 elevation={0}
-                sx={{ 
-                  p: 2, 
+                sx={{
+                  p: 2,
                   borderRadius: '8px',
                   border: '1px solid',
                   borderColor: 'divider',
-                  bgcolor: 'background.paper'
+                  bgcolor: 'background.paper',
                 }}
               >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 2,
+                  }}
+                >
                   <Typography variant="subtitle1">優先度設定</Typography>
                   <FormControlLabel
                     control={
@@ -647,16 +662,18 @@ export const SubjectForm = ({
                       試験日と進捗状況に基づいて自動的に優先度が設定されます。
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <Typography variant="body2" sx={{ mr: 1 }}>現在の優先度:</Typography>
+                      <Typography variant="body2" sx={{ mr: 1 }}>
+                        現在の優先度:
+                      </Typography>
                       <Chip
                         icon={getPriorityLabel(formData.priority || 'medium').icon}
                         label={getPriorityLabel(formData.priority || 'medium').label}
                         size="small"
-                        sx={{ 
+                        sx={{
                           bgcolor: `${getPriorityColor(formData.priority || 'medium')}20`,
                           color: getPriorityColor(formData.priority || 'medium'),
                           fontWeight: 'bold',
-                          borderRadius: '6px'
+                          borderRadius: '6px',
                         }}
                       />
                     </Box>
@@ -678,9 +695,9 @@ export const SubjectForm = ({
                 variant="outlined"
                 onClick={onCancel}
                 disabled={isLoading}
-                sx={{ 
+                sx={{
                   borderRadius: '8px',
-                  px: 3
+                  px: 3,
                 }}
               >
                 キャンセル
@@ -691,10 +708,10 @@ export const SubjectForm = ({
               variant="contained"
               color="primary"
               disabled={isLoading}
-              sx={{ 
+              sx={{
                 borderRadius: '8px',
                 px: 4,
-                boxShadow: (theme) => `0 4px 10px ${theme.palette.primary.main}40`
+                boxShadow: (theme) => `0 4px 10px ${theme.palette.primary.main}40`,
               }}
             >
               {isLoading ? '保存中...' : subject ? '更新' : '作成'}
@@ -704,4 +721,4 @@ export const SubjectForm = ({
       </Paper>
     </Box>
   );
-}; 
+};

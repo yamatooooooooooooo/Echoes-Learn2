@@ -12,7 +12,7 @@ describe('visualizationService', () => {
       totalPages: 100,
       examDate: addDays(new Date(), 10),
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     },
     {
       id: '2',
@@ -21,7 +21,7 @@ describe('visualizationService', () => {
       totalPages: 150,
       examDate: addDays(new Date(), 5),
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     },
     {
       id: '3',
@@ -30,14 +30,14 @@ describe('visualizationService', () => {
       totalPages: 200,
       examDate: addDays(new Date(), 20),
       createdAt: new Date(),
-      updatedAt: new Date()
-    }
+      updatedAt: new Date(),
+    },
   ];
 
   describe('getRadarChartData', () => {
     it('科目データから正しいレーダーチャートデータを生成する', () => {
       const result = getRadarChartData(mockSubjects);
-      
+
       expect(result).toHaveLength(3);
       expect(result[0].subject).toBe('数学');
       expect(result[0].progress).toBe(50); // 50/100 = 50%
@@ -61,7 +61,7 @@ describe('visualizationService', () => {
           totalPages: 0, // 0ページ
           examDate: new Date(),
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         {
           id: '5',
@@ -70,12 +70,12 @@ describe('visualizationService', () => {
           totalPages: undefined as any, // 未定義
           examDate: new Date(),
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       ];
-      
+
       const result = getRadarChartData(invalidSubjects);
-      
+
       expect(result).toHaveLength(2);
       expect(result[0].progress).toBe(0);
       expect(result[1].progress).toBe(0);
@@ -85,9 +85,9 @@ describe('visualizationService', () => {
   describe('getCountdownData', () => {
     it('科目データから正しいカウントダウンデータを生成する', () => {
       const result = getCountdownData(mockSubjects);
-      
+
       expect(result).toHaveLength(3);
-      
+
       // 数学のテスト
       expect(result[0].subject).toBe('数学');
       expect(result[0].remainingDays).toBe(10);
@@ -96,11 +96,11 @@ describe('visualizationService', () => {
       expect(result[0].progressData[0].value).toBe(50);
       expect(result[0].progressData[1].name).toBe('未完了');
       expect(result[0].progressData[1].value).toBe(50);
-      
+
       // 英語のテスト
       expect(result[1].subject).toBe('英語');
       expect(result[1].remainingDays).toBe(5);
-      
+
       // 物理のテスト
       expect(result[2].subject).toBe('物理');
       expect(result[2].remainingDays).toBe(20);
@@ -122,14 +122,14 @@ describe('visualizationService', () => {
           totalPages: 100,
           examDate: addDays(new Date(), -5), // 5日前
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       ];
-      
+
       const result = getCountdownData(pastExamSubject);
-      
+
       expect(result).toHaveLength(1);
       expect(result[0].remainingDays).toBe(0);
     });
   });
-}); 
+});

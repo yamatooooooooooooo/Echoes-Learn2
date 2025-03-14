@@ -10,12 +10,9 @@ import {
   Tooltip,
   CircularProgress,
   Paper,
-  Alert
+  Alert,
 } from '@mui/material';
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon
-} from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Progress } from '../../../../domain/models/ProgressModel';
 
 interface ProgressListProps {
@@ -36,7 +33,7 @@ export const ProgressList: React.FC<ProgressListProps> = ({
   error,
   onEdit,
   onDelete,
-  formatDate
+  formatDate,
 }) => {
   if (loading) {
     return (
@@ -78,9 +75,9 @@ export const ProgressList: React.FC<ProgressListProps> = ({
               secondaryAction={
                 <Box>
                   <Tooltip title="編集">
-                    <IconButton 
-                      edge="end" 
-                      size="small" 
+                    <IconButton
+                      edge="end"
+                      size="small"
                       onClick={() => onEdit(progress)}
                       sx={{ mr: 0.5 }}
                     >
@@ -88,11 +85,7 @@ export const ProgressList: React.FC<ProgressListProps> = ({
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="削除">
-                    <IconButton 
-                      edge="end" 
-                      size="small" 
-                      onClick={() => onDelete(progress.id || '')}
-                    >
+                    <IconButton edge="end" size="small" onClick={() => onDelete(progress.id || '')}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
@@ -118,4 +111,4 @@ export const ProgressList: React.FC<ProgressListProps> = ({
       </List>
     </Paper>
   );
-}; 
+};

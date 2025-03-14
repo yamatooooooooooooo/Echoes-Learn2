@@ -8,20 +8,20 @@ export interface StudySession {
   userId: string;
   subjectId: string;
   subjectName: string;
-  date: string;                 // YYYY-MM-DD形式
-  timeOfDay: string;            // 区分（朝、午前、午後...）
-  startTime: string;            // HH:MM形式
-  duration: number;             // 分単位
-  pagesCompleted: number;       // 完了ページ数
-  efficiency: number;           // 効率スコア (0-100)
-  startPage?: number;           // 開始ページ
-  endPage?: number;             // 終了ページ
-  location?: string;            // 学習場所
-  environment?: string;         // 学習環境
-  focusLevel?: number;          // 集中度 (1-5)
-  mood?: number;                // 気分/状態 (1-5)
-  memo?: string;                // メモ（任意）
-  createdAt?: Date;             // 作成日時
+  date: string; // YYYY-MM-DD形式
+  timeOfDay: string; // 区分（朝、午前、午後...）
+  startTime: string; // HH:MM形式
+  duration: number; // 分単位
+  pagesCompleted: number; // 完了ページ数
+  efficiency: number; // 効率スコア (0-100)
+  startPage?: number; // 開始ページ
+  endPage?: number; // 終了ページ
+  location?: string; // 学習場所
+  environment?: string; // 学習環境
+  focusLevel?: number; // 集中度 (1-5)
+  mood?: number; // 気分/状態 (1-5)
+  memo?: string; // メモ（任意）
+  createdAt?: Date; // 作成日時
 }
 
 // 学習セッション入力データ
@@ -47,14 +47,14 @@ export interface SubjectPerformance {
   userId: string;
   subjectId: string;
   name: string;
-  progress: number;             // 進捗率 (0-100)
-  efficiency: number;           // 効率スコア (0-100)
-  lastStudied: string;          // 最後に学習した日付
+  progress: number; // 進捗率 (0-100)
+  efficiency: number; // 効率スコア (0-100)
+  lastStudied: string; // 最後に学習した日付
   recommendedStudyTime: number; // 推奨学習時間（分単位）
-  studyFrequency: number;       // 週あたりの推奨学習回数
-  strengths: string[];          // 強みのトピック/分野
-  weaknesses: string[];         // 弱点のトピック/分野
-  updatedAt?: Date;             // 更新日時
+  studyFrequency: number; // 週あたりの推奨学習回数
+  strengths: string[]; // 強みのトピック/分野
+  weaknesses: string[]; // 弱点のトピック/分野
+  updatedAt?: Date; // 更新日時
 }
 
 // 時間帯区分の定義
@@ -64,7 +64,7 @@ export const TIME_OF_DAY_OPTIONS = [
   '午後 (12-17時)',
   '夕方 (17-20時)',
   '夜 (20-24時)',
-  '深夜 (0-5時)'
+  '深夜 (0-5時)',
 ];
 
 // 学習環境の選択肢
@@ -74,24 +74,16 @@ export const ENVIRONMENT_OPTIONS = [
   'カフェ・公共施設',
   '自宅',
   '学校・図書館',
-  '移動中'
+  '移動中',
 ];
 
 // 学習場所の選択肢
-export const LOCATION_OPTIONS = [
-  '自宅',
-  '図書館',
-  'カフェ',
-  '学校',
-  '職場',
-  '移動中',
-  'その他'
-];
+export const LOCATION_OPTIONS = ['自宅', '図書館', 'カフェ', '学校', '職場', '移動中', 'その他'];
 
 // 現在の時刻に基づいて時間帯を判定する機能
 export const determineTimeOfDay = (): string => {
   const hour = new Date().getHours();
-  
+
   if (hour >= 5 && hour < 9) {
     return TIME_OF_DAY_OPTIONS[0]; // 朝
   } else if (hour >= 9 && hour < 12) {
@@ -122,4 +114,4 @@ export const getTodayFormatted = (): string => {
   const month = String(today.getMonth() + 1).padStart(2, '0');
   const day = String(today.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
-}; 
+};

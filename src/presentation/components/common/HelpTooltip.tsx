@@ -8,7 +8,7 @@ import {
   Box,
   useTheme,
   SxProps,
-  Theme
+  Theme,
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 
@@ -17,22 +17,22 @@ interface HelpTooltipProps {
    * ヘルプテキスト - ポップアップ内に表示される詳細説明
    */
   helpText: string;
-  
+
   /**
    * ツールチップのテキスト - アイコンホバー時に表示される短いヒント
    */
   tooltipText?: string;
-  
+
   /**
    * アイコンサイズ
    */
   iconSize?: 'small' | 'medium' | 'large';
-  
+
   /**
    * アイコンの色 - デフォルトはinfoカラー
    */
   iconColor?: string;
-  
+
   /**
    * 追加のスタイル
    */
@@ -48,38 +48,38 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
   tooltipText = '詳細情報',
   iconSize = 'small',
   iconColor,
-  sx
+  sx,
 }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const theme = useTheme();
-  
+
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleClose = () => {
     setAnchorEl(null);
   };
-  
+
   const open = Boolean(anchorEl);
   const id = open ? 'help-popover' : undefined;
-  
+
   return (
     <>
       <Tooltip title={tooltipText}>
         <IconButton
           size={iconSize}
           onClick={handleClick}
-          sx={{ 
+          sx={{
             color: iconColor || 'info.main',
-            ...sx
+            ...sx,
           }}
           aria-describedby={id}
         >
           <InfoIcon fontSize={iconSize} />
         </IconButton>
       </Tooltip>
-      
+
       <Popover
         id={id}
         open={open}
@@ -95,11 +95,9 @@ export const HelpTooltip: React.FC<HelpTooltipProps> = ({
         }}
       >
         <Paper sx={{ maxWidth: 320, p: 2 }}>
-          <Typography variant="body2">
-            {helpText}
-          </Typography>
+          <Typography variant="body2">{helpText}</Typography>
         </Paper>
       </Popover>
     </>
   );
-}; 
+};

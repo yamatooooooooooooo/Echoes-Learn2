@@ -13,4 +13,4 @@ export interface StudySession {
   toPage?: number;
   notes?: string;
   rating?: number; // 1-5の評価
-} 
+}

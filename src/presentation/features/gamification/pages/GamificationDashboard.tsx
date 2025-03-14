@@ -14,13 +14,13 @@ import {
   ListItemText,
   Chip,
   Avatar,
-  useTheme
+  useTheme,
 } from '@mui/material';
 import {
   EmojiEvents as EmojiEventsIcon,
   Timeline as TimelineIcon,
   Stars as StarsIcon,
-  Whatshot as WhatshotIcon
+  Whatshot as WhatshotIcon,
 } from '@mui/icons-material';
 import { UserLevelProgress } from '../components/UserLevelProgress';
 import { GamificationRepository } from '../../../../infrastructure/repositories/gamificationRepository';
@@ -49,11 +49,7 @@ const TabPanel = (props: TabPanelProps) => {
       aria-labelledby={`gamification-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 };
@@ -67,36 +63,40 @@ const a11yProps = (index: number) => {
 };
 
 // シンプルな実績リストコンポーネント
-const AchievementsList = ({ completedAchievements, inProgressAchievements }: { completedAchievements: any[], inProgressAchievements: any[] }) => {
+const AchievementsList = ({
+  completedAchievements,
+  inProgressAchievements,
+}: {
+  completedAchievements: any[];
+  inProgressAchievements: any[];
+}) => {
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>獲得済み実績 ({completedAchievements.length})</Typography>
+      <Typography variant="h6" gutterBottom>
+        獲得済み実績 ({completedAchievements.length})
+      </Typography>
       {completedAchievements.length === 0 ? (
         <Typography>まだ実績を獲得していません。</Typography>
       ) : (
         <List>
-          {completedAchievements.map(achievement => (
+          {completedAchievements.map((achievement) => (
             <ListItem key={achievement.id}>
-              <ListItemText 
-                primary={achievement.title} 
-                secondary={achievement.description} 
-              />
+              <ListItemText primary={achievement.title} secondary={achievement.description} />
               <Chip label="獲得済み" color="success" size="small" />
             </ListItem>
           ))}
         </List>
       )}
-      
+
       <Divider sx={{ my: 2 }} />
-      
-      <Typography variant="h6" gutterBottom>未獲得実績 ({inProgressAchievements.length})</Typography>
+
+      <Typography variant="h6" gutterBottom>
+        未獲得実績 ({inProgressAchievements.length})
+      </Typography>
       <List>
-        {inProgressAchievements.map(achievement => (
+        {inProgressAchievements.map((achievement) => (
           <ListItem key={achievement.id}>
-            <ListItemText 
-              primary={achievement.title} 
-              secondary={achievement.description} 
-            />
+            <ListItemText primary={achievement.title} secondary={achievement.description} />
           </ListItem>
         ))}
       </List>
@@ -108,7 +108,9 @@ const AchievementsList = ({ completedAchievements, inProgressAchievements }: { c
 const BadgeCollection = ({ badges }: { badges: string[] }) => {
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>獲得バッジ ({badges.length})</Typography>
+      <Typography variant="h6" gutterBottom>
+        獲得バッジ ({badges.length})
+      </Typography>
       {badges.length === 0 ? (
         <Typography>まだバッジを獲得していません。</Typography>
       ) : (
@@ -133,17 +135,16 @@ const BadgeCollection = ({ badges }: { badges: string[] }) => {
 const ChallengesList = ({ challenges }: { challenges: any[] }) => {
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>アクティブなチャレンジ ({challenges.length})</Typography>
+      <Typography variant="h6" gutterBottom>
+        アクティブなチャレンジ ({challenges.length})
+      </Typography>
       {challenges.length === 0 ? (
         <Typography>現在アクティブなチャレンジはありません。</Typography>
       ) : (
         <List>
-          {challenges.map(challenge => (
+          {challenges.map((challenge) => (
             <ListItem key={challenge.id}>
-              <ListItemText 
-                primary={challenge.title} 
-                secondary={challenge.description} 
-              />
+              <ListItemText primary={challenge.title} secondary={challenge.description} />
             </ListItem>
           ))}
         </List>
@@ -162,17 +163,17 @@ export const GamificationDashboard: React.FC = () => {
   const [inProgressAchievements, setInProgressAchievements] = useState<any[]>([]);
   const [challenges, setChallenges] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Firebaseサービスを取得
   const { firestore, auth, gamificationRepository } = useFirebase();
-  
+
   // 実績データの定義
   const achievementData = [
     { name: '完了', value: userProfile?.achievements?.length || 0 },
     { name: '進行中', value: 5 },
-    { name: '未開始', value: 10 }
+    { name: '未開始', value: 10 },
   ];
-  
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -181,30 +182,30 @@ export const GamificationDashboard: React.FC = () => {
         // 認証状態の確認
         const currentUser = auth.currentUser;
         const userId = currentUser?.uid;
-        
+
         if (!userId) {
           setError('認証されていません。ログインしてください。');
           setLoading(false);
           return;
         }
-        
+
         const repo = new GamificationRepository(firestore, auth);
-        
+
         // ユーザー経験値プロフィールを取得
         const profile = await repo.getUserExperienceProfile(userId);
         setUserProfile(profile);
-        
+
         // アチーブメントを取得
         const achievements = await repo.getAchievements(userId);
-        
+
         // アチーブメントをダミーデータで処理
         // 実際のアプリでは、獲得済みと未獲得のアチーブメントを適切に分離する必要があります
-        const completed = achievements.filter(a => a.unlocked);
-        const inProgress = achievements.filter(a => !a.unlocked);
-        
+        const completed = achievements.filter((a) => a.unlocked);
+        const inProgress = achievements.filter((a) => !a.unlocked);
+
         setCompletedAchievements(completed);
         setInProgressAchievements(inProgress);
-        
+
         // チャレンジはダミーデータを使用
         const activeChallenges = [
           {
@@ -216,14 +217,13 @@ export const GamificationDashboard: React.FC = () => {
             progress: 30,
             tasks: [
               { id: 'task-1', description: '毎日最低30分学習する', completed: false },
-              { id: 'task-2', description: '毎日最低10ページ読む', completed: false }
+              { id: 'task-2', description: '毎日最低10ページ読む', completed: false },
             ],
-            rewards: ['経験値 500', 'バッジ: 継続の達人']
-          }
+            rewards: ['経験値 500', 'バッジ: 継続の達人'],
+          },
         ];
-        
+
         setChallenges(activeChallenges);
-        
       } catch (error) {
         console.error('ゲーミフィケーションデータの取得に失敗しました:', error);
         setError('データの取得に失敗しました。もう一度お試しください。');
@@ -231,35 +231,47 @@ export const GamificationDashboard: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     loadData();
   }, [firestore, auth]); // 依存配列にFirebaseサービスを追加
-  
+
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
-  
+
   // アチーブメントのレアリティに応じた色を取得
   const getRarityColor = (rarity: string): string => {
     switch (rarity) {
-      case 'legendary': return '#FFD700'; // 金
-      case 'epic': return '#9932CC'; // 紫
-      case 'rare': return '#1E90FF'; // 青
-      case 'uncommon': return '#32CD32'; // 緑
-      default: return '#A9A9A9'; // グレー (common)
+      case 'legendary':
+        return '#FFD700'; // 金
+      case 'epic':
+        return '#9932CC'; // 紫
+      case 'rare':
+        return '#1E90FF'; // 青
+      case 'uncommon':
+        return '#32CD32'; // 緑
+      default:
+        return '#A9A9A9'; // グレー (common)
     }
   };
-  
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '50vh',
+          }}
+        >
           <CircularProgress />
         </Box>
       </Container>
     );
   }
-  
+
   if (error) {
     return (
       <Container maxWidth="lg">
@@ -271,7 +283,7 @@ export const GamificationDashboard: React.FC = () => {
       </Container>
     );
   }
-  
+
   if (!userProfile) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -281,20 +293,23 @@ export const GamificationDashboard: React.FC = () => {
       </Container>
     );
   }
-  
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ mt: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          gutterBottom
+          sx={{ display: 'flex', alignItems: 'center' }}
+        >
           <EmojiEventsIcon sx={{ mr: 1, color: 'primary.main' }} />
           ゲーミフィケーション
         </Typography>
-        
+
         {/* ユーザーレベル進捗 */}
-        {userProfile && (
-          <UserLevelProgress userId={userProfile.userId} />
-        )}
-        
+        {userProfile && <UserLevelProgress userId={userProfile.userId} />}
+
         <Box sx={{ mt: 4 }}>
           <Paper sx={{ borderRadius: 2 }}>
             <Tabs
@@ -310,28 +325,24 @@ export const GamificationDashboard: React.FC = () => {
               <Tab icon={<WhatshotIcon />} label="チャレンジ" {...a11yProps(2)} />
               <Tab icon={<TimelineIcon />} label="統計" {...a11yProps(3)} />
             </Tabs>
-            
+
             <Divider />
-            
+
             <TabPanel value={tabValue} index={0}>
-              <AchievementsList 
+              <AchievementsList
                 completedAchievements={completedAchievements}
                 inProgressAchievements={inProgressAchievements}
               />
             </TabPanel>
-            
+
             <TabPanel value={tabValue} index={1}>
-              <BadgeCollection 
-                badges={userProfile.badges}
-              />
+              <BadgeCollection badges={userProfile.badges} />
             </TabPanel>
-            
+
             <TabPanel value={tabValue} index={2}>
-              <ChallengesList 
-                challenges={challenges}
-              />
+              <ChallengesList challenges={challenges} />
             </TabPanel>
-            
+
             <TabPanel value={tabValue} index={3}>
               <Typography variant="h6">学習統計</Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
@@ -355,4 +366,4 @@ export const GamificationDashboard: React.FC = () => {
       </Box>
     </Container>
   );
-}; 
+};

@@ -13,7 +13,7 @@ jest.mock('../../hooks/useProgressForm', () => ({
       pagesRead: 11,
       recordDate: '2023-01-01',
       studyDuration: 60,
-      memo: 'テストメモ'
+      memo: 'テストメモ',
     },
     isSubmitting: false,
     error: null,
@@ -22,8 +22,8 @@ jest.mock('../../hooks/useProgressForm', () => ({
     handleDateChange: jest.fn(),
     handleSubmit: jest.fn(),
     resetForm: jest.fn(),
-    setFormDataFromProgress: jest.fn()
-  })
+    setFormDataFromProgress: jest.fn(),
+  }),
 }));
 
 describe('ProgressForm', () => {
@@ -33,7 +33,7 @@ describe('ProgressForm', () => {
     totalPages: 100,
     currentPage: 30,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 
   const mockProgress: Progress = {
@@ -45,7 +45,7 @@ describe('ProgressForm', () => {
     pagesRead: 11,
     recordDate: '2023-01-01',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 
   const mockOnClose = jest.fn();
@@ -67,7 +67,11 @@ describe('ProgressForm', () => {
 
     expect(screen.getByText('進捗記録')).toBeInTheDocument();
     expect(screen.getByText(`科目名: ${mockSubject.name}`)).toBeInTheDocument();
-    expect(screen.getByText(`現在のページ: ${mockSubject.currentPage} / ${mockSubject.totalPages} ページ`)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `現在のページ: ${mockSubject.currentPage} / ${mockSubject.totalPages} ページ`
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText('記録する')).toBeInTheDocument();
   });
 

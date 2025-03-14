@@ -14,4 +14,4 @@ export interface Subject {
   description?: string;
   author?: string;
   imageUrl?: string;
-} 
+}

@@ -37,21 +37,19 @@ export const getRadarChartData = (subjects: Subject[]): RadarChartData[] => {
     const today = new Date();
 
     // ノルマ計算対象の科目のみをフィルタリング
-    const activeSubjects = subjects.filter(subject => {
+    const activeSubjects = subjects.filter((subject) => {
       const examDate = new Date(subject.examDate);
       // 試験日が設定されており、今日以降で、かつ完了していない科目
-      return subject.examDate && 
-             examDate >= today && 
-             subject.currentPage < subject.totalPages;
+      return subject.examDate && examDate >= today && subject.currentPage < subject.totalPages;
     });
 
     // 科目ごとの進捗率を計算
-    return activeSubjects.map(subject => {
+    return activeSubjects.map((subject) => {
       const progress = calculateProgress(subject);
-      
+
       return {
         subject: subject.name,
-        progress
+        progress,
       };
     });
   } catch (error) {
@@ -69,10 +67,10 @@ const calculateProgress = (subject: Subject): number => {
   if (!subject.totalPages || subject.totalPages <= 0) {
     return 0;
   }
-  
+
   const currentPage = subject.currentPage || 0;
   const progress = Math.round((currentPage / subject.totalPages) * 100);
-  
+
   // 0〜100の範囲に収める
   return Math.max(0, Math.min(100, progress));
 };
@@ -89,19 +87,19 @@ export const getCountdownData = (subjects: Subject[]): CountdownData[] => {
     }
 
     const today = new Date();
-    
-    return subjects.map(subject => {
+
+    return subjects.map((subject) => {
       const progress = calculateProgress(subject);
       const remainingDays = calculateRemainingDays(subject.examDate);
-      
+
       return {
         subject: subject.name,
         dueDate: subject.examDate,
         remainingDays,
         progressData: [
           { name: '完了', value: progress },
-          { name: '未完了', value: 100 - progress }
-        ]
+          { name: '未完了', value: 100 - progress },
+        ],
       };
     });
   } catch (error) {
@@ -118,7 +116,7 @@ export const getCountdownData = (subjects: Subject[]): CountdownData[] => {
 const calculateRemainingDays = (dueDate: Date): number => {
   const today = new Date();
   const days = differenceInDays(dueDate, today);
-  
+
   // 0以上の値を返す
   return Math.max(0, days);
-}; 
+};

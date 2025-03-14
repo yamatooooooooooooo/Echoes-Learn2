@@ -16,7 +16,7 @@ const mockProgressRecords: Progress[] = [
     pagesRead: 10,
     recordDate: '2023-03-10',
     createdAt: new Date('2023-03-10T10:00:00'),
-    updatedAt: new Date('2023-03-10T10:00:00')
+    updatedAt: new Date('2023-03-10T10:00:00'),
   },
   {
     id: 'progress-2',
@@ -28,7 +28,7 @@ const mockProgressRecords: Progress[] = [
     recordDate: '2023-03-11',
     memo: 'テストメモ',
     createdAt: new Date('2023-03-11T10:00:00'),
-    updatedAt: new Date('2023-03-11T10:00:00')
+    updatedAt: new Date('2023-03-11T10:00:00'),
   },
   {
     id: 'progress-3',
@@ -39,14 +39,14 @@ const mockProgressRecords: Progress[] = [
     pagesRead: 10,
     recordDate: '2023-03-12',
     createdAt: new Date('2023-03-12T10:00:00'),
-    updatedAt: new Date('2023-03-12T10:00:00')
-  }
+    updatedAt: new Date('2023-03-12T10:00:00'),
+  },
 ];
 
 // モック関数
 const mockOnEdit = jest.fn();
 const mockOnDelete = jest.fn();
-const mockFormatDate = jest.fn(date => 
+const mockFormatDate = jest.fn((date) =>
   typeof date === 'string' ? date : date.toISOString().split('T')[0]
 );
 
@@ -125,7 +125,7 @@ describe('ProgressHistory', () => {
     expect(screen.getByText('1 → 10')).toBeInTheDocument();
     expect(screen.getByText('11 → 20')).toBeInTheDocument();
     expect(screen.getByText('21 → 30')).toBeInTheDocument();
-    
+
     // メモが表示されていることを確認
     expect(screen.getByText('テストメモ')).toBeInTheDocument();
   });
@@ -182,12 +182,12 @@ describe('ProgressHistory', () => {
           super(...args);
         }
       }
-      
+
       static now() {
         return new Date('2023-03-12T12:00:00Z').getTime();
       }
     };
-    
+
     global.Date = mockDateClass as DateConstructor;
 
     render(
@@ -206,8 +206,8 @@ describe('ProgressHistory', () => {
 
     // フィルター後にコンテンツが表示されていることを確認
     expect(screen.queryByText('1 → 10')).not.toBeInTheDocument(); // フィルターされて表示されない
-    
+
     // 日付のモックを元に戻す
     global.Date = originalDate;
   });
-}); 
+});

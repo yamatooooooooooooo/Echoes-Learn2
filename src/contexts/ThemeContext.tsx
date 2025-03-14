@@ -39,7 +39,7 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
   // ローカルストレージにテーマ設定を保存
   const [mode, setMode] = useLocalStorage<ThemeMode>('themeMode', 'system');
   const [subjectThemes, setSubjectThemes] = useLocalStorage<SubjectTheme[]>('subjectThemes', []);
-  
+
   // 実際に適用するテーマ（light または dark）
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('light');
   // エラー状態
@@ -49,7 +49,7 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
   const applyTheme = (mode: ThemeMode) => {
     try {
       let theme: 'light' | 'dark' = 'light';
-      
+
       if (mode === 'light' || mode === 'dark') {
         theme = mode;
       } else if (mode === 'system' || mode === 'auto') {
@@ -57,7 +57,7 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
         const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
         theme = prefersDarkMode ? 'dark' : 'light';
       }
-      
+
       setCurrentTheme(theme);
       setError(null);
     } catch (err) {
@@ -74,15 +74,15 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
   // システムのダークモード設定を監視
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+
     const handleChange = (e: MediaQueryListEvent) => {
       if (mode === 'system') {
         applyTheme('system');
       }
     };
-    
+
     mediaQuery.addEventListener('change', handleChange);
-    
+
     return () => {
       mediaQuery.removeEventListener('change', handleChange);
     };
@@ -101,8 +101,8 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
 
   // 科目別テーマを設定
   const setSubjectTheme = (subjectId: string, mode: 'light' | 'dark' | 'inherit') => {
-    const existingIndex = subjectThemes.findIndex(theme => theme.subjectId === subjectId);
-    
+    const existingIndex = subjectThemes.findIndex((theme) => theme.subjectId === subjectId);
+
     if (existingIndex >= 0) {
       const updatedThemes = [...subjectThemes];
       updatedThemes[existingIndex] = { subjectId, mode };
@@ -114,12 +114,12 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
 
   // 科目のテーマを取得
   const getSubjectTheme = (subjectId: string): 'light' | 'dark' => {
-    const subjectTheme = subjectThemes.find(theme => theme.subjectId === subjectId);
-    
+    const subjectTheme = subjectThemes.find((theme) => theme.subjectId === subjectId);
+
     if (!subjectTheme || subjectTheme.mode === 'inherit') {
       return currentTheme;
     }
-    
+
     return subjectTheme.mode;
   };
 
@@ -131,15 +131,13 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
     toggleTheme,
     subjectThemes,
     setSubjectTheme,
-    getSubjectTheme
+    getSubjectTheme,
   };
 
   // アプリ全体のテーマを適用したThemeProviderでラップ
   return (
     <ThemeContext.Provider value={contextValue}>
-      <ThemeProvider theme={createAppTheme(currentTheme)}>
-        {children}
-      </ThemeProvider>
+      <ThemeProvider theme={createAppTheme(currentTheme)}>{children}</ThemeProvider>
     </ThemeContext.Provider>
   );
 };

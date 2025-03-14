@@ -5,19 +5,19 @@ import React from 'react';
 
 // Firebase Contextのモック
 jest.mock('../../../contexts/FirebaseContext', () => ({
-  useFirebase: () => ({ auth: { currentUser: { uid: 'test-user-id' } } })
+  useFirebase: () => ({ auth: { currentUser: { uid: 'test-user-id' } } }),
 }));
 
 // useServicesのモック
 jest.mock('../../../hooks/useServices', () => ({
   useServices: () => ({
     progressRepository: {
-      addProgress: jest.fn().mockResolvedValue('progress-1')
+      addProgress: jest.fn().mockResolvedValue('progress-1'),
     },
     subjectRepository: {
-      updateSubject: jest.fn().mockResolvedValue(undefined)
-    }
-  })
+      updateSubject: jest.fn().mockResolvedValue(undefined),
+    },
+  }),
 }));
 
 describe('useProgressForm', () => {
@@ -26,7 +26,7 @@ describe('useProgressForm', () => {
     name: 'テスト科目',
     currentPage: 10,
     totalPages: 100,
-    examDate: new Date()
+    examDate: new Date(),
   };
 
   const mockOnSuccess = jest.fn();
@@ -36,10 +36,12 @@ describe('useProgressForm', () => {
   });
 
   test('初期状態が正しく設定される', () => {
-    const { result } = renderHook(() => useProgressForm({
-      subject: initialSubject,
-      onSuccess: mockOnSuccess
-    }));
+    const { result } = renderHook(() =>
+      useProgressForm({
+        subject: initialSubject,
+        onSuccess: mockOnSuccess,
+      })
+    );
 
     expect(result.current.formData).toEqual({
       subjectId: 'subject-1',
@@ -48,22 +50,24 @@ describe('useProgressForm', () => {
       pagesRead: 0,
       recordDate: expect.any(String),
       studyDuration: 0,
-      memo: ''
+      memo: '',
     });
     expect(result.current.fieldErrors).toEqual({});
     expect(result.current.isSubmitting).toBe(false);
   });
 
   test('フォーム入力が正しく更新される', () => {
-    const { result } = renderHook(() => useProgressForm({
-      subject: initialSubject,
-      onSuccess: mockOnSuccess
-    }));
+    const { result } = renderHook(() =>
+      useProgressForm({
+        subject: initialSubject,
+        onSuccess: mockOnSuccess,
+      })
+    );
 
     // endPageの更新
     act(() => {
       result.current.handleChange({
-        target: { name: 'endPage', value: '20', type: 'number' }
+        target: { name: 'endPage', value: '20', type: 'number' },
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
@@ -73,7 +77,7 @@ describe('useProgressForm', () => {
     // startPageの更新
     act(() => {
       result.current.handleChange({
-        target: { name: 'startPage', value: '15', type: 'number' }
+        target: { name: 'startPage', value: '15', type: 'number' },
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
@@ -82,13 +86,15 @@ describe('useProgressForm', () => {
   });
 
   test('日付入力が正しく更新される', () => {
-    const { result } = renderHook(() => useProgressForm({
-      subject: initialSubject,
-      onSuccess: mockOnSuccess
-    }));
+    const { result } = renderHook(() =>
+      useProgressForm({
+        subject: initialSubject,
+        onSuccess: mockOnSuccess,
+      })
+    );
 
     const newDate = new Date('2023-01-01');
-    
+
     act(() => {
       result.current.handleDateChange(newDate);
     });
@@ -97,22 +103,24 @@ describe('useProgressForm', () => {
   });
 
   test('バリデーションが正しく動作する - 有効な入力', async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useProgressForm({
-      subject: initialSubject,
-      onSuccess: mockOnSuccess
-    }));
+    const { result, waitForNextUpdate } = renderHook(() =>
+      useProgressForm({
+        subject: initialSubject,
+        onSuccess: mockOnSuccess,
+      })
+    );
 
     // 有効な入力を設定
     act(() => {
       result.current.handleChange({
-        target: { name: 'endPage', value: '20', type: 'number' }
+        target: { name: 'endPage', value: '20', type: 'number' },
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
     // フォーム送信
     act(() => {
       result.current.handleSubmit({
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       } as unknown as React.FormEvent);
     });
 
@@ -120,48 +128,52 @@ describe('useProgressForm', () => {
 
     // エラーがないことを確認
     expect(result.current.error).toBe(null);
-    
+
     // onSuccessが正しく呼ばれたことを確認
     expect(mockOnSuccess).toHaveBeenCalledWith('progress-1');
   });
 
   test('バリデーションが正しく動作する - 終了ページが開始ページより小さい', () => {
-    const { result } = renderHook(() => useProgressForm({
-      subject: initialSubject,
-      onSuccess: mockOnSuccess
-    }));
+    const { result } = renderHook(() =>
+      useProgressForm({
+        subject: initialSubject,
+        onSuccess: mockOnSuccess,
+      })
+    );
 
     // 無効な入力を設定（終了ページが開始ページより小さい）
     act(() => {
       result.current.handleChange({
-        target: { name: 'endPage', value: '5', type: 'number' }
+        target: { name: 'endPage', value: '5', type: 'number' },
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
     // フォーム送信
     act(() => {
       result.current.handleSubmit({
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       } as unknown as React.FormEvent);
     });
 
     // エラーが表示されることを確認
     expect(result.current.fieldErrors.endPage).toBeTruthy();
-    
+
     // onSuccessが呼ばれないことを確認
     expect(mockOnSuccess).not.toHaveBeenCalled();
   });
 
   test('送信中フラグが正しく設定される', () => {
-    const { result } = renderHook(() => useProgressForm({
-      subject: initialSubject,
-      onSuccess: mockOnSuccess
-    }));
+    const { result } = renderHook(() =>
+      useProgressForm({
+        subject: initialSubject,
+        onSuccess: mockOnSuccess,
+      })
+    );
 
     // 有効な入力を設定
     act(() => {
       result.current.handleChange({
-        target: { name: 'endPage', value: '20', type: 'number' }
+        target: { name: 'endPage', value: '20', type: 'number' },
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
@@ -169,7 +181,7 @@ describe('useProgressForm', () => {
     // 送信をシミュレートして状態を確認
     act(() => {
       result.current.handleSubmit({
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       } as unknown as React.FormEvent);
     });
 
@@ -177,15 +189,17 @@ describe('useProgressForm', () => {
   });
 
   test('フォームリセットが正しく動作する', () => {
-    const { result } = renderHook(() => useProgressForm({
-      subject: initialSubject,
-      onSuccess: mockOnSuccess
-    }));
+    const { result } = renderHook(() =>
+      useProgressForm({
+        subject: initialSubject,
+        onSuccess: mockOnSuccess,
+      })
+    );
 
     // フォームを変更
     act(() => {
       result.current.handleChange({
-        target: { name: 'endPage', value: '20', type: 'number' }
+        target: { name: 'endPage', value: '20', type: 'number' },
       } as React.ChangeEvent<HTMLInputElement>);
     });
 
@@ -202,8 +216,8 @@ describe('useProgressForm', () => {
       pagesRead: 0,
       recordDate: expect.any(String),
       studyDuration: 0,
-      memo: ''
+      memo: '',
     });
     expect(result.current.fieldErrors).toEqual({});
   });
-}); 
+});

@@ -1,14 +1,5 @@
 import React from 'react';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Fade,
-  Backdrop,
-  Button,
-  Snackbar,
-  Alert
-} from '@mui/material';
+import { Box, Typography, Paper, Fade, Backdrop, Button, Snackbar, Alert } from '@mui/material';
 import { ConstructionOutlined as ConstructionIcon } from '@mui/icons-material';
 
 /**
@@ -16,7 +7,7 @@ import { ConstructionOutlined as ConstructionIcon } from '@mui/icons-material';
  * @param Component ラップするコンポーネント
  * @param options オプション設定
  * @returns ラップされたコンポーネント
- * 
+ *
  * 使用例:
  * ```
  * const WrappedComponent = withMaintenanceOverlay(MyComponent, {
@@ -38,37 +29,37 @@ export function withMaintenanceOverlay<P extends object>(
     message = 'この機能は現在メンテナンス中です。近日中に実装予定です。',
     title = '機能準備中',
     showComponent = true,
-    severity = 'info'
+    severity = 'info',
   } = options;
-  
+
   // ラップするコンポーネントを返す
   const WrappedComponent: React.FC<P> = (props: P) => {
     const [showSnackbar, setShowSnackbar] = React.useState(false);
-    
+
     // スナックバーを表示する関数
     const handleShowSnackbar = () => {
       setShowSnackbar(true);
     };
-    
+
     // スナックバーを閉じる関数
     const handleCloseSnackbar = () => {
       setShowSnackbar(false);
     };
-    
+
     // 1秒後に自動的にスナックバーを表示
     React.useEffect(() => {
       const timer = setTimeout(() => {
         handleShowSnackbar();
       }, 1000);
-      
+
       return () => clearTimeout(timer);
     }, []);
-    
+
     return (
       <>
         {/* 元のコンポーネントを表示 */}
         {showComponent && <Component {...props} />}
-        
+
         {/* メンテナンスオーバーレイ */}
         <Backdrop
           sx={{
@@ -81,7 +72,7 @@ export function withMaintenanceOverlay<P extends object>(
             zIndex: 1000,
             display: 'flex',
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
           }}
           open={true}
         >
@@ -95,7 +86,7 @@ export function withMaintenanceOverlay<P extends object>(
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                textAlign: 'center'
+                textAlign: 'center',
               }}
             >
               <ConstructionIcon fontSize="large" color={severity} sx={{ mb: 2 }} />
@@ -105,17 +96,13 @@ export function withMaintenanceOverlay<P extends object>(
               <Typography variant="body1" paragraph>
                 {message}
               </Typography>
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={handleShowSnackbar}
-              >
+              <Button variant="outlined" color="primary" onClick={handleShowSnackbar}>
                 了解
               </Button>
             </Paper>
           </Fade>
         </Backdrop>
-        
+
         {/* 通知メッセージ */}
         <Snackbar
           open={showSnackbar}
@@ -123,9 +110,9 @@ export function withMaintenanceOverlay<P extends object>(
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <Alert 
-            onClose={handleCloseSnackbar} 
-            severity={severity} 
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={severity}
             sx={{ width: '100%' }}
             icon={<ConstructionIcon />}
           >
@@ -135,6 +122,6 @@ export function withMaintenanceOverlay<P extends object>(
       </>
     );
   };
-  
+
   return WrappedComponent;
-} 
+}

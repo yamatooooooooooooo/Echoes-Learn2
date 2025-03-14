@@ -5,12 +5,12 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Tooltip,
-  useTheme as useMuiTheme
+  useTheme as useMuiTheme,
 } from '@mui/material';
 import {
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
-  DeviceHub as DeviceHubIcon
+  DeviceHub as DeviceHubIcon,
 } from '@mui/icons-material';
 import { useTheme } from '../../../../contexts/ThemeContext';
 
@@ -24,17 +24,20 @@ interface SubjectThemeSelectorProps {
 export const SubjectThemeSelector: React.FC<SubjectThemeSelectorProps> = ({ subjectId }) => {
   const { currentTheme, subjectThemes, setSubjectTheme } = useTheme();
   const muiTheme = useMuiTheme();
-  
+
   // 現在の科目のテーマ設定を取得
-  const subjectTheme = subjectThemes.find(theme => theme.subjectId === subjectId);
+  const subjectTheme = subjectThemes.find((theme) => theme.subjectId === subjectId);
   const currentMode = subjectTheme?.mode || 'inherit';
-  
-  const handleThemeChange = (_event: React.MouseEvent<HTMLElement>, newMode: 'light' | 'dark' | 'inherit' | null) => {
+
+  const handleThemeChange = (
+    _event: React.MouseEvent<HTMLElement>,
+    newMode: 'light' | 'dark' | 'inherit' | null
+  ) => {
     if (newMode !== null) {
       setSubjectTheme(subjectId, newMode);
     }
   };
-  
+
   return (
     <Box sx={{ mb: 2 }}>
       <Typography variant="subtitle2" gutterBottom>
@@ -48,13 +51,13 @@ export const SubjectThemeSelector: React.FC<SubjectThemeSelectorProps> = ({ subj
         size="small"
         sx={{ width: '100%' }}
       >
-        <ToggleButton 
-          value="light" 
+        <ToggleButton
+          value="light"
           aria-label="ライトモード"
-          sx={{ 
+          sx={{
             flex: 1,
             borderRadius: '4px 0 0 4px',
-            color: currentMode === 'light' ? muiTheme.palette.primary.main : 'inherit'
+            color: currentMode === 'light' ? muiTheme.palette.primary.main : 'inherit',
           }}
         >
           <Tooltip title="ライトモード">
@@ -64,13 +67,13 @@ export const SubjectThemeSelector: React.FC<SubjectThemeSelectorProps> = ({ subj
             </Box>
           </Tooltip>
         </ToggleButton>
-        
-        <ToggleButton 
-          value="dark" 
+
+        <ToggleButton
+          value="dark"
           aria-label="ダークモード"
-          sx={{ 
+          sx={{
             flex: 1,
-            color: currentMode === 'dark' ? muiTheme.palette.primary.main : 'inherit'
+            color: currentMode === 'dark' ? muiTheme.palette.primary.main : 'inherit',
           }}
         >
           <Tooltip title="ダークモード">
@@ -80,14 +83,14 @@ export const SubjectThemeSelector: React.FC<SubjectThemeSelectorProps> = ({ subj
             </Box>
           </Tooltip>
         </ToggleButton>
-        
-        <ToggleButton 
-          value="inherit" 
+
+        <ToggleButton
+          value="inherit"
           aria-label="グローバル設定に従う"
-          sx={{ 
+          sx={{
             flex: 1,
             borderRadius: '0 4px 4px 0',
-            color: currentMode === 'inherit' ? muiTheme.palette.primary.main : 'inherit'
+            color: currentMode === 'inherit' ? muiTheme.palette.primary.main : 'inherit',
           }}
         >
           <Tooltip title="グローバル設定に従う（現在: ${currentTheme === 'light' ? 'ライト' : 'ダーク'}）">
@@ -100,4 +103,4 @@ export const SubjectThemeSelector: React.FC<SubjectThemeSelectorProps> = ({ subj
       </ToggleButtonGroup>
     </Box>
   );
-}; 
+};

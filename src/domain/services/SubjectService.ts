@@ -1,6 +1,9 @@
 import { Subject, SubjectCreateInput, SubjectUpdateInput } from '../models/SubjectModel';
 import { ISubjectRepository } from '../interfaces/repositories/ISubjectRepository';
-import { calculatePriority, calculateDaysRemaining } from '../../presentation/features/subject/utils/subjectUtils';
+import {
+  calculatePriority,
+  calculateDaysRemaining,
+} from '../../presentation/features/subject/utils/subjectUtils';
 
 /**
  * 科目に関するビジネスロジックを提供するサービスクラス
@@ -29,18 +32,18 @@ export class SubjectService {
    */
   async createSubject(subjectData: SubjectCreateInput): Promise<string> {
     const userId = 'current-user'; // 実際の実装ではユーザー認証情報から取得する
-    
+
     // 優先度が指定されていない場合は自動計算
     if (!subjectData.priority) {
       const tempSubject = {
         id: '',
         ...subjectData,
-        currentPage: subjectData.currentPage || 0
+        currentPage: subjectData.currentPage || 0,
       } as Subject;
-      
+
       subjectData.priority = calculatePriority(tempSubject);
     }
-    
+
     return this.subjectRepository.addSubject(userId, subjectData);
   }
 
@@ -52,19 +55,19 @@ export class SubjectService {
     if (subjectData.examDate && !subjectData.priority) {
       // 現在の科目データを取得
       const currentSubject = await this.subjectRepository.getSubject(id);
-      
+
       if (currentSubject) {
         // 更新データと現在のデータをマージ
         const updatedSubject = {
           ...currentSubject,
-          ...subjectData
+          ...subjectData,
         };
-        
+
         // 優先度を計算
         subjectData.priority = calculatePriority(updatedSubject);
       }
     }
-    
+
     await this.subjectRepository.updateSubject(id, subjectData);
   }
 
@@ -94,14 +97,14 @@ export class SubjectService {
    */
   async updateSubjectPriorities(subjects: Subject[]): Promise<Subject[]> {
     const updatedSubjects: Subject[] = [];
-    
+
     for (const subject of subjects) {
       if (subject.id) {
         await this.subjectRepository.updateSubject(subject.id, { priority: subject.priority });
         updatedSubjects.push(subject);
       }
     }
-    
+
     return updatedSubjects;
   }
-} 
+}

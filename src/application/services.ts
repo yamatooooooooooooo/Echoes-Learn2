@@ -42,26 +42,34 @@ export interface ApplicationServices {
  * サービス層の初期化関数
  * 依存関係の注入パターンを使用して各サービスを初期化
  */
-export const initializeServices = (
-  dependencies: FirebaseDependencies
-): ApplicationServices => {
+export const initializeServices = (dependencies: FirebaseDependencies): ApplicationServices => {
   try {
     console.log('Initializing application services...');
-    
+
     // リポジトリの初期化
     const userRepository = new UserRepository(dependencies.firestore, dependencies.auth);
     const subjectRepository = new SubjectRepository(dependencies.firestore, dependencies.auth);
     const progressRepository = new ProgressRepository(dependencies.firestore, dependencies.auth);
-    const userSettingsRepository = new FirebaseUserSettingsRepository(dependencies.firestore, dependencies.auth);
-    const studyAnalyticsRepository = new StudyAnalyticsRepository(dependencies.firestore, dependencies.auth);
-    
+    const userSettingsRepository = new FirebaseUserSettingsRepository(
+      dependencies.firestore,
+      dependencies.auth
+    );
+    const studyAnalyticsRepository = new StudyAnalyticsRepository(
+      dependencies.firestore,
+      dependencies.auth
+    );
+
     // サービスの初期化
-    const quotaService = new QuotaService(subjectRepository, progressRepository, userSettingsRepository);
+    const quotaService = new QuotaService(
+      subjectRepository,
+      progressRepository,
+      userSettingsRepository
+    );
     const priorityService = new PriorityService(subjectRepository, progressRepository);
     const analyticsService = new AnalyticsService(subjectRepository, progressRepository);
-    
+
     console.log('Application services initialized successfully');
-    
+
     return {
       userRepository,
       subjectRepository,
@@ -71,7 +79,7 @@ export const initializeServices = (
       learningAnalyticsRepository,
       quotaService,
       priorityService,
-      analyticsService
+      analyticsService,
     };
   } catch (error) {
     console.error('Error initializing application services:', error);
@@ -85,4 +93,4 @@ export const initializeServices = (
 export const createMockServices = (): ApplicationServices => {
   // テスト用のモックサービスを作成...
   return {} as ApplicationServices;
-}; 
+};

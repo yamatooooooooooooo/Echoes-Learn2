@@ -17,7 +17,7 @@ const darkPalette: PaletteOptions = {
   },
   background: {
     default: '#191919', // ダーク背景
-    paper: '#2D2D2D',  // カード背景
+    paper: '#2D2D2D', // カード背景
   },
   text: {
     primary: '#EDEDED',
@@ -63,7 +63,7 @@ const lightPalette: PaletteOptions = {
   },
   background: {
     default: '#FFFFFF', // 純白の背景
-    paper: '#FFFFFF',  // カード背景も白
+    paper: '#FFFFFF', // カード背景も白
   },
   text: {
     primary: '#37352F', // Notionの本文色
@@ -384,8 +384,8 @@ const commonOptions = {
         '@media (max-width:600px)': {
           html: {
             fontSize: '14px',
-          }
-        }
+          },
+        },
       },
     },
     MuiButton: {
@@ -428,7 +428,7 @@ const commonOptions = {
             borderColor: '#4A5568',
             transform: 'translateY(-2px)',
             boxShadow: '0 3px 8px rgba(0, 0, 0, 0.2)',
-          }
+          },
         },
       },
     },
@@ -553,4 +553,4 @@ export const createAppTheme = (mode: 'light' | 'dark') => {
     document.body.dataset.theme = mode;
   }
   return createTheme(mode === 'light' ? lightThemeOptions : darkThemeOptions);
-}; 
+};

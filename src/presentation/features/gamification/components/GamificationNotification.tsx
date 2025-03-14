@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  Button, 
-  Typography, 
-  Box, 
-  Grow, 
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+  Box,
+  Grow,
   CircularProgress,
   Paper,
   Snackbar,
   Alert,
-  useTheme
+  useTheme,
 } from '@mui/material';
 import { TransitionProps } from '@mui/material/transitions';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -28,7 +28,7 @@ const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement;
   },
-  ref: React.Ref<unknown>,
+  ref: React.Ref<unknown>
 ) {
   return <Grow ref={ref} {...props} />;
 });
@@ -50,11 +50,11 @@ const showConfetti = (colorVariant: 'default' | 'rare' | 'epic' | 'legendary' = 
     default: ['#1976d2', '#4dabf5', '#bbdefb'],
     rare: ['#2196f3', '#90caf9', '#e3f2fd'],
     epic: ['#9c27b0', '#ba68c8', '#e1bee7'],
-    legendary: ['#f57c00', '#ffb74d', '#ffe0b2']
+    legendary: ['#f57c00', '#ffb74d', '#ffe0b2'],
   };
-  
+
   const selectedColors = colors[colorVariant] || colors.default;
-  
+
   confetti({
     particleCount: 100,
     spread: 70,
@@ -71,16 +71,16 @@ export const GamificationNotification: React.FC<NotificationProps> = ({
   points,
   iconType = 'trophy',
   achievementRarity = 'common',
-  onClose
+  onClose,
 }) => {
   const theme = useTheme();
   const [open, setOpen] = useState(true);
-  
+
   useEffect(() => {
     // 通知が表示されたときに紙吹雪エフェクト
     if (open) {
       let confettiType: 'default' | 'rare' | 'epic' | 'legendary' = 'default';
-      
+
       if (type === 'levelUp') {
         confettiType = 'legendary';
       } else if (type === 'achievement') {
@@ -98,7 +98,7 @@ export const GamificationNotification: React.FC<NotificationProps> = ({
             confettiType = 'default';
         }
       }
-      
+
       showConfetti(confettiType);
     }
   }, [open, type, achievementRarity]);
@@ -111,12 +111,18 @@ export const GamificationNotification: React.FC<NotificationProps> = ({
   // レアリティに応じた色を取得
   const getColorByRarity = () => {
     switch (achievementRarity) {
-      case 'common': return theme.palette.info.main;
-      case 'uncommon': return theme.palette.success.main;
-      case 'rare': return theme.palette.primary.main;
-      case 'epic': return theme.palette.secondary.main;
-      case 'legendary': return theme.palette.warning.main;
-      default: return theme.palette.primary.main;
+      case 'common':
+        return theme.palette.info.main;
+      case 'uncommon':
+        return theme.palette.success.main;
+      case 'rare':
+        return theme.palette.primary.main;
+      case 'epic':
+        return theme.palette.secondary.main;
+      case 'legendary':
+        return theme.palette.warning.main;
+      default:
+        return theme.palette.primary.main;
     }
   };
 
@@ -150,43 +156,45 @@ export const GamificationNotification: React.FC<NotificationProps> = ({
           borderRadius: 2,
           bgcolor: 'background.paper',
           boxShadow: 10,
-          overflow: 'hidden'
-        }
+          overflow: 'hidden',
+        },
       }}
     >
       <Box
         sx={{
           p: 3,
           textAlign: 'center',
-          background: type === 'levelUp' 
-            ? `linear-gradient(45deg, ${theme.palette.success.dark} 30%, ${theme.palette.success.main} 90%)`
-            : type === 'achievement' && achievementRarity === 'legendary'
-              ? `linear-gradient(45deg, ${theme.palette.warning.dark} 30%, ${theme.palette.warning.main} 90%)`
+          background:
+            type === 'levelUp'
+              ? `linear-gradient(45deg, ${theme.palette.success.dark} 30%, ${theme.palette.success.main} 90%)`
+              : type === 'achievement' && achievementRarity === 'legendary'
+                ? `linear-gradient(45deg, ${theme.palette.warning.dark} 30%, ${theme.palette.warning.main} 90%)`
+                : undefined,
+          color:
+            type === 'levelUp' || (type === 'achievement' && achievementRarity === 'legendary')
+              ? 'white'
               : undefined,
-          color: type === 'levelUp' || (type === 'achievement' && achievementRarity === 'legendary') 
-            ? 'white' 
-            : undefined
         }}
       >
         {getIcon()}
-        <DialogTitle sx={{ pb: 0 }}>
-          {title}
-        </DialogTitle>
+        <DialogTitle sx={{ pb: 0 }}>{title}</DialogTitle>
         <Typography variant="body1" id="notification-dialog-description" sx={{ mt: 1 }}>
           {message}
         </Typography>
-        
+
         {level && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2, gap: 1 }}>
+          <Box
+            sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2, gap: 1 }}
+          >
             <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
               レベル {level}
             </Typography>
             <Typography variant="body2" sx={{ mt: 1 }}>
-              {USER_LEVELS.find(l => l.level === level)?.title || ''}
+              {USER_LEVELS.find((l) => l.level === level)?.title || ''}
             </Typography>
           </Box>
         )}
-        
+
         {points && (
           <Box sx={{ mt: 2 }}>
             <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
@@ -195,14 +203,9 @@ export const GamificationNotification: React.FC<NotificationProps> = ({
           </Box>
         )}
       </Box>
-      
+
       <DialogActions sx={{ p: 2, justifyContent: 'center' }}>
-        <Button 
-          onClick={handleClose} 
-          color="primary" 
-          variant="contained"
-          sx={{ minWidth: 100 }}
-        >
+        <Button onClick={handleClose} color="primary" variant="contained" sx={{ minWidth: 100 }}>
           閉じる
         </Button>
       </DialogActions>
@@ -222,7 +225,7 @@ export const GamificationToast: React.FC<ToastNotificationProps> = ({
   message,
   type,
   open,
-  onClose
+  onClose,
 }) => {
   return (
     <Snackbar
@@ -236,4 +239,4 @@ export const GamificationToast: React.FC<ToastNotificationProps> = ({
       </Alert>
     </Snackbar>
   );
-}; 
+};

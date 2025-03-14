@@ -22,9 +22,8 @@ const StyledLinearProgress = styled(LinearProgress, {
 })<StyledLinearProgressProps>(({ theme, height = 4, barColor }) => ({
   height: height,
   borderRadius: height / 2,
-  backgroundColor: theme.palette.mode === 'dark' 
-    ? 'rgba(255, 255, 255, 0.08)' 
-    : 'rgba(0, 0, 0, 0.05)',
+  backgroundColor:
+    theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
   '& .MuiLinearProgress-bar': {
     borderRadius: height / 2,
     backgroundColor: barColor || theme.palette.primary.main,
@@ -47,14 +46,14 @@ const NotionProgressBar: React.FC<NotionProgressBarProps> = ({
   color,
 }) => {
   const theme = useTheme();
-  
+
   // 値が0-100の範囲内に収まるようにする
   const normalizedValue = Math.max(0, Math.min(100, value));
-  
+
   // 進捗状況に基づいて色を決定（colorプロップが指定されていない場合）
   const getColorByProgress = (): string => {
     if (color) return color;
-    
+
     if (normalizedValue >= 100) {
       return theme.palette.success.main; // 完了
     } else if (normalizedValue >= 75) {
@@ -71,31 +70,27 @@ const NotionProgressBar: React.FC<NotionProgressBarProps> = ({
   return (
     <Box sx={{ width: '100%', mb: 1 }}>
       {label && (
-        <Typography 
-          variant="body2" 
-          color="text.secondary" 
-          sx={{ mb: 0.5, fontSize: '0.75rem' }}
-        >
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, fontSize: '0.75rem' }}>
           {label}
         </Typography>
       )}
-      
-      <StyledLinearProgress 
-        variant="determinate" 
-        value={normalizedValue} 
+
+      <StyledLinearProgress
+        variant="determinate"
+        value={normalizedValue}
         height={height}
         barColor={getColorByProgress()}
       />
-      
+
       {showPercentage && (
-        <Typography 
-          variant="body2" 
-          color="text.secondary" 
-          sx={{ 
-            mt: 0.5, 
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            mt: 0.5,
             textAlign: 'right',
             fontSize: '0.75rem',
-            opacity: 0.8
+            opacity: 0.8,
           }}
         >
           {`${Math.round(normalizedValue)}%`}
@@ -105,4 +100,4 @@ const NotionProgressBar: React.FC<NotionProgressBarProps> = ({
   );
 };
 
-export default NotionProgressBar; 
+export default NotionProgressBar;

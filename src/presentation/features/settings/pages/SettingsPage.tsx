@@ -10,7 +10,7 @@ import {
   Button,
   Avatar,
   Card,
-  CardContent
+  CardContent,
 } from '@mui/material';
 import { UserSettingsForm } from '../components/UserSettingsForm';
 import { ThemeSettings } from '../components/ThemeSettings';
@@ -66,23 +66,21 @@ export const SettingsPage: React.FC = () => {
         <CardContent>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Avatar 
-                src={currentUser?.photoURL || undefined} 
+              <Avatar
+                src={currentUser?.photoURL || undefined}
                 alt={currentUser?.displayName || ''}
                 sx={{ width: 48, height: 48, mr: 2 }}
               />
               <Box>
-                <Typography variant="h6">
-                  {currentUser?.displayName || 'ユーザー'}
-                </Typography>
+                <Typography variant="h6">{currentUser?.displayName || 'ユーザー'}</Typography>
                 <Typography variant="body2" color="text.secondary">
                   {currentUser?.email || ''}
                 </Typography>
               </Box>
             </Box>
-            <Button 
-              variant="outlined" 
-              color="error" 
+            <Button
+              variant="outlined"
+              color="error"
               startIcon={<LogoutIcon />}
               onClick={handleLogout}
             >
@@ -92,20 +90,24 @@ export const SettingsPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Paper elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+      <Paper
+        elevation={0}
+        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}
+      >
         <Tabs
           value={selectedTab}
           onChange={handleTabChange}
           sx={{
             borderBottom: 1,
             borderColor: 'divider',
-            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
             '& .MuiTab-root': {
               py: 2,
               textTransform: 'none',
               fontWeight: 500,
               fontSize: '0.95rem',
-            }
+            },
           }}
         >
           <Tab label="表示設定" id="tab-0" aria-controls="tabpanel-0" />
@@ -120,4 +122,4 @@ export const SettingsPage: React.FC = () => {
       </Paper>
     </Container>
   );
-}; 
+};

@@ -1,14 +1,18 @@
-import { UserSettings, UserSettingsUpdateInput, DEFAULT_USER_SETTINGS } from '../../domain/models/UserSettingsModel';
+import {
+  UserSettings,
+  UserSettingsUpdateInput,
+  DEFAULT_USER_SETTINGS,
+} from '../../domain/models/UserSettingsModel';
 import { FirebaseApp } from 'firebase/app';
-import { 
-  Firestore, 
-  getFirestore, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
+import {
+  Firestore,
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
   Timestamp,
-  serverTimestamp
+  serverTimestamp,
 } from 'firebase/firestore';
 import { Auth, getAuth } from 'firebase/auth';
 import { ModuleSettings } from '../../presentation/features/dashboard/hooks/useDashboardSettings';
@@ -31,12 +35,12 @@ const MOCK_USER_SETTINGS: UserSettings = {
   ...DEFAULT_USER_SETTINGS,
   themeMode: 'system',
   createdAt: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
-  updatedAt: new Date()
+  updatedAt: new Date(),
 };
 
 // モックダッシュボード設定
 const MOCK_DASHBOARD_SETTINGS: DashboardSettings = {
-  moduleSettings: getDefaultModuleSettings()
+  moduleSettings: getDefaultModuleSettings(),
 };
 
 /**
@@ -45,7 +49,7 @@ const MOCK_DASHBOARD_SETTINGS: DashboardSettings = {
 export class FirebaseUserSettingsRepository implements UserSettingsRepository {
   private firestore: Firestore;
   private auth: Auth;
-  
+
   constructor(app: FirebaseApp);
   constructor(firestore: Firestore, auth: Auth);
   constructor(appOrFirestore: FirebaseApp | Firestore, authParam?: Auth) {
@@ -59,7 +63,7 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
       this.auth = authParam!;
     }
   }
-  
+
   /**
    * ユーザー設定を取得する
    * @returns ユーザー設定
@@ -69,17 +73,17 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
       const currentUser = this.auth.currentUser;
       if (!currentUser) {
         console.log('ユーザーが認証されていません。デフォルト設定を返します。');
-        return { 
+        return {
           ...DEFAULT_USER_SETTINGS,
           id: 'default',
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
       }
-      
+
       const settingsRef = doc(this.firestore, 'userSettings', currentUser.uid);
       const settingsSnap = await getDoc(settingsRef);
-      
+
       if (settingsSnap.exists()) {
         console.log('既存の設定を取得しました。');
         const data = settingsSnap.data();
@@ -89,17 +93,17 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
           ...data,
           id: settingsSnap.id,
           createdAt: data.createdAt?.toDate() || new Date(),
-          updatedAt: data.updatedAt?.toDate() || new Date()
+          updatedAt: data.updatedAt?.toDate() || new Date(),
         } as UserSettings;
       } else {
         console.log('設定がまだ作成されていません。デフォルト設定を作成します。');
         // デフォルト設定を作成
         await this.createDefaultSettings(currentUser.uid);
-        return { 
+        return {
           ...DEFAULT_USER_SETTINGS,
           id: currentUser.uid,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
       }
     } catch (error) {
@@ -107,7 +111,7 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
       throw error;
     }
   }
-  
+
   /**
    * ユーザー設定を更新する
    * @param settings 更新するユーザー設定
@@ -119,27 +123,30 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
         console.error('ユーザーが認証されていません。設定を更新できません。');
         throw new Error('ユーザーが認証されていていません');
       }
-      
+
       console.log('設定更新を開始します。ユーザーID:', currentUser.uid);
-      
+
       const settingsRef = doc(this.firestore, 'userSettings', currentUser.uid);
       const settingsSnap = await getDoc(settingsRef);
-      
+
       // nullやundefinedを含む可能性のあるフィールドを削除
-      const cleanSettings = Object.entries(settings).reduce((acc, [key, value]) => {
-        if (value !== undefined && value !== null) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, any>);
-      
+      const cleanSettings = Object.entries(settings).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined && value !== null) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, any>
+      );
+
       // 最終更新日時を追加
       cleanSettings.updatedAt = serverTimestamp();
-      
+
       if (settingsSnap.exists()) {
         // 既存の設定を更新
         console.log('既存の設定を更新します:', cleanSettings);
-        
+
         try {
           await setDoc(settingsRef, cleanSettings, { merge: true });
           console.log('設定の更新が完了しました');
@@ -150,14 +157,14 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
       } else {
         // 新しい設定を作成
         console.log('設定が存在しないため、新しい設定を作成します:', cleanSettings);
-        
+
         const newSettings = {
           ...DEFAULT_USER_SETTINGS,
           ...cleanSettings,
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         };
-        
+
         try {
           await setDoc(settingsRef, newSettings);
           console.log('新しい設定の作成が完了しました');
@@ -171,7 +178,7 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
       throw error;
     }
   }
-  
+
   /**
    * デフォルト設定の作成
    * @param userId ユーザーID
@@ -179,14 +186,14 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
   private async createDefaultSettings(userId: string): Promise<void> {
     try {
       const settingsRef = doc(this.firestore, 'userSettings', userId);
-      
+
       const defaultData = {
         ...DEFAULT_USER_SETTINGS,
         id: userId,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       };
-      
+
       await setDoc(settingsRef, defaultData);
       console.log('デフォルト設定の作成が完了しました');
     } catch (error) {
@@ -200,26 +207,26 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
   async resetToDefaults(): Promise<UserSettings> {
     try {
       const userId = this.auth.currentUser?.uid;
-      
+
       if (!userId) {
         throw new Error('ユーザーがログインしていません。設定をリセットできません。');
       }
-      
+
       const settingsRef = doc(this.firestore, 'userSettings', userId);
       const defaultSettings = {
         ...DEFAULT_USER_SETTINGS,
         createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
+        updatedAt: Timestamp.now(),
       };
-      
+
       // デフォルト設定で上書き
       await setDoc(settingsRef, defaultSettings);
-      
+
       return {
         ...defaultSettings,
         id: userId,
         createdAt: defaultSettings.createdAt.toDate(),
-        updatedAt: defaultSettings.updatedAt.toDate()
+        updatedAt: defaultSettings.updatedAt.toDate(),
       };
     } catch (error) {
       console.error('ユーザー設定のリセットに失敗しました:', error);
@@ -248,4 +255,4 @@ export class FirebaseUserSettingsRepository implements UserSettingsRepository {
     // モックデータの更新（実際には保存されない）
     Object.assign(MOCK_DASHBOARD_SETTINGS, settings);
   }
-} 
+}

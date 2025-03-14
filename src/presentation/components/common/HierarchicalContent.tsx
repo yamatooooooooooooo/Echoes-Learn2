@@ -1,11 +1,5 @@
 import React, { ReactNode } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Divider, 
-  SxProps, 
-  Theme 
-} from '@mui/material';
+import { Box, Typography, Divider, SxProps, Theme } from '@mui/material';
 import { OutlinedIcon } from './OutlinedIcon';
 import { SvgIconComponent } from '@mui/icons-material';
 
@@ -32,7 +26,7 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
   children,
   importance = 'primary',
   divided = false,
-  sx = {}
+  sx = {},
 }) => {
   // 重要度に応じたスタイルを取得
   const getImportanceStyles = () => {
@@ -70,49 +64,47 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
       sx={{
         mb: 3,
         ...getImportanceStyles(),
-        ...sx
+        ...sx,
       }}
     >
       {title && (
         <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
           {icon && (
             <Box sx={{ mr: 1.5 }}>
-              <OutlinedIcon 
-                icon={icon} 
-                size={importance === 'primary' ? 'medium' : 'small'} 
+              <OutlinedIcon
+                icon={icon}
+                size={importance === 'primary' ? 'medium' : 'small'}
                 color={iconColor}
                 active={importance === 'primary'}
               />
             </Box>
           )}
           <Box>
-            <Typography 
-              variant={importance === 'primary' ? 'h6' : 'subtitle1'} 
-              sx={{ 
+            <Typography
+              variant={importance === 'primary' ? 'h6' : 'subtitle1'}
+              sx={{
                 fontWeight: importance === 'tertiary' ? 400 : 500,
-                color: importance === 'tertiary' ? 'text.secondary' : 'text.primary'
+                color: importance === 'tertiary' ? 'text.secondary' : 'text.primary',
               }}
             >
               {title}
             </Typography>
             {subtitle && (
-              <Typography 
-                variant="body2" 
-                color="text.secondary"
-                sx={{ mt: 0.5, opacity: 0.8 }}
-              >
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, opacity: 0.8 }}>
                 {subtitle}
               </Typography>
             )}
           </Box>
         </Box>
       )}
-      
+
       {divided && <Divider sx={{ my: 2 }} />}
-      
-      <Box sx={{ 
-        opacity: importance === 'primary' ? 1 : importance === 'secondary' ? 0.9 : 0.8
-      }}>
+
+      <Box
+        sx={{
+          opacity: importance === 'primary' ? 1 : importance === 'secondary' ? 0.9 : 0.8,
+        }}
+      >
         {children}
       </Box>
     </Box>
@@ -139,7 +131,7 @@ export const DataDisplay: React.FC<DataDisplayProps> = ({
   size = 'medium',
   orientation = 'horizontal',
   importance = 'primary',
-  sx = {}
+  sx = {},
 }) => {
   // サイズに応じたスタイルを取得
   const getSizeStyles = () => {
@@ -167,48 +159,46 @@ export const DataDisplay: React.FC<DataDisplayProps> = ({
   };
 
   const { labelVariant, valueVariant, spacing } = getSizeStyles();
-  
+
   const isVertical = orientation === 'vertical';
-  
+
   return (
     <Box
       sx={{
         display: 'flex',
         flexDirection: isVertical ? 'column' : 'row',
         alignItems: isVertical ? 'flex-start' : 'center',
-        ...sx
+        ...sx,
       }}
     >
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center',
-        mb: isVertical ? spacing : 0,
-        mr: isVertical ? 0 : 2,
-        opacity: importance === 'primary' ? 0.9 : importance === 'secondary' ? 0.8 : 0.7,
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          mb: isVertical ? spacing : 0,
+          mr: isVertical ? 0 : 2,
+          opacity: importance === 'primary' ? 0.9 : importance === 'secondary' ? 0.8 : 0.7,
+        }}
+      >
         {icon && (
           <Box sx={{ mr: 0.75 }}>
-            <OutlinedIcon 
-              icon={icon} 
-              size="small" 
-              sx={{ opacity: 0.8 }}
-            />
+            <OutlinedIcon icon={icon} size="small" sx={{ opacity: 0.8 }} />
           </Box>
         )}
         <Typography
           variant={labelVariant}
           className="label-text"
-          sx={{ 
+          sx={{
             color: 'text.secondary',
           }}
         >
           {label}
         </Typography>
       </Box>
-      
+
       <Typography
         variant={valueVariant}
-        sx={{ 
+        sx={{
           fontWeight: importance === 'primary' ? 500 : 400,
           color: importance === 'primary' ? 'text.primary' : 'text.secondary',
         }}
@@ -239,7 +229,7 @@ export const InfoSection: React.FC<InfoSectionProps> = ({
   importance = 'primary',
   bordered = false,
   background = false,
-  sx = {}
+  sx = {},
 }) => {
   // 重要度に応じたスタイルを取得
   const getStyles = () => {
@@ -264,11 +254,12 @@ export const InfoSection: React.FC<InfoSectionProps> = ({
     if (background) {
       return {
         ...base,
-        backgroundColor: importance === 'primary' 
-          ? 'background.paper' 
-          : importance === 'secondary'
-            ? 'rgba(0, 0, 0, 0.02)'
-            : 'transparent',
+        backgroundColor:
+          importance === 'primary'
+            ? 'background.paper'
+            : importance === 'secondary'
+              ? 'rgba(0, 0, 0, 0.02)'
+              : 'transparent',
       };
     }
 
@@ -279,14 +270,14 @@ export const InfoSection: React.FC<InfoSectionProps> = ({
     <Box
       sx={{
         ...getStyles(),
-        ...sx
+        ...sx,
       }}
     >
       {title && (
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
             mb: 2,
             pb: 1,
             borderBottom: bordered ? '1px solid' : 'none',
@@ -295,22 +286,18 @@ export const InfoSection: React.FC<InfoSectionProps> = ({
         >
           {icon && (
             <Box sx={{ mr: 1 }}>
-              <OutlinedIcon 
-                icon={icon} 
-                size="small" 
-                active={importance === 'primary'} 
-              />
+              <OutlinedIcon icon={icon} size="small" active={importance === 'primary'} />
             </Box>
           )}
-          <Typography 
+          <Typography
             variant={
-              importance === 'primary' 
-                ? 'subtitle1' 
-                : importance === 'secondary' 
-                  ? 'subtitle2' 
+              importance === 'primary'
+                ? 'subtitle1'
+                : importance === 'secondary'
+                  ? 'subtitle2'
                   : 'body2'
             }
-            sx={{ 
+            sx={{
               fontWeight: 500,
               color: importance === 'tertiary' ? 'text.secondary' : 'text.primary',
             }}
@@ -319,10 +306,8 @@ export const InfoSection: React.FC<InfoSectionProps> = ({
           </Typography>
         </Box>
       )}
-      
-      <Box>
-        {children}
-      </Box>
+
+      <Box>{children}</Box>
     </Box>
   );
-}; 
+};

@@ -11,7 +11,7 @@ interface CacheEntry<T> {
 class CacheManager {
   private cache: Map<string, CacheEntry<any>> = new Map();
   private defaultTTL: number = 60 * 1000; // デフォルトのTTL: 60秒
-  
+
   /**
    * キャッシュからデータを取得する
    * @param key キャッシュキー
@@ -19,21 +19,21 @@ class CacheManager {
    */
   get<T>(key: string): T | undefined {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return undefined; // キャッシュミス
     }
-    
+
     const now = Date.now();
     if (entry.expiry < now) {
       // キャッシュが期限切れなら削除
       this.cache.delete(key);
       return undefined;
     }
-    
+
     return entry.value as T;
   }
-  
+
   /**
    * データをキャッシュに保存する
    * @param key キャッシュキー
@@ -44,7 +44,7 @@ class CacheManager {
     const expiry = Date.now() + ttl;
     this.cache.set(key, { value, expiry });
   }
-  
+
   /**
    * キャッシュからデータを削除する
    * @param key キャッシュキー
@@ -52,7 +52,7 @@ class CacheManager {
   delete(key: string): void {
     this.cache.delete(key);
   }
-  
+
   /**
    * 指定されたプレフィックスで始まるすべてのキャッシュエントリを削除する
    * @param prefix キャッシュキーのプレフィックス
@@ -60,21 +60,21 @@ class CacheManager {
   deleteByPrefix(prefix: string): void {
     // Array.fromを使用してIterableをArrayに変換
     const keys = Array.from(this.cache.keys());
-    
+
     for (const key of keys) {
       if (key.startsWith(prefix)) {
         this.cache.delete(key);
       }
     }
   }
-  
+
   /**
    * キャッシュを完全にクリアする
    */
   clear(): void {
     this.cache.clear();
   }
-  
+
   /**
    * 期限切れの全てのキャッシュエントリを削除する
    */
@@ -82,7 +82,7 @@ class CacheManager {
     const now = Date.now();
     // Array.fromを使用してIterableをArrayに変換
     const entries = Array.from(this.cache.entries());
-    
+
     for (const [key, entry] of entries) {
       if (entry.expiry < now) {
         this.cache.delete(key);
@@ -92,4 +92,4 @@ class CacheManager {
 }
 
 // シングルトンとして公開
-export const cacheManager = new CacheManager(); 
+export const cacheManager = new CacheManager();

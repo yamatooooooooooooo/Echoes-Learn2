@@ -42,7 +42,7 @@ export const useSubjectProgress = (
   // 進捗記録を読み込む
   const loadProgressRecords = async () => {
     if (!subject || !subject.id || !progressRepo) return;
-    
+
     setLoading(true);
     try {
       const records = await progressRepo.getSubjectProgress(
@@ -60,40 +60,36 @@ export const useSubjectProgress = (
   // 進捗を追加
   const addProgress = async (formData: ProgressFormData) => {
     if (!subject || !subject.id || !progressRepo || !subjectRepo || !auth?.currentUser?.uid) return;
-    
+
     setIsAddingProgress(true);
     try {
       // 現在のページ数を計算
-      const newCurrentPage = Math.min(
-        subject.currentPage + formData.pagesRead,
-        subject.totalPages
-      );
-      
+      const newCurrentPage = Math.min(subject.currentPage + formData.pagesRead, subject.totalPages);
+
       // 進捗データを作成
       const progressData: ProgressCreateInput = {
         subjectId: subject.id,
         startPage: subject.currentPage,
         endPage: newCurrentPage,
         pagesRead: formData.pagesRead,
-        recordDate: formData.recordDate
+        recordDate: formData.recordDate,
       };
-      
+
       // 進捗を保存
       await progressRepo.addProgress(auth.currentUser.uid, progressData);
-      
+
       // 科目の現在のページ数を更新
       await subjectRepo.updateSubject(subject.id, { currentPage: newCurrentPage });
-      
+
       // 科目データを更新
       const updatedSubject = { ...subject, currentPage: newCurrentPage };
-      
+
       // 進捗記録を再読み込み
       await loadProgressRecords();
-      
+
       // コールバックを実行
       if (onProgressAdded) onProgressAdded();
       if (onSubjectUpdated) onSubjectUpdated(updatedSubject);
-      
     } catch (err) {
       setError(err instanceof Error ? err : new Error('進捗の追加に失敗しました'));
     } finally {
@@ -116,37 +112,33 @@ export const useSubjectProgress = (
   // 進捗を更新
   const updateProgress = async (progressId: string, formData: ProgressFormData) => {
     if (!subject || !subject.id || !progressId || !progressRepo || !subjectRepo) return;
-    
+
     setLoading(true);
     try {
       // 現在の進捗を取得
-      const currentProgress = progressRecords.find(p => p.id === progressId);
+      const currentProgress = progressRecords.find((p) => p.id === progressId);
       if (!currentProgress) throw new Error('進捗データが見つかりません');
-      
+
       // 読了ページ数の差分を計算
       const pagesDiff = formData.pagesRead - currentProgress.pagesRead;
-      
+
       // 科目の現在のページ数を再計算
-      const newCurrentPage = Math.min(
-        subject.currentPage + pagesDiff,
-        subject.totalPages
-      );
-      
+      const newCurrentPage = Math.min(subject.currentPage + pagesDiff, subject.totalPages);
+
       // 科目の現在のページ数を更新
       await subjectRepo.updateSubject(subject.id, { currentPage: newCurrentPage });
-      
+
       // 科目データを更新
       const updatedSubject = { ...subject, currentPage: newCurrentPage };
-      
+
       // 進捗記録を再読み込み
       await loadProgressRecords();
-      
+
       // 編集モードを終了
       cancelEditingProgress();
-      
+
       // コールバックを実行
       if (onSubjectUpdated) onSubjectUpdated(updatedSubject);
-      
     } catch (err) {
       setError(err instanceof Error ? err : new Error('進捗の更新に失敗しました'));
     } finally {
@@ -157,34 +149,33 @@ export const useSubjectProgress = (
   // 進捗を削除
   const deleteProgress = async (progressId: string) => {
     if (!subject || !subject.id || !progressId || !progressRepo || !subjectRepo) return;
-    
+
     setLoading(true);
     try {
       // 現在の進捗を取得
-      const currentProgress = progressRecords.find(p => p.id === progressId);
+      const currentProgress = progressRecords.find((p) => p.id === progressId);
       if (!currentProgress) throw new Error('進捗データが見つかりません');
-      
+
       // 読了ページ数を計算
       const pagesRead = currentProgress.pagesRead;
-      
+
       // 科目の現在のページ数を再計算
       const newCurrentPage = Math.max(subject.currentPage - pagesRead, 0);
-      
+
       // 進捗を削除
       await progressRepo.deleteProgress(progressId);
-      
+
       // 科目の現在のページ数を更新
       await subjectRepo.updateSubject(subject.id, { currentPage: newCurrentPage });
-      
+
       // 科目データを更新
       const updatedSubject = { ...subject, currentPage: newCurrentPage };
-      
+
       // 進捗記録を再読み込み
       await loadProgressRecords();
-      
+
       // コールバックを実行
       if (onSubjectUpdated) onSubjectUpdated(updatedSubject);
-      
     } catch (err) {
       setError(err instanceof Error ? err : new Error('進捗の削除に失敗しました'));
     } finally {
@@ -203,6 +194,6 @@ export const useSubjectProgress = (
     startEditingProgress,
     cancelEditingProgress,
     updateProgress,
-    deleteProgress
+    deleteProgress,
   };
-}; 
+};

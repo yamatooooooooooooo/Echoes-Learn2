@@ -1,7 +1,7 @@
 import React, { useState, ReactNode } from 'react';
-import { 
-  Card, 
-  CardContent, 
+import {
+  Card,
+  CardContent,
   CardHeader,
   Typography,
   Box,
@@ -13,10 +13,10 @@ import {
   ListItemText,
   ButtonBase,
   Tooltip,
-  Divider
+  Divider,
 } from '@mui/material';
 import { Draggable } from '@hello-pangea/dnd';
-import { 
+import {
   MoreHoriz as MoreHorizIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
@@ -24,7 +24,7 @@ import {
   VisibilityOff as VisibilityOffIcon,
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
-  DragIndicator as DragIndicatorIcon
+  DragIndicator as DragIndicatorIcon,
 } from '@mui/icons-material';
 
 interface NotionModuleCardProps {
@@ -62,7 +62,7 @@ export const NotionModuleCard: React.FC<NotionModuleCardProps> = ({
   isDraggingEnabled = true,
   canHide = true,
   isFirst = false,
-  isLast = false
+  isLast = false,
 }) => {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
@@ -112,11 +112,7 @@ export const NotionModuleCard: React.FC<NotionModuleCardProps> = ({
   };
 
   return (
-    <Draggable
-      draggableId={id}
-      index={index}
-      isDragDisabled={!isDraggingEnabled}
-    >
+    <Draggable draggableId={id} index={index} isDragDisabled={!isDraggingEnabled}>
       {(provided, snapshot) => (
         <Card
           ref={provided.innerRef}
@@ -131,8 +127,8 @@ export const NotionModuleCard: React.FC<NotionModuleCardProps> = ({
             transition: 'all 0.2s ease',
             position: 'relative',
             '&:hover': {
-              borderColor: 'rgba(200, 200, 200, 1)'
-            }
+              borderColor: 'rgba(200, 200, 200, 1)',
+            },
           }}
         >
           {/* ドラッグハンドル - 常に表示 */}
@@ -148,8 +144,8 @@ export const NotionModuleCard: React.FC<NotionModuleCardProps> = ({
                 alignItems: 'center',
                 opacity: snapshot.isDragging ? 1 : 0.2,
                 '&:hover': {
-                  opacity: 1
-                }
+                  opacity: 1,
+                },
               }}
             >
               <DragIndicatorIcon fontSize="small" />
@@ -166,13 +162,21 @@ export const NotionModuleCard: React.FC<NotionModuleCardProps> = ({
               borderBottom: collapsed ? 'none' : '1px solid rgba(230, 230, 230, 0.5)',
               cursor: 'pointer',
               '&:hover': {
-                backgroundColor: 'rgba(245, 247, 249, 0.5)'
-              }
+                backgroundColor: 'rgba(245, 247, 249, 0.5)',
+              },
             }}
             onClick={handleToggleCollapse}
             avatar={
               icon && (
-                <Box sx={{ color: 'text.secondary', opacity: 0.8, mr: 1, display: 'flex', alignItems: 'center' }}>
+                <Box
+                  sx={{
+                    color: 'text.secondary',
+                    opacity: 0.8,
+                    mr: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
                   {icon}
                 </Box>
               )
@@ -185,7 +189,7 @@ export const NotionModuleCard: React.FC<NotionModuleCardProps> = ({
                   fontSize: '1rem',
                   color: 'rgba(55, 53, 47, 1)',
                   display: 'flex',
-                  alignItems: 'center'
+                  alignItems: 'center',
                 }}
               >
                 {title}
@@ -210,11 +214,7 @@ export const NotionModuleCard: React.FC<NotionModuleCardProps> = ({
                 </IconButton>
 
                 {/* もっと見るメニュー */}
-                <IconButton
-                  onClick={handleMenuOpen}
-                  size="small"
-                  sx={{ ml: 0.5 }}
-                >
+                <IconButton onClick={handleMenuOpen} size="small" sx={{ ml: 0.5 }}>
                   <MoreHorizIcon fontSize="small" />
                 </IconButton>
 
@@ -237,8 +237,8 @@ export const NotionModuleCard: React.FC<NotionModuleCardProps> = ({
                       minWidth: 180,
                       borderRadius: '4px',
                       boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-                      mt: 0.5
-                    }
+                      mt: 0.5,
+                    },
                   }}
                 >
                   {/* 表示/非表示の切り替え */}
@@ -279,7 +279,7 @@ export const NotionModuleCard: React.FC<NotionModuleCardProps> = ({
               sx={{
                 p: 3,
                 backgroundColor: 'white',
-                '&:last-child': { pb: 3 }
+                '&:last-child': { pb: 3 },
               }}
             >
               {children}
@@ -289,4 +289,4 @@ export const NotionModuleCard: React.FC<NotionModuleCardProps> = ({
       )}
     </Draggable>
   );
-}; 
+};

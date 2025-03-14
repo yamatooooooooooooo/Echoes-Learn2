@@ -1,38 +1,17 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { 
-  getFirestore, 
+import {
+  getFirestore,
   Firestore,
   connectFirestoreEmulator,
   enableIndexedDbPersistence,
-  CACHE_SIZE_UNLIMITED
+  CACHE_SIZE_UNLIMITED,
 } from 'firebase/firestore';
-import { 
-  getAuth, 
-  Auth, 
-  connectAuthEmulator 
-} from 'firebase/auth';
-import { 
-  getStorage, 
-  FirebaseStorage,
-  connectStorageEmulator
-} from 'firebase/storage';
-import { 
-  getFunctions, 
-  Functions,
-  connectFunctionsEmulator
-} from 'firebase/functions';
-import { 
-  getPerformance
-} from 'firebase/performance';
-import { 
-  getAnalytics, 
-  Analytics,
-  logEvent
-} from 'firebase/analytics';
-import { 
-  getRemoteConfig,
-  RemoteConfig
-} from 'firebase/remote-config';
+import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
+import { getStorage, FirebaseStorage, connectStorageEmulator } from 'firebase/storage';
+import { getFunctions, Functions, connectFunctionsEmulator } from 'firebase/functions';
+import { getPerformance } from 'firebase/performance';
+import { getAnalytics, Analytics, logEvent } from 'firebase/analytics';
+import { getRemoteConfig, RemoteConfig } from 'firebase/remote-config';
 
 // Firebase設定
 const firebaseConfig = {
@@ -42,17 +21,17 @@ const firebaseConfig = {
   storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
   appId: process.env.REACT_APP_APP_ID,
-  measurementId: process.env.REACT_APP_MEASUREMENT_ID
+  measurementId: process.env.REACT_APP_MEASUREMENT_ID,
 };
 
 // デバッグ用：環境変数が設定されているか確認
-console.log("Firebase設定のデバッグ:", { 
-  apiKey: process.env.REACT_APP_API_KEY ? "設定済み" : "未設定",
-  authDomain: process.env.REACT_APP_AUTH_DOMAIN ? "設定済み" : "未設定",
-  projectId: process.env.REACT_APP_PROJECT_ID ? "設定済み" : "未設定",
-  storageBucket: process.env.REACT_APP_STORAGE_BUCKET ? "設定済み" : "未設定",
-  messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID ? "設定済み" : "未設定",
-  appId: process.env.REACT_APP_APP_ID ? "設定済み" : "未設定"
+console.log('Firebase設定のデバッグ:', {
+  apiKey: process.env.REACT_APP_API_KEY ? '設定済み' : '未設定',
+  authDomain: process.env.REACT_APP_AUTH_DOMAIN ? '設定済み' : '未設定',
+  projectId: process.env.REACT_APP_PROJECT_ID ? '設定済み' : '未設定',
+  storageBucket: process.env.REACT_APP_STORAGE_BUCKET ? '設定済み' : '未設定',
+  messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID ? '設定済み' : '未設定',
+  appId: process.env.REACT_APP_APP_ID ? '設定済み' : '未設定',
 });
 
 // Firebaseサービスの型定義
@@ -62,7 +41,7 @@ interface FirebaseServices {
   firestore: Firestore;
   storage: FirebaseStorage;
   functions: Functions;
-  performance?: any;  // より明確な型が必要な場合は後で定義
+  performance?: any; // より明確な型が必要な場合は後で定義
   analytics?: Analytics;
   remoteConfig?: RemoteConfig;
 }
@@ -75,15 +54,18 @@ const initializeFirebaseApp = (): FirebaseApp => {
     console.error('Firebase app initialization error:', error);
     throw error;
   }
-}
+};
 
 // Firestoreを初期化する関数
 const initializeFirestore = (app: FirebaseApp): Firestore => {
   try {
     const firestore = getFirestore(app);
-    
+
     // 開発環境でエミュレーターを使用
-    if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_USE_FIREBASE_EMULATORS === 'true') {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.REACT_APP_USE_FIREBASE_EMULATORS === 'true'
+    ) {
       connectFirestoreEmulator(firestore, 'localhost', 8080);
     } else {
       // 本番環境ではオフラインキャッシュを有効化
@@ -93,16 +75,30 @@ const initializeFirestore = (app: FirebaseApp): Firestore => {
           console.warn('Firestore persistence could not be enabled: multiple tabs open');
         } else if (err.code === 'unimplemented') {
           console.warn('Firestore persistence is not available in this browser');
+        } else if (err.message && err.message.includes('already been started and persistence')) {
+          console.warn('Firestore persistence already enabled or instance already initialized');
+        } else {
+          console.error('Error enabling persistence:', err);
         }
       });
     }
-    
+
     return firestore;
   } catch (error) {
     console.error('Firestore initialization error:', error);
+    // キャッチしたエラーがpersistenceに関するエラーである場合は、
+    // Firestoreインスタンスを返します
+    if (
+      error instanceof Error &&
+      error.message &&
+      error.message.includes('already been started and persistence')
+    ) {
+      console.warn('Returning Firestore instance even though persistence could not be enabled');
+      return getFirestore(app);
+    }
     throw error;
   }
-}
+};
 
 /**
  * Firebase初期化関数
@@ -111,19 +107,19 @@ const initializeFirestore = (app: FirebaseApp): Firestore => {
 export const initializeFirebase = (): FirebaseServices => {
   try {
     console.log('Initializing Firebase...');
-    
+
     // アプリ全体のFirebase初期化は一度だけ行う
     const app = initializeFirebaseApp();
     const auth = getAuth(app);
     const firestore = initializeFirestore(app);
     const storage = getStorage(app);
     const functions = getFunctions(app);
-    
+
     // 本番環境でのみ有効化する追加サービス
     let performance;
     let analytics;
     let remoteConfig;
-    
+
     if (process.env.NODE_ENV === 'production') {
       // Performance Monitoringを有効化
       try {
@@ -132,7 +128,7 @@ export const initializeFirebase = (): FirebaseServices => {
       } catch (perfError) {
         console.error('Error initializing Performance Monitoring:', perfError);
       }
-      
+
       // Analyticsを有効化
       try {
         if (process.env.REACT_APP_MEASUREMENT_ID) {
@@ -145,24 +141,27 @@ export const initializeFirebase = (): FirebaseServices => {
       } catch (analyticsError) {
         console.error('Error initializing Analytics:', analyticsError);
       }
-      
+
       // Remote Configを有効化
       try {
         remoteConfig = getRemoteConfig(app);
         remoteConfig.settings = {
           minimumFetchIntervalMillis: 3600000, // 1時間に一回の更新
-          fetchTimeoutMillis: 60000 // 1分のタイムアウト
+          fetchTimeoutMillis: 60000, // 1分のタイムアウト
         };
         console.log('Firebase Remote Config initialized');
       } catch (configError) {
         console.error('Error initializing Remote Config:', configError);
       }
     }
-    
+
     // 開発環境の場合、エミュレーターを使用
-    if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_USE_FIREBASE_EMULATORS === 'true') {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.REACT_APP_USE_FIREBASE_EMULATORS === 'true'
+    ) {
       console.log('Using Firebase Emulators');
-      
+
       // 各サービスのエミュレーターに接続
       try {
         connectAuthEmulator(auth, 'http://localhost:9099');
@@ -173,18 +172,18 @@ export const initializeFirebase = (): FirebaseServices => {
         console.error('Error connecting to Firebase emulators:', emulatorError);
       }
     }
-    
+
     console.log('Firebase initialized successfully');
-    
-    return { 
-      app, 
-      auth, 
-      firestore, 
-      storage, 
+
+    return {
+      app,
+      auth,
+      firestore,
+      storage,
       functions,
       performance,
       analytics,
-      remoteConfig
+      remoteConfig,
     };
   } catch (error) {
     console.error('Error initializing Firebase:', error);
@@ -219,4 +218,4 @@ export const storage = firebaseServices.storage;
 export const functions = firebaseServices.functions;
 export const performance = firebaseServices.performance;
 export const analytics = firebaseServices.analytics;
-export const remoteConfig = firebaseServices.remoteConfig; 
+export const remoteConfig = firebaseServices.remoteConfig;
