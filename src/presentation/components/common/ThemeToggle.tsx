@@ -8,13 +8,16 @@ import { useTheme } from '../../../contexts/ThemeContext';
  * テーマ切り替えボタンコンポーネント
  */
 export const ThemeToggle: React.FC = () => {
-  const { mode, currentTheme, toggleTheme } = useTheme();
+  const { mode, toggleMode } = useTheme();
   const muiTheme = useMuiTheme();
+  
+  // 現在のテーマ（light/dark）を計算
+  const isDarkMode = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   return (
-    <Tooltip title={currentTheme === 'light' ? 'ダークモードに切り替え' : 'ライトモードに切り替え'}>
+    <Tooltip title={isDarkMode ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}>
       <IconButton
-        onClick={toggleTheme}
+        onClick={toggleMode}
         color="inherit"
         aria-label="テーマ切り替え"
         sx={{
@@ -22,14 +25,14 @@ export const ThemeToggle: React.FC = () => {
           transition: 'all 0.3s',
           '&:hover': {
             transform: 'rotate(12deg)',
-            bgcolor: currentTheme === 'light' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)',
+            bgcolor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
           },
         }}
       >
-        {currentTheme === 'light' ? (
-          <Brightness4Icon sx={{ color: muiTheme.palette.text.primary }} />
-        ) : (
+        {isDarkMode ? (
           <Brightness7Icon sx={{ color: muiTheme.palette.text.primary }} />
+        ) : (
+          <Brightness4Icon sx={{ color: muiTheme.palette.text.primary }} />
         )}
       </IconButton>
     </Tooltip>

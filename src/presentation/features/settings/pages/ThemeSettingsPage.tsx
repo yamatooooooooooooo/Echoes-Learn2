@@ -31,10 +31,13 @@ import { useTheme, ThemeMode } from '../../../../contexts/ThemeContext';
  * テーマ設定画面
  */
 export const ThemeSettingsPage: React.FC = () => {
-  const { mode, currentTheme, setMode } = useTheme();
+  const { mode, setMode } = useTheme();
   const muiTheme = useMuiTheme();
   const [infoOpen, setInfoOpen] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // 現在のテーマ（light/dark）を計算
+  const isDarkMode = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const handleModeChange = (newMode: ThemeMode) => {
     setMode(newMode);
@@ -92,8 +95,8 @@ export const ThemeSettingsPage: React.FC = () => {
             <Card 
               variant="outlined" 
               sx={{ 
-                borderColor: currentTheme === 'light' ? 'primary.main' : 'divider',
-                boxShadow: currentTheme === 'light' ? 2 : 0
+                borderColor: mode === 'light' ? 'primary.main' : 'divider',
+                boxShadow: mode === 'light' ? 2 : 0
               }}
             >
               <CardActionArea onClick={() => handleModeChange('light')}>
@@ -123,8 +126,8 @@ export const ThemeSettingsPage: React.FC = () => {
             <Card 
               variant="outlined" 
               sx={{ 
-                borderColor: currentTheme === 'dark' ? 'primary.main' : 'divider',
-                boxShadow: currentTheme === 'dark' ? 2 : 0
+                borderColor: mode === 'dark' ? 'primary.main' : 'divider',
+                boxShadow: mode === 'dark' ? 2 : 0
               }}
             >
               <CardActionArea onClick={() => handleModeChange('dark')}>
@@ -187,12 +190,12 @@ export const ThemeSettingsPage: React.FC = () => {
               sx={{ 
                 p: 2,
                 border: '1px solid', 
-                borderColor: mode === 'auto' ? 'primary.main' : 'divider',
+                borderColor: mode === 'system' ? 'primary.main' : 'divider',
                 borderRadius: 1,
               }}
             >
               <FormControlLabel 
-                value="auto" 
+                value="system" 
                 control={<Radio />} 
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>

@@ -42,8 +42,11 @@ import {
   DragIndicator as DragIndicatorIcon,
   ExpandMore,
   ExpandLess,
-  Backup as BackupIcon
+  Backup as BackupIcon,
+  ChevronLeft as ChevronLeftIcon,
+  HelpOutline as HelpOutlineIcon
 } from '@mui/icons-material';
+import { Link as RouterLink } from 'react-router-dom';
 
 // サイドバーのプロパティ型
 interface SidebarProps {
@@ -139,6 +142,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     studyTracking: false
   });
   const [searchQuery, setSearchQuery] = useState('');
+
+  // ドロワーの幅をデバイスサイズに合わせて調整
+  const drawerWidth = isMobile ? 240 : isTablet ? 260 : 280;
 
   // フォルダの開閉状態を切り替える
   const toggleFolder = (folderId: string) => {
@@ -520,85 +526,208 @@ export const Sidebar: React.FC<SidebarProps> = ({
     };
   }, [open, isMobile]);
 
-  return (
+  // ドロワーの内容コンポーネント - 先に定義する
+  const DrawerContent = () => (
     <>
-      {/* AppBarを削除 */}
-      
-      {/* メニューボタンを独立して配置 */}
-      <IconButton
-        color="inherit"
-        aria-label={open ? 'メニューを閉じる' : 'メニューを開く'}
-        edge="start"
-        onClick={onToggle}
+      <Toolbar 
         sx={{ 
-          position: 'fixed',
-          top: 16,
-          left: 16,
-          zIndex: theme.zIndex.drawer + 2,
-          backgroundColor: theme.palette.background.paper,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          '&:hover': {
-            backgroundColor: alpha(theme.palette.primary.main, 0.08),
-          }
+          display: 'flex', 
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: 1,
+          py: 1.5
         }}
       >
-        <MenuIcon />
-      </IconButton>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Avatar
+            alt="Echoes Learn"
+            src="/logo.png"
+            sx={{ 
+              width: 32, 
+              height: 32, 
+              mr: 1,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              bgcolor: 'background.paper'
+            }}
+          />
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ 
+              fontWeight: 600,
+              fontSize: '1.1rem',
+              background: 'linear-gradient(45deg, #4B8AF0 30%, #7367F0 90%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            Echoes Learn
+          </Typography>
+        </Box>
+        <IconButton onClick={onToggle} sx={{ ml: 1 }}>
+          <ChevronLeftIcon />
+        </IconButton>
+      </Toolbar>
+      <Divider />
       
-      {/* モバイル用ドロワー */}
-      {isMobile ? (
-        <SwipeableDrawer
-          variant="temporary"
-          open={open}
-          onClose={onToggle}
-          onOpen={onToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
+      <Box sx={{ 
+        overflowY: 'auto',
+        flex: 1,
+        p: 1,
+        '::-webkit-scrollbar': {
+          width: '4px',
+        },
+        '::-webkit-scrollbar-track': {
+          backgroundColor: 'transparent',
+        },
+        '::-webkit-scrollbar-thumb': {
+          backgroundColor: theme.palette.divider,
+          borderRadius: '4px',
+        }
+      }}>
+        <List 
+          dense 
+          component="nav"
+          sx={{ p: 0 }}
+        >
+          {renderMenuItems(sidebarItems)}
+        </List>
+      </Box>
+      
+      <Divider />
+      
+      <List dense sx={{ p: 0 }}>
+        <ListItemButton 
           sx={{
-            '& .MuiDrawer-paper': { 
-              width: '85%',
-              maxWidth: 280, 
-              boxSizing: 'border-box',
-              backgroundColor: theme.palette.background.paper,
-              borderRight: '1px solid',
-              borderColor: theme.palette.divider,
-              boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.08)'
+            borderRadius: 1,
+            mb: 0.5,
+            '&:hover': {
+              backgroundColor: theme.palette.action.hover,
             },
-            zIndex: theme.zIndex.drawer + 2,
+          }}
+          onClick={() => onMenuSelect('settings')}
+        >
+          <ListItemIcon>
+            <SettingsIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="設定" />
+        </ListItemButton>
+        
+        <ListItemButton
+          component={RouterLink}
+          to="/help"
+          sx={{
+            borderRadius: 1,
+            '&:hover': {
+              backgroundColor: theme.palette.action.hover,
+            },
           }}
         >
-          {drawerContent}
-        </SwipeableDrawer>
-      ) : (
-        // タブレット・デスクトップ用ドロワー
-        <Drawer
-          variant="persistent"
-          open={open}
-          onClose={onToggle}
-          sx={{
-            width: sidebarWidth,
-            flexShrink: 0,
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { 
-              width: sidebarWidth, 
-              boxSizing: 'border-box',
-              backgroundColor: theme.palette.background.paper,
-              borderRight: '1px solid',
-              borderColor: theme.palette.divider,
-              height: '100%',
-              boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
-              transition: resizing ? 'none' : theme.transitions.create('width', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
-            },
-            zIndex: theme.zIndex.drawer,
-          }}
-        >
-          {drawerContent}
-        </Drawer>
-      )}
+          <ListItemIcon>
+            <HelpOutlineIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="ヘルプ" />
+        </ListItemButton>
+      </List>
     </>
+  );
+
+  // モバイル用ドロワー
+  const mobileDrawer = (
+    <Drawer
+      variant="temporary"
+      open={open}
+      onClose={onToggle}
+      ModalProps={{
+        keepMounted: true, // モバイルでのパフォーマンス向上
+      }}
+      sx={{
+        '& .MuiDrawer-paper': { 
+          width: drawerWidth,
+          boxSizing: 'border-box',
+          boxShadow: theme.shadows[5],
+          borderRadius: { xs: 0, sm: '0 8px 8px 0' }
+        },
+      }}
+    >
+      <DrawerContent />
+    </Drawer>
+  );
+
+  // デスクトップ用ドロワー
+  const desktopDrawer = (
+    <Drawer
+      variant="persistent"
+      anchor="left"
+      open={open}
+      sx={{
+        '& .MuiDrawer-paper': { 
+          width: drawerWidth,
+          boxSizing: 'border-box',
+          borderRight: `1px solid ${theme.palette.divider}`,
+          // スクロールバーのカスタマイズ
+          '&::-webkit-scrollbar': {
+            width: '4px',
+          },
+          '&::-webkit-scrollbar-track': {
+            backgroundColor: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: theme.palette.divider,
+            borderRadius: '4px',
+          }
+        },
+      }}
+    >
+      <DrawerContent />
+    </Drawer>
+  );
+
+  return (
+    <nav>
+      {/* モバイルアプリバー */}
+      <AppBar
+        position="fixed"
+        color="default"
+        elevation={1}
+        sx={{
+          display: { sm: 'none' },
+          bgcolor: theme.palette.background.paper,
+          zIndex: theme.zIndex.drawer + 1,
+        }}
+      >
+        <Toolbar sx={{ px: 1 }}>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={onToggle}
+            sx={{ mr: 1 }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar
+              sx={{
+                bgcolor: theme.palette.primary.main,
+                color: theme.palette.primary.contrastText,
+                width: 32,
+                height: 32,
+                mr: 1,
+              }}
+            >
+              E
+            </Avatar>
+            <Typography variant="subtitle1" component="div" sx={{ fontWeight: 'bold' }}>
+              Echoes Learn
+            </Typography>
+          </Box>
+        </Toolbar>
+      </AppBar>
+      
+      {/* デバイスタイプに応じたドロワーの表示 */}
+      {isMobile ? mobileDrawer : desktopDrawer}
+    </nav>
   );
 }; 

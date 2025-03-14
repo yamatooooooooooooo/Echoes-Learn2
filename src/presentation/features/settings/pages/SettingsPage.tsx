@@ -32,8 +32,11 @@ import {
  */
 export const SettingsPage: React.FC = () => {
   const [selectedTab, setSelectedTab] = React.useState(0);
-  const { mode, setMode, currentTheme } = useTheme();
+  const { mode, setMode } = useTheme();
   const muiTheme = useMuiTheme();
+  
+  // 現在のテーマ（light/dark）を計算
+  const isDarkMode = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
@@ -150,7 +153,7 @@ export const SettingsPage: React.FC = () => {
                 
                 <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    現在の表示モード: <strong>{currentTheme === 'light' ? 'ライトモード' : 'ダークモード'}</strong>
+                    現在の表示モード: <strong>{mode === 'dark' ? 'ダークモード' : 'ライトモード'}</strong>
                     {mode === 'system' && ' (システム設定に基づく)'}
                   </Typography>
                 </Box>

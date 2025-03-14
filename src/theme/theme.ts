@@ -400,18 +400,54 @@ export const darkThemeOptions: ThemeOptions = {
       main: '#94A3B8',
     },
     background: {
-      default: '#121212',
-      paper: '#1E1E1E',
+      default: '#0A0A0A', // より暗い背景色
+      paper: '#141414', // ペーパー要素の背景色も調整
     },
     text: {
-      primary: '#E2E8F0',
-      secondary: '#94A3B8',
+      primary: '#F8FAFC', // より明るいテキスト色でコントラスト向上
+      secondary: '#A0AEC0', // 二次テキストも調整
     },
     divider: '#2D3748',
+    action: {
+      active: '#F8FAFC',
+      hover: 'rgba(255, 255, 255, 0.08)',
+      selected: 'rgba(255, 255, 255, 0.16)',
+      disabled: 'rgba(255, 255, 255, 0.3)',
+      disabledBackground: 'rgba(255, 255, 255, 0.12)',
+    }
   },
   typography: lightThemeOptions.typography,
   spacing: lightThemeOptions.spacing,
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: '#0A0A0A', // bodyタグのバックグラウンドも明示的に設定
+          color: '#F8FAFC',
+          margin: 0,
+          padding: 0,
+          WebkitTapHighlightColor: 'transparent',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          touchAction: 'manipulation',
+        },
+        // ダークモード時のスクロールバースタイル
+        '::-webkit-scrollbar': {
+          width: '8px',
+          height: '8px',
+        },
+        '::-webkit-scrollbar-track': {
+          background: '#141414',
+        },
+        '::-webkit-scrollbar-thumb': {
+          background: '#2D3748',
+          borderRadius: '4px',
+        },
+        '::-webkit-scrollbar-thumb:hover': {
+          background: '#4A5568',
+        }
+      }
+    },
     MuiButton: {
       styleOverrides: {
         root: {
@@ -446,20 +482,21 @@ export const darkThemeOptions: ThemeOptions = {
           borderRadius: 8,
           boxShadow: 'none',
           border: '1px solid #2D3748',
+          backgroundColor: '#141414', // カードの背景色を明示的に指定
           transition: 'all 0.25s ease-in-out',
           '&:hover': {
             borderColor: '#4A5568',
             transform: 'translateY(-2px)',
-            boxShadow: '0 3px 8px rgba(0, 0, 0, 0.2)',
-          }
+            boxShadow: '0 3px 8px rgba(0, 0, 0, 0.3)',
+          },
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          boxShadow: 'none',
+          backgroundColor: '#141414', // ペーパーの背景色も統一
+          color: '#F8FAFC',
         },
         elevation1: {
           boxShadow: 'none',
@@ -467,10 +504,27 @@ export const darkThemeOptions: ThemeOptions = {
         },
       },
     },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: 'none',
+          borderBottom: '1px solid #2D3748',
+          backgroundColor: '#0A0A0A', // AppBarの背景色を調整
+          color: '#F8FAFC',
+        },
+      },
+    },
+    MuiToolbar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#0A0A0A', // ツールバーの背景色も調整
+        },
+      },
+    },
     MuiDivider: {
       styleOverrides: {
         root: {
-          borderColor: '#2D3748',
+          borderColor: '#2D3748', // 区切り線の色を調整
         },
       },
     },
@@ -478,7 +532,6 @@ export const darkThemeOptions: ThemeOptions = {
       styleOverrides: {
         root: {
           borderBottom: '1px solid #2D3748',
-          padding: '1rem 1.5rem',
         },
       },
     },

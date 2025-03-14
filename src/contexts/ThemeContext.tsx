@@ -1,33 +1,45 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ThemeProvider } from '@mui/material/styles';
-import { createAppTheme } from '../theme/theme';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import React, { createContext, useContext, useState, useEffect, FC, ReactNode } from 'react';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { darkThemeOptions, lightThemeOptions } from '../theme/theme';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // テーマモードの定義
-export type ThemeMode = 'light' | 'dark' | 'system' | 'auto';
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 // 科目別テーマ設定の型
 export interface SubjectTheme {
-  subjectId: string;
-  mode: 'light' | 'dark' | 'inherit'; // inheritはグローバル設定を継承
+  id: string;
+  name: string;
+  color: string;
 }
 
 // テーマコンテキストの型定義
-interface ThemeContextType {
+export interface ThemeContextType {
   mode: ThemeMode;
-  currentTheme: 'light' | 'dark'; // 実際に適用されているテーマ
   setMode: (mode: ThemeMode) => void;
-  toggleTheme: () => void; // テーマを切り替える関数
-  subjectThemes: SubjectTheme[]; // 科目別テーマ設定
-  setSubjectTheme: (subjectId: string, mode: 'light' | 'dark' | 'inherit') => void; // 科目別テーマを設定
-  getSubjectTheme: (subjectId: string) => 'light' | 'dark'; // 科目のテーマを取得
+  toggleMode: () => void;
+  subjectThemes: SubjectTheme[];
+  activeSubjectTheme: SubjectTheme | null;
+  setActiveSubjectTheme: (theme: SubjectTheme | null) => void;
+  addSubjectTheme: (theme: SubjectTheme) => void;
+  removeSubjectTheme: (id: string) => void;
+  updateSubjectTheme: (id: string, updates: Partial<SubjectTheme>) => void;
 }
+
+const defaultSubjectThemes: SubjectTheme[] = [
+  { id: 'default', name: 'デフォルト', color: '#4B8AF0' },
+  { id: 'green', name: '緑', color: '#10B981' },
+  { id: 'purple', name: '紫', color: '#8B5CF6' },
+  { id: 'pink', name: 'ピンク', color: '#EC4899' },
+  { id: 'yellow', name: '黄色', color: '#F59E0B' },
+];
 
 // コンテキストの作成
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // プロバイダーコンポーネントのプロパティ型
-interface ThemeProviderProps {
+interface AppThemeProviderProps {
   children: ReactNode;
 }
 
@@ -35,123 +47,162 @@ interface ThemeProviderProps {
  * テーマプロバイダーコンポーネント
  * アプリケーション全体でテーマを管理する
  */
-export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  // ローカルストレージにテーマ設定を保存
-  const [mode, setMode] = useLocalStorage<ThemeMode>('themeMode', 'system');
-  const [subjectThemes, setSubjectThemes] = useLocalStorage<SubjectTheme[]>('subjectThemes', []);
+export const AppThemeProvider: FC<AppThemeProviderProps> = ({ children }) => {
+  // システム設定の検出を強化（初期値としてだけでなく継続的に監視）
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   
-  // 実際に適用するテーマ（light または dark）
-  const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('light');
-  // エラー状態
-  const [error, setError] = useState<string | null>(null);
-
-  // テーマを適用する関数
-  const applyTheme = (mode: ThemeMode) => {
-    try {
-      let theme: 'light' | 'dark' = 'light';
-      
-      if (mode === 'light' || mode === 'dark') {
-        theme = mode;
-      } else if (mode === 'system' || mode === 'auto') {
-        // システムのテーマ設定を取得
-        const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        theme = prefersDarkMode ? 'dark' : 'light';
-      }
-      
-      setCurrentTheme(theme);
-      // DOMのdata-theme属性も設定してCSSでも利用できるようにする
-      document.documentElement.setAttribute('data-theme', theme);
-      setError(null);
-    } catch (err) {
-      console.error('テーマの適用に失敗しました', err);
-      setError('テーマの適用に失敗しました');
+  // 保存されたテーマモードの取得を改善
+  const [mode, setModeState] = useState<ThemeMode>(() => {
+    const savedMode = localStorage.getItem('themeMode');
+    // 有効な値のみ許可（型安全性を確保）
+    if (savedMode === 'light' || savedMode === 'dark' || savedMode === 'system') {
+      return savedMode as ThemeMode;
     }
-  };
-
-  // テーマの変更を監視し、適用する
-  useEffect(() => {
-    applyTheme(mode);
-  }, [mode]);
-
-  // システムのダークモード設定を監視
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const handleChange = () => {
-      if (mode === 'system') {
-        applyTheme('system');
-      }
-    };
-    
-    // 初期化時にも一度実行
-    handleChange();
-    
-    // イベントリスナーの追加
-    try {
-      // 新しいAPI (addEventListener)をサポートしているブラウザ
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    } catch (e1) {
+    return 'system'; // デフォルト値
+  });
+  
+  // 実際の表示テーマの計算（'system'の場合はシステム設定に従う）
+  const actualTheme = mode === 'system' 
+    ? (prefersDarkMode ? 'dark' : 'light')
+    : mode;
+  
+  // サブジェクトテーマの状態管理を改善
+  const [subjectThemes, setSubjectThemes] = useState<SubjectTheme[]>(() => {
+    const savedThemes = localStorage.getItem('subjectThemes');
+    if (savedThemes) {
       try {
-        // 古いブラウザ向けのフォールバック (addListener)
-        mediaQuery.addListener(handleChange);
-        return () => mediaQuery.removeListener(handleChange);
-      } catch (e2) {
-        console.error('メディアクエリリスナーの設定に失敗しました', e2);
+        return JSON.parse(savedThemes);
+      } catch (e) {
+        console.error('Failed to parse saved subject themes:', e);
+        return defaultSubjectThemes;
       }
     }
-  }, [mode]);
+    return defaultSubjectThemes;
+  });
+  
+  const [activeSubjectTheme, setActiveSubjectThemeState] = useState<SubjectTheme | null>(() => {
+    const savedActiveTheme = localStorage.getItem('activeSubjectTheme');
+    if (savedActiveTheme) {
+      try {
+        return JSON.parse(savedActiveTheme);
+      } catch (e) {
+        console.error('Failed to parse saved active subject theme:', e);
+        return null;
+      }
+    }
+    return null;
+  });
 
-  // テーマの切り替え
-  const toggleTheme = () => {
-    if (mode === 'light') {
-      setMode('dark');
-    } else if (mode === 'dark') {
-      setMode('system');
-    } else {
-      setMode('light');
+  // モードの変更時にローカルストレージを更新
+  const setMode = (newMode: ThemeMode) => {
+    setModeState(newMode);
+    localStorage.setItem('themeMode', newMode);
+    console.log(`Theme mode set to: ${newMode}`); // デバッグログ追加
+  };
+
+  // モードの切り替え機能
+  const toggleMode = () => {
+    setModeState(prevMode => {
+      if (prevMode === 'light') return 'dark';
+      if (prevMode === 'dark') return 'system';
+      return 'light';
+    });
+  };
+
+  // アクティブなサブジェクトテーマの設定
+  const setActiveSubjectTheme = (theme: SubjectTheme | null) => {
+    setActiveSubjectThemeState(theme);
+    localStorage.setItem('activeSubjectTheme', theme ? JSON.stringify(theme) : '');
+    console.log(`Active subject theme set to:`, theme); // デバッグログ追加
+  };
+
+  // サブジェクトテーマの追加
+  const addSubjectTheme = (theme: SubjectTheme) => {
+    setSubjectThemes(prev => {
+      const updated = [...prev, theme];
+      localStorage.setItem('subjectThemes', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // サブジェクトテーマの削除
+  const removeSubjectTheme = (id: string) => {
+    setSubjectThemes(prev => {
+      const updated = prev.filter(theme => theme.id !== id);
+      localStorage.setItem('subjectThemes', JSON.stringify(updated));
+      return updated;
+    });
+    
+    // 削除されたテーマが現在アクティブな場合、アクティブテーマをリセット
+    if (activeSubjectTheme?.id === id) {
+      setActiveSubjectTheme(null);
     }
   };
 
-  // 科目別テーマを設定
-  const setSubjectTheme = (subjectId: string, mode: 'light' | 'dark' | 'inherit') => {
-    const existingIndex = subjectThemes.findIndex(theme => theme.subjectId === subjectId);
+  // サブジェクトテーマの更新
+  const updateSubjectTheme = (id: string, updates: Partial<SubjectTheme>) => {
+    setSubjectThemes(prev => {
+      const updated = prev.map(theme => 
+        theme.id === id ? { ...theme, ...updates } : theme
+      );
+      localStorage.setItem('subjectThemes', JSON.stringify(updated));
+      return updated;
+    });
     
-    if (existingIndex >= 0) {
-      const updatedThemes = [...subjectThemes];
-      updatedThemes[existingIndex] = { subjectId, mode };
-      setSubjectThemes(updatedThemes);
-    } else {
-      setSubjectThemes([...subjectThemes, { subjectId, mode }]);
+    // 更新されたテーマが現在アクティブな場合、アクティブテーマも更新
+    if (activeSubjectTheme?.id === id) {
+      setActiveSubjectTheme({ ...activeSubjectTheme, ...updates });
     }
   };
 
-  // 科目のテーマを取得
-  const getSubjectTheme = (subjectId: string): 'light' | 'dark' => {
-    const subjectTheme = subjectThemes.find(theme => theme.subjectId === subjectId);
+  // システム設定の変更を監視し、'system'モードの場合は自動的にテーマを更新
+  useEffect(() => {
+    if (mode === 'system') {
+      // システム設定が変更された場合、コンポーネントを再レンダリングするためのダミー更新
+      setModeState('system');
+      console.log(`System preference changed to: ${prefersDarkMode ? 'dark' : 'light'}`); // デバッグログ追加
+    }
+  }, [prefersDarkMode, mode]);
+
+  // テーマの作成 - 選択されたモードとアクティブなサブジェクトテーマに基づく
+  const theme = React.useMemo(() => {
+    // ベースとなるテーマオプションを選択
+    const baseThemeOptions = actualTheme === 'dark' ? darkThemeOptions : lightThemeOptions;
     
-    if (!subjectTheme || subjectTheme.mode === 'inherit') {
-      return currentTheme;
+    // アクティブなサブジェクトテーマがある場合、primary colorをカスタマイズ
+    if (activeSubjectTheme) {
+      return createTheme({
+        ...baseThemeOptions,
+        palette: {
+          ...baseThemeOptions.palette,
+          primary: {
+            main: activeSubjectTheme.color,
+            ...(baseThemeOptions.palette?.primary || {})
+          }
+        }
+      });
     }
     
-    return subjectTheme.mode;
-  };
+    return createTheme(baseThemeOptions);
+  }, [actualTheme, activeSubjectTheme]);
 
-  // コンテキスト値の作成
+  // コンテキスト値の構築
   const contextValue: ThemeContextType = {
     mode,
-    currentTheme,
     setMode,
-    toggleTheme,
+    toggleMode,
     subjectThemes,
-    setSubjectTheme,
-    getSubjectTheme
+    activeSubjectTheme,
+    setActiveSubjectTheme,
+    addSubjectTheme,
+    removeSubjectTheme,
+    updateSubjectTheme,
   };
 
-  // アプリ全体のテーマを適用したThemeProviderでラップ
   return (
     <ThemeContext.Provider value={contextValue}>
-      <ThemeProvider theme={createAppTheme(currentTheme)}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
         {children}
       </ThemeProvider>
     </ThemeContext.Provider>
@@ -159,10 +210,10 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
 };
 
 // テーマコンテキストを使用するためのカスタムフック
-export const useTheme = () => {
+export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a AppThemeProvider');
+    throw new Error('useTheme must be used within an AppThemeProvider');
   }
   return context;
 };
