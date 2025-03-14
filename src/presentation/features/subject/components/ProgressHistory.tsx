@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -56,6 +56,149 @@ interface ProgressHistoryProps {
   subjectTotalPages: number;
 }
 
+// 進捗レコードアイテムを別コンポーネントとして分離し、React.memoでラップ
+const ProgressRecordItem = React.memo(({ 
+  progress, 
+  onShowDetails, 
+  onOpenEditDialog, 
+  onOpenDeleteDialog, 
+  isLastItem 
+}: { 
+  progress: Progress; 
+  onShowDetails: (progress: Progress) => void; 
+  onOpenEditDialog: (progress: Progress) => void; 
+  onOpenDeleteDialog: (progressId: string) => void; 
+  isLastItem: boolean;
+}) => {
+  return (
+    <ListItem
+      secondaryAction={
+        <Stack direction="row" spacing={0.5}>
+          <Tooltip title="詳細">
+            <IconButton 
+              edge="end" 
+              size="small" 
+              onClick={() => onShowDetails(progress)}
+            >
+              <InfoIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="編集">
+            <IconButton 
+              edge="end" 
+              size="small"
+              onClick={() => onOpenEditDialog(progress)}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="削除">
+            <IconButton 
+              edge="end" 
+              size="small"
+              onClick={() => onOpenDeleteDialog(progress.id!)}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      }
+      sx={{ 
+        borderBottom: isLastItem ? 'none' : '1px dashed',
+        borderColor: 'divider',
+        '&:hover': {
+          bgcolor: 'action.hover'
+        }
+      }}
+    >
+      <ListItemText
+        primary={
+          <React.Fragment>
+            <Typography variant="body2" component="span">
+              {progress.startPage} → {progress.endPage} ページ
+            </Typography>
+            <Chip 
+              label={`${progress.pagesRead}ページ読了`}
+              size="small"
+              color="primary"
+              variant="outlined"
+              sx={{ ml: 1, height: 20, fontSize: '0.7rem' }}
+            />
+          </React.Fragment>
+        }
+        secondary={
+          <React.Fragment>
+            <Typography 
+              variant="caption" 
+              color="text.secondary" 
+              component="span"
+            >
+              {progress.studyDuration 
+                ? `${progress.studyDuration}分の学習 · ` 
+                : ''}
+              {progress.satisfactionLevel && (
+                progress.satisfactionLevel === 'good' ? '😊 充実した学習 · ' :
+                progress.satisfactionLevel === 'bad' ? '😔 難しかった · ' :
+                '😐 普通 · '
+              )}
+              {progress.memo && progress.memo.length > 20 
+                ? progress.memo.substring(0, 20) + '...' 
+                : progress.memo}
+            </Typography>
+          </React.Fragment>
+        }
+      />
+    </ListItem>
+  );
+});
+
+// デイリーセクションコンポーネントを分離
+const DailyProgressSection = React.memo(({ 
+  dateStr, 
+  records, 
+  onShowDetails, 
+  onOpenEditDialog, 
+  onOpenDeleteDialog 
+}: { 
+  dateStr: string; 
+  records: Progress[]; 
+  onShowDetails: (progress: Progress) => void; 
+  onOpenEditDialog: (progress: Progress) => void; 
+  onOpenDeleteDialog: (progressId: string) => void; 
+}) => {
+  return (
+    <Box key={dateStr}>
+      {/* 日付ヘッダー */}
+      <Box 
+        sx={{ 
+          p: 1.5, 
+          bgcolor: 'background.default',
+          borderBottom: '1px solid',
+          borderColor: 'divider'
+        }}
+      >
+        <Typography variant="subtitle2">
+          {format(new Date(dateStr), 'yyyy年M月d日（EEE）', { locale: ja })}
+        </Typography>
+      </Box>
+      
+      {/* その日の進捗リスト */}
+      <List dense disablePadding>
+        {records.map((progress, index) => (
+          <ProgressRecordItem
+            key={progress.id || index}
+            progress={progress}
+            onShowDetails={onShowDetails}
+            onOpenEditDialog={onOpenEditDialog}
+            onOpenDeleteDialog={onOpenDeleteDialog}
+            isLastItem={index === records.length - 1}
+          />
+        ))}
+      </List>
+    </Box>
+  );
+});
+
 /**
  * 進捗履歴をタイムライン形式で表示し、フィルタリング機能を提供するコンポーネント
  */
@@ -94,24 +237,24 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
   // 操作中の状態
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // フィルター変更ハンドラー
-  const handleFilterChange = (
+  // フィルター変更ハンドラー - useCallbackでメモ化
+  const handleFilterChange = useCallback((
     _event: React.MouseEvent<HTMLElement>,
     newFilter: FilterType | null
   ) => {
     if (newFilter !== null) {
       setFilter(newFilter);
     }
-  };
+  }, []);
 
-  // 詳細表示ハンドラー
-  const handleShowDetails = (progress: Progress) => {
+  // 詳細表示ハンドラー - useCallbackでメモ化
+  const handleShowDetails = useCallback((progress: Progress) => {
     setSelectedProgress(progress);
     setDetailDialogOpen(true);
-  };
+  }, []);
   
-  // 編集ダイアログを開く
-  const handleOpenEditDialog = (progress: Progress) => {
+  // 編集ダイアログを開く - useCallbackでメモ化
+  const handleOpenEditDialog = useCallback((progress: Progress) => {
     setEditingProgress(progress);
     setEditFormData({
       startPage: progress.startPage,
@@ -123,10 +266,10 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
     });
     setEditFormErrors({});
     setEditDialogOpen(true);
-  };
+  }, []);
   
-  // 編集フォームの入力変更
-  const handleEditFormChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | { value: unknown }> | SelectChangeEvent<string>) => {
+  // 編集フォームの入力変更 - useCallbackでメモ化
+  const handleEditFormChange = useCallback((field: string) => (e: React.ChangeEvent<HTMLInputElement | { value: unknown }> | SelectChangeEvent<string>) => {
     const value = e.target.value;
     setEditFormData(prev => ({
       ...prev,
@@ -134,16 +277,16 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
     }));
     
     // エラーをクリア
-    if (editFormErrors[field]) {
-      setEditFormErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
-  };
+    setEditFormErrors(prev => {
+      if (!prev[field]) return prev;
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  }, []);
   
-  // 編集フォームのバリデーション
-  const validateEditForm = (): boolean => {
+  // 編集フォームのバリデーション - useCallbackでメモ化
+  const validateEditForm = useCallback((): boolean => {
     const errors: Record<string, string> = {};
     
     if (editFormData.startPage < 0) {
@@ -168,10 +311,10 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
     
     setEditFormErrors(errors);
     return Object.keys(errors).length === 0;
-  };
+  }, [editFormData, subjectTotalPages]);
   
-  // 編集を保存
-  const handleSaveEdit = async () => {
+  // 編集を保存 - useCallbackでメモ化
+  const handleSaveEdit = useCallback(async () => {
     if (!editingProgress || !validateEditForm()) return;
     
     setIsSubmitting(true);
@@ -197,16 +340,16 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [editingProgress, validateEditForm, editFormData, onEdit]);
   
-  // 削除ダイアログを開く
-  const handleOpenDeleteDialog = (progressId: string) => {
+  // 削除ダイアログを開く - useCallbackでメモ化
+  const handleOpenDeleteDialog = useCallback((progressId: string) => {
     setDeletingProgressId(progressId);
     setDeleteDialogOpen(true);
-  };
+  }, []);
   
-  // 進捗記録を削除
-  const handleConfirmDelete = async () => {
+  // 進捗記録を削除 - useCallbackでメモ化
+  const handleConfirmDelete = useCallback(async () => {
     if (!deletingProgressId) return;
     
     setIsSubmitting(true);
@@ -219,7 +362,7 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [deletingProgressId, onDelete]);
 
   // 日付でソートされたフィルター済みの進捗記録
   const filteredAndSortedProgress = useMemo(() => {
@@ -273,6 +416,28 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
     return grouped;
   }, [filteredAndSortedProgress]);
 
+  // 日付の配列をメモ化
+  const dateKeys = useMemo(() => Object.keys(progressByDate), [progressByDate]);
+
+  // 詳細ダイアログを閉じる - useCallbackでメモ化
+  const handleCloseDetailDialog = useCallback(() => {
+    setDetailDialogOpen(false);
+  }, []);
+
+  // 編集ダイアログを閉じる - useCallbackでメモ化
+  const handleCloseEditDialog = useCallback(() => {
+    if (!isSubmitting) {
+      setEditDialogOpen(false);
+    }
+  }, [isSubmitting]);
+
+  // 削除ダイアログを閉じる - useCallbackでメモ化
+  const handleCloseDeleteDialog = useCallback(() => {
+    if (!isSubmitting) {
+      setDeleteDialogOpen(false);
+    }
+  }, [isSubmitting]);
+
   // 読み込み中表示
   if (loading) {
     return (
@@ -303,7 +468,7 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
   }
 
   // フィルター後のデータがない場合
-  if (Object.keys(progressByDate).length === 0) {
+  if (dateKeys.length === 0) {
     return (
       <Box>
         {/* フィルターUI */}
@@ -361,108 +526,15 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
 
       {/* タイムライン表示 */}
       <Paper variant="outlined">
-        {Object.entries(progressByDate).map(([dateStr, records], dateIndex) => (
-          <Box key={dateStr}>
-            {/* 日付ヘッダー */}
-            <Box 
-              sx={{ 
-                p: 1.5, 
-                bgcolor: 'background.default',
-                borderBottom: '1px solid',
-                borderColor: 'divider'
-              }}
-            >
-              <Typography variant="subtitle2">
-                {format(new Date(dateStr), 'yyyy年M月d日（EEE）', { locale: ja })}
-              </Typography>
-            </Box>
-            
-            {/* その日の進捗リスト */}
-            <List dense disablePadding>
-              {records.map((progress, index) => (
-                <React.Fragment key={progress.id || index}>
-                  <ListItem
-                    secondaryAction={
-                      <Stack direction="row" spacing={0.5}>
-                        <Tooltip title="詳細">
-                          <IconButton 
-                            edge="end" 
-                            size="small" 
-                            onClick={() => handleShowDetails(progress)}
-                          >
-                            <InfoIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="編集">
-                          <IconButton 
-                            edge="end" 
-                            size="small"
-                            onClick={() => handleOpenEditDialog(progress)}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="削除">
-                          <IconButton 
-                            edge="end" 
-                            size="small"
-                            onClick={() => handleOpenDeleteDialog(progress.id!)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                    }
-                    sx={{ 
-                      borderBottom: index < records.length - 1 ? '1px dashed' : 'none',
-                      borderColor: 'divider',
-                      '&:hover': {
-                        bgcolor: 'action.hover'
-                      }
-                    }}
-                  >
-                    <ListItemText
-                      primary={
-                        <React.Fragment>
-                          <Typography variant="body2" component="span">
-                            {progress.startPage} → {progress.endPage} ページ
-                          </Typography>
-                          <Chip 
-                            label={`${progress.pagesRead}ページ読了`}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                            sx={{ ml: 1, height: 20, fontSize: '0.7rem' }}
-                          />
-                        </React.Fragment>
-                      }
-                      secondary={
-                        <React.Fragment>
-                          <Typography 
-                            variant="caption" 
-                            color="text.secondary" 
-                            component="span"
-                          >
-                            {progress.studyDuration 
-                              ? `${progress.studyDuration}分の学習 · ` 
-                              : ''}
-                            {progress.satisfactionLevel && (
-                              progress.satisfactionLevel === 'good' ? '😊 充実した学習 · ' :
-                              progress.satisfactionLevel === 'bad' ? '😔 難しかった · ' :
-                              '😐 普通 · '
-                            )}
-                            {progress.memo && progress.memo.length > 20 
-                              ? progress.memo.substring(0, 20) + '...' 
-                              : progress.memo}
-                          </Typography>
-                        </React.Fragment>
-                      }
-                    />
-                  </ListItem>
-                </React.Fragment>
-              ))}
-            </List>
-          </Box>
+        {dateKeys.map((dateStr) => (
+          <DailyProgressSection
+            key={dateStr}
+            dateStr={dateStr}
+            records={progressByDate[dateStr]}
+            onShowDetails={handleShowDetails}
+            onOpenEditDialog={handleOpenEditDialog}
+            onOpenDeleteDialog={handleOpenDeleteDialog}
+          />
         ))}
       </Paper>
       
@@ -471,7 +543,7 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
         <ProgressDetailDialog 
           open={detailDialogOpen}
           progress={selectedProgress}
-          onClose={() => setDetailDialogOpen(false)}
+          onClose={handleCloseDetailDialog}
           formatDate={formatDate}
         />
       )}
@@ -479,7 +551,7 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
       {/* 編集ダイアログ */}
       <Dialog
         open={editDialogOpen}
-        onClose={() => !isSubmitting && setEditDialogOpen(false)}
+        onClose={handleCloseEditDialog}
         maxWidth="sm"
         fullWidth
       >
@@ -590,7 +662,7 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
         </DialogContent>
         <DialogActions>
           <Button 
-            onClick={() => setEditDialogOpen(false)} 
+            onClick={handleCloseEditDialog} 
             disabled={isSubmitting}
           >
             キャンセル
@@ -609,7 +681,7 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
       {/* 削除確認ダイアログ */}
       <Dialog
         open={deleteDialogOpen}
-        onClose={() => !isSubmitting && setDeleteDialogOpen(false)}
+        onClose={handleCloseDeleteDialog}
       >
         <DialogTitle>進捗記録の削除</DialogTitle>
         <DialogContent>
@@ -625,7 +697,7 @@ export const ProgressHistory: React.FC<ProgressHistoryProps> = ({
         </DialogContent>
         <DialogActions>
           <Button 
-            onClick={() => setDeleteDialogOpen(false)} 
+            onClick={handleCloseDeleteDialog} 
             disabled={isSubmitting}
           >
             キャンセル

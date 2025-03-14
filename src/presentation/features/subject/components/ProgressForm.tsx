@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   TextField,
@@ -36,6 +36,114 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { ja } from 'date-fns/locale';
 import InfoIcon from '@mui/icons-material/Info';
 import { calculateProgress } from '../utils/subjectUtils';
+
+// クイック入力ボタンをメモ化されたコンポーネントとして分離
+const QuickInputButtons = React.memo(({ handleQuickIncrement, isSubmitting }: { 
+  handleQuickIncrement: (pages: number) => void,
+  isSubmitting: boolean
+}) => (
+  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+    <Typography variant="body2" sx={{ color: 'text.secondary', width: '100%', mb: 0.5 }}>
+      クイック入力:
+    </Typography>
+    <Button 
+      size="small"
+      variant="outlined"
+      onClick={() => handleQuickIncrement(1)}
+      disabled={isSubmitting}
+      sx={{ minWidth: '4rem' }}
+    >
+      +1ページ
+    </Button>
+    <Button 
+      size="small"
+      variant="outlined"
+      onClick={() => handleQuickIncrement(5)}
+      disabled={isSubmitting}
+      sx={{ minWidth: '4rem' }}
+    >
+      +5ページ
+    </Button>
+    <Button 
+      size="small"
+      variant="outlined"
+      onClick={() => handleQuickIncrement(10)}
+      disabled={isSubmitting}
+      sx={{ minWidth: '4rem' }}
+    >
+      +10ページ
+    </Button>
+  </Box>
+));
+
+// 満足度選択コンポーネントをメモ化
+const SatisfactionSelector = React.memo(({ 
+  value, 
+  onChange, 
+  disabled 
+}: { 
+  value: 'good' | 'neutral' | 'bad' | undefined; 
+  onChange: (value: 'good' | 'neutral' | 'bad') => void; 
+  disabled: boolean;
+}) => (
+  <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+    <ToggleButtonGroup
+      value={value}
+      exclusive
+      onChange={(_, newValue) => newValue && onChange(newValue)}
+      aria-label="学習満足度"
+      sx={{ width: '100%', justifyContent: 'center' }}
+      disabled={disabled}
+    >
+      <ToggleButton value="good" aria-label="満足" sx={{ flex: 1 }}>
+        <Tooltip title="良い">
+          <Box sx={{ textAlign: 'center' }}>
+            <SentimentSatisfiedAltIcon color="success" sx={{ fontSize: 32 }} />
+            <Typography variant="caption" display="block">良い</Typography>
+          </Box>
+        </Tooltip>
+      </ToggleButton>
+      <ToggleButton value="neutral" aria-label="普通" sx={{ flex: 1 }}>
+        <Tooltip title="普通">
+          <Box sx={{ textAlign: 'center' }}>
+            <SentimentNeutralIcon color="primary" sx={{ fontSize: 32 }} />
+            <Typography variant="caption" display="block">普通</Typography>
+          </Box>
+        </Tooltip>
+      </ToggleButton>
+      <ToggleButton value="bad" aria-label="不満" sx={{ flex: 1 }}>
+        <Tooltip title="悪い">
+          <Box sx={{ textAlign: 'center' }}>
+            <SentimentVeryDissatisfiedIcon color="error" sx={{ fontSize: 32 }} />
+            <Typography variant="caption" display="block">悪い</Typography>
+          </Box>
+        </Tooltip>
+      </ToggleButton>
+    </ToggleButtonGroup>
+  </Stack>
+));
+
+// 科目進捗表示コンポーネントをメモ化
+const SubjectProgressDisplay = React.memo(({ subject }: { subject: Subject }) => (
+  <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper', mb: 2 }}>
+    <Grid container spacing={1}>
+      <Grid item xs={12}>
+        <Typography variant="subtitle1" gutterBottom>
+          {subject.name || '科目名'}
+        </Typography>
+        <LinearProgress 
+          variant="determinate" 
+          value={calculateProgress(subject.currentPage || 0, subject.totalPages || 0)} 
+          sx={{ mb: 1, borderRadius: 1 }}
+        />
+        <Typography variant="caption" color="text.secondary">
+          {subject.currentPage || 0}/{subject.totalPages || '?'} ページ
+          （{Math.round(calculateProgress(subject.currentPage || 0, subject.totalPages || 0))}%）
+        </Typography>
+      </Grid>
+    </Grid>
+  </Paper>
+));
 
 interface ProgressFormProps {
   subject?: Subject;
@@ -93,15 +201,15 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
   }, [progress, open, setFormDataFromProgress]);
 
   // ダイアログを閉じるときにフォームをリセット
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (!isSubmitting) {
       resetForm();
       onClose?.();
     }
-  };
+  }, [isSubmitting, resetForm, onClose]);
 
   // クイック入力ボタンの処理
-  const handleQuickIncrement = (pages: number) => {
+  const handleQuickIncrement = useCallback((pages: number) => {
     const nextPage = Math.min(
       (subject?.totalPages || 999999),
       (formData.startPage || 0) + pages - 1
@@ -129,56 +237,17 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
         type: 'text'
       }
     } as unknown as React.ChangeEvent<HTMLInputElement>);
-  };
-
-  // クイック入力ボタンを追加します
-  const QuickInputButtons = ({ handleQuickIncrement, isSubmitting }: { 
-    handleQuickIncrement: (pages: number) => void,
-    isSubmitting: boolean
-  }) => (
-    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-      <Typography variant="body2" sx={{ color: 'text.secondary', width: '100%', mb: 0.5 }}>
-        クイック入力:
-      </Typography>
-      <Button 
-        size="small"
-        variant="outlined"
-        onClick={() => handleQuickIncrement(1)}
-        disabled={isSubmitting}
-        sx={{ minWidth: '4rem' }}
-      >
-        +1ページ
-      </Button>
-      <Button 
-        size="small"
-        variant="outlined"
-        onClick={() => handleQuickIncrement(5)}
-        disabled={isSubmitting}
-        sx={{ minWidth: '4rem' }}
-      >
-        +5ページ
-      </Button>
-      <Button 
-        size="small"
-        variant="outlined"
-        onClick={() => handleQuickIncrement(10)}
-        disabled={isSubmitting}
-        sx={{ minWidth: '4rem' }}
-      >
-        +10ページ
-      </Button>
-    </Box>
-  );
+  }, [formData, subject, handleChange]);
 
   // 日付型の安全な変換のためのヘルパー関数
-  const getSafeDate = (dateValue: string | Date | undefined): Date | null => {
+  const getSafeDate = useCallback((dateValue: string | Date | undefined): Date | null => {
     if (!dateValue) return null;
     const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
     return !isNaN(date.getTime()) ? date : null;
-  };
+  }, []);
 
   // フォームの提出処理
-  const handleSubmitForm = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitForm = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (isInlineMode && onSubmit) {
@@ -189,31 +258,20 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
       // モーダルモードの場合、フックのhandleSubmitを呼び出す
       await formSubmitHandler(e);
     }
-  };
+  }, [isInlineMode, onSubmit, formData, resetForm, formSubmitHandler]);
 
-  // フォームコンテンツ
-  const renderFormContent = () => (
-    <Box component="form" onSubmit={handleSubmitForm} sx={{ mt: 1 }}>
-      {subject && (
-        <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.paper', mb: 2 }}>
-          <Grid container spacing={1}>
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" gutterBottom>
-                {subject.name || '科目名'}
-              </Typography>
-              <LinearProgress 
-                variant="determinate" 
-                value={calculateProgress(subject.currentPage || 0, subject.totalPages || 0)} 
-                sx={{ mb: 1, borderRadius: 1 }}
-              />
-              <Typography variant="caption" color="text.secondary">
-                {subject.currentPage || 0}/{subject.totalPages || '?'} ページ
-                （{Math.round(calculateProgress(subject.currentPage || 0, subject.totalPages || 0))}%）
-              </Typography>
-            </Grid>
-          </Grid>
-        </Paper>
-      )}
+  // フォーム送信のトリガー
+  const triggerFormSubmit = useCallback(() => {
+    const formElement = document.querySelector('form');
+    if (formElement) {
+      formElement.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+  }, []);
+
+  // フォームコンテンツのメモ化
+  const renderFormContent = useMemo(() => (
+    <Box component="form" onSubmit={handleSubmitForm} sx={{ mt: 1 }} id="progress-form">
+      {subject && <SubjectProgressDisplay subject={subject} />}
       
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -320,40 +378,11 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
           <Typography variant="body2" color="text.secondary" gutterBottom>
             今回の学習の満足度:
           </Typography>
-          <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-            <ToggleButtonGroup
-              value={formData.satisfactionLevel}
-              exclusive
-              onChange={(_, value) => value && handleSatisfactionChange(value)}
-              aria-label="学習満足度"
-              sx={{ width: '100%', justifyContent: 'center' }}
-            >
-              <ToggleButton value="good" aria-label="満足" sx={{ flex: 1 }}>
-                <Tooltip title="良い">
-                  <Box sx={{ textAlign: 'center' }}>
-                    <SentimentSatisfiedAltIcon color="success" sx={{ fontSize: 32 }} />
-                    <Typography variant="caption" display="block">良い</Typography>
-                  </Box>
-                </Tooltip>
-              </ToggleButton>
-              <ToggleButton value="neutral" aria-label="普通" sx={{ flex: 1 }}>
-                <Tooltip title="普通">
-                  <Box sx={{ textAlign: 'center' }}>
-                    <SentimentNeutralIcon color="primary" sx={{ fontSize: 32 }} />
-                    <Typography variant="caption" display="block">普通</Typography>
-                  </Box>
-                </Tooltip>
-              </ToggleButton>
-              <ToggleButton value="bad" aria-label="不満" sx={{ flex: 1 }}>
-                <Tooltip title="悪い">
-                  <Box sx={{ textAlign: 'center' }}>
-                    <SentimentVeryDissatisfiedIcon color="error" sx={{ fontSize: 32 }} />
-                    <Typography variant="caption" display="block">悪い</Typography>
-                  </Box>
-                </Tooltip>
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Stack>
+          <SatisfactionSelector 
+            value={formData.satisfactionLevel}
+            onChange={handleSatisfactionChange}
+            disabled={isSubmitting}
+          />
         </Grid>
         
         {/* メモ入力フィールド */}
@@ -389,14 +418,27 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
         )}
       </Grid>
     </Box>
-  );
+  ), [
+    subject, 
+    error, 
+    formData, 
+    fieldErrors, 
+    handleChange, 
+    handleDateChange, 
+    handleSatisfactionChange, 
+    handleSubmitForm, 
+    handleQuickIncrement, 
+    getSafeDate, 
+    isSubmitting, 
+    isInlineMode
+  ]);
 
   // モーダルモードの場合はダイアログとしてレンダリング
   if (isModalMode) {
     return (
       <Dialog 
         open={open === true} 
-        onClose={onClose} 
+        onClose={handleClose} 
         fullWidth 
         maxWidth="sm"
         scroll="paper"
@@ -405,7 +447,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
           {isEditMode ? '進捗記録を編集' : '新しい進捗を記録'}
           <IconButton
             aria-label="close"
-            onClick={onClose}
+            onClick={handleClose}
             sx={{
               position: 'absolute',
               right: 8,
@@ -418,12 +460,12 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
         </DialogTitle>
         
         <DialogContent dividers>
-          {renderFormContent()}
+          {renderFormContent}
         </DialogContent>
         
         <DialogActions>
           <Button 
-            onClick={onClose} 
+            onClick={handleClose} 
             disabled={isSubmitting}
           >
             キャンセル
@@ -435,12 +477,7 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
             color="primary"
             disabled={isSubmitting}
             startIcon={isSubmitting && <CircularProgress size={24} />}
-            onClick={() => {
-              const formElement = document.querySelector('form');
-              if (formElement) {
-                formElement.dispatchEvent(new Event('submit', { cancelable: true }));
-              }
-            }}
+            onClick={triggerFormSubmit}
           >
             {isSubmitting ? '送信中...' : isEditMode ? '更新する' : '記録する'}
           </Button>
@@ -450,5 +487,5 @@ export const ProgressForm: React.FC<ProgressFormProps> = ({
   }
   
   // インラインモードの場合はフォームを直接レンダリング
-  return renderFormContent();
+  return renderFormContent;
 }; 
