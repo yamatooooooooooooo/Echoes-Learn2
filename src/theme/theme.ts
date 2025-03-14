@@ -362,7 +362,6 @@ const commonOptions = {
       fontSize: '1.125rem',
       fontWeight: 500,
     },
-パフォーマンス最適化の状態
     divider: '#2D3748',
   },
   typography: lightThemeOptions.typography,
@@ -470,7 +469,6 @@ const commonOptions = {
           borderColor: '#2D3748',
         },
       },
-main
     },
   },
   shape: {
