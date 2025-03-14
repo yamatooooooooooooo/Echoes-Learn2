@@ -27,6 +27,7 @@ import { ProgressDeleteDialog } from './ProgressDeleteDialog';
 import { useSubjectProgress } from '../hooks/useSubjectProgress';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
 import { useServices } from '../../../../hooks/useServices';
+import NotionProgressBar from '../../../components/common/NotionProgressBar';
 
 // タブの種類
 type TabType = 'details' | 'history' | 'charts';
@@ -441,6 +442,14 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
             </Typography>
           </Box>
           
+          <NotionProgressBar 
+            value={progress} 
+            height={8}
+            label=""
+            color={getProgressColor(progress)}
+          />
+          
+          {/* 既存のLinearProgressをコメントアウトまたは削除
           <LinearProgress
             variant="determinate"
             value={progress}
@@ -469,6 +478,7 @@ const SubjectCardComponent: React.FC<SubjectCardProps> = ({
           >
             {progress}% 完了
           </Typography>
+          */}
         </Box>
       </Box>
 

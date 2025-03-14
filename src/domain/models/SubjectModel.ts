@@ -12,6 +12,7 @@ export interface Subject {
   priority?: 'high' | 'medium' | 'low';
   importance?: 'high' | 'medium' | 'low';
   bufferDays?: number;
+  completionRate?: number;
   updatedAt?: Date;
   createdAt?: Date;
 }
@@ -28,6 +29,7 @@ export interface SubjectCreateInput {
   priority?: 'high' | 'medium' | 'low';
   importance?: 'high' | 'medium' | 'low';
   bufferDays?: number;
+  completionRate?: number;
 }
 
 export interface SubjectUpdateInput {
@@ -42,4 +44,5 @@ export interface SubjectUpdateInput {
   priority?: 'high' | 'medium' | 'low';
   importance?: 'high' | 'medium' | 'low';
   bufferDays?: number;
+  completionRate?: number;
 } 

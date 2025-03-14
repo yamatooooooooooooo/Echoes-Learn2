@@ -169,6 +169,32 @@ export class SubjectRepository implements ISubjectRepository {
       throw error;
     }
   }
+
+  /**
+   * 科目の完了率を更新
+   * @param id 科目ID
+   * @param completionRate 新しい完了率 (0-100)
+   */
+  async updateCompletionRate(id: string, completionRate: number): Promise<void> {
+    try {
+      const userId = this.auth.currentUser?.uid;
+      if (!userId) {
+        throw new Error('認証されていません');
+      }
+
+      // 完了率は0-100の範囲内に制限
+      const validCompletionRate = Math.max(0, Math.min(100, completionRate));
+      
+      const subjectRef = doc(this.firestore, 'users', userId, 'subjects', id);
+      await updateDoc(subjectRef, {
+        completionRate: validCompletionRate,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('科目の完了率更新中にエラーが発生しました:', error);
+      throw error;
+    }
+  }
   
   /**
    * 優先度の高い科目を取得

@@ -29,4 +29,8 @@ export interface ISubjectRepository {
    * 科目を削除
    */
   deleteSubject(id: string): Promise<void>;
+
+  getHighPrioritySubjects(userId: string, limit?: number): Promise<Subject[]>;
+  getUpcomingExamSubjects(userId: string, limit?: number): Promise<Subject[]>;
+  updateCompletionRate(id: string, completionRate: number): Promise<void>;
 } 

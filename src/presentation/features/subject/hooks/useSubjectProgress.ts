@@ -4,6 +4,7 @@ import { Subject } from '../../../../domain/models/SubjectModel';
 import { Progress, ProgressCreateInput, ProgressUpdateInput } from '../../../../domain/models/ProgressModel';
 import { useFirebase } from '../../../../contexts/FirebaseContext';
 import { ProgressService } from '../../../../domain/services/ProgressService';
+import { calculateProgress } from '../utils/subjectUtils';
 
 // 進捗フォームのデータ型
 interface ProgressFormData {
@@ -216,10 +217,18 @@ export const useSubjectProgress = (
         
         // 科目のcurrentPageを更新（必要な場合）
         if (Number(progressForm.endPage) > (subject.currentPage || 0)) {
+          const newCurrentPage = Number(progressForm.endPage);
+          const completionRate = calculateProgress(newCurrentPage, subject.totalPages);
+          
           const updatedSubject = {
             ...subject,
-            currentPage: Number(progressForm.endPage)
+            currentPage: newCurrentPage,
+            completionRate: completionRate
           };
+          
+          // completionRateを更新
+          await subjectRepository.updateCompletionRate(subject.id, completionRate);
+          
           if (onSubjectUpdated) {
             onSubjectUpdated(updatedSubject);
           }
@@ -237,10 +246,18 @@ export const useSubjectProgress = (
         
         // 科目のcurrentPageも更新
         if (Number(progressForm.endPage) > (subject.currentPage || 0)) {
+          const newCurrentPage = Number(progressForm.endPage);
+          const completionRate = calculateProgress(newCurrentPage, subject.totalPages);
+          
           const updatedSubject = {
             ...subject,
-            currentPage: Number(progressForm.endPage)
+            currentPage: newCurrentPage,
+            completionRate: completionRate
           };
+          
+          // completionRateを更新
+          await subjectRepository.updateCompletionRate(subject.id, completionRate);
+          
           if (onSubjectUpdated) {
             onSubjectUpdated(updatedSubject);
           }
