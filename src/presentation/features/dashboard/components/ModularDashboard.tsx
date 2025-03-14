@@ -36,6 +36,7 @@ import { DashboardSettingsDialog } from './DashboardSettingsDialog';
 import { NotionStyleCard } from '../../../components/common/NotionStyleCard';
 import CountdownContainer from './CountdownContainer';
 import LearningAnalysis from '../../../../components/LearningAnalysis';
+import NormaDisplay from '../../../../components/NormaDisplay';
 
 interface ModularDashboardProps {
   formatDate: (date: Date | string | undefined) => string;
@@ -245,6 +246,12 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
             isLoading={isLoading}
           />
         );
+      case 'normaDisplay':
+        return (
+          <NormaDisplay 
+            userId={dashboardData?.subjects?.[0]?.userId || ''}
+          />
+        );
       case 'exams':
         return (
           <CountdownContainer 
@@ -382,6 +389,11 @@ export const ModularDashboard: React.FC<ModularDashboardProps> = ({
                   // 学習統計も少し大きめに
                   if (moduleId === 'stats') {
                     gridSize = { xs: 12, sm: 6, md: 6 };
+                  }
+
+                  // ノルマ表示も大きめに
+                  if (moduleId === 'normaDisplay') {
+                    gridSize = { xs: 12, sm: 12, md: 8 };
                   }
                   
                   return (

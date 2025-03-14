@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { SvgIconComponent } from '@mui/icons-material';
 import { MODULE_ICONS } from './appIcons';
 import { Analytics as AnalyticsIcon } from '@mui/icons-material';
+import { Assignment as AssignmentIcon } from '@mui/icons-material';
 
 export interface DashboardModule {
   id: string;
@@ -41,6 +42,17 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     order: 2,
     canDisable: true
   },
+  normaDisplay: {
+    id: 'normaDisplay',
+    title: 'ノルマ進捗',
+    description: 'デイリー/ウィークリーノルマの進捗状況を表示します',
+    icon: AssignmentIcon,
+    defaultSize: 'large',
+    defaultCollapsed: false,
+    defaultEnabled: true,
+    order: 3,
+    canDisable: true
+  },
   exams: {
     id: 'exams',
     title: '試験日カウントダウン',
@@ -49,7 +61,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultSize: 'medium',
     defaultCollapsed: false,
     defaultEnabled: true,
-    order: 3,
+    order: 4,
     canDisable: true
   },
   reports: {
@@ -60,7 +72,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultSize: 'medium',
     defaultCollapsed: false,
     defaultEnabled: true,
-    order: 4,
+    order: 5,
     canDisable: true
   },
   recentProgress: {
@@ -71,7 +83,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultSize: 'large',
     defaultCollapsed: false,
     defaultEnabled: true,
-    order: 5,
+    order: 6,
     canDisable: true
   },
   learningAnalytics: {
@@ -82,7 +94,7 @@ export const DASHBOARD_MODULES: Record<string, DashboardModule> = {
     defaultSize: 'large',
     defaultCollapsed: false,
     defaultEnabled: true,
-    order: 6,
+    order: 7,
     canDisable: true
   }
 };
