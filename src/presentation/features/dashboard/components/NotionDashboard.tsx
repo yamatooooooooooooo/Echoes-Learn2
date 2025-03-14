@@ -367,8 +367,9 @@ const DashboardSection: React.FC<{
   title: string;
   children: ReactNode;
   collapsible?: boolean;
-}> = ({ title, children, collapsible = true }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  defaultCollapsed?: boolean;
+}> = ({ title, children, collapsible = true, defaultCollapsed = false }) => {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const theme = useTheme();
 
   return (
@@ -552,7 +553,15 @@ export const NotionDashboard: React.FC<NotionDashboardProps> = ({
 
   // モジュールを追加する
   const handleAddModule = useCallback((moduleId: string) => {
+    // モジュールリストに追加
     setModules((prev) => [...prev, moduleId]);
+    
+    // モジュール設定にもデフォルト設定を追加
+    setModuleSettings((prev) => ({
+      ...prev,
+      [moduleId]: { enabled: true, collapsed: false }
+    }));
+    
     setSnackbarMessage(
       `${AVAILABLE_MODULES.find((m) => m.id === moduleId)?.title || 'モジュール'}が追加されました`
     );
@@ -657,13 +666,51 @@ export const NotionDashboard: React.FC<NotionDashboardProps> = ({
   
   // モジュールコンテンツをレンダリングする関数
   const renderModuleContent = useCallback((id: string) => {
-    // 簡易実装
+    // NotionModuleTypeの場合は適切なコンテンツを返す
+    const notionModuleType = mapModuleIdToNotionType(id);
+    
+    if (notionModuleType) {
+      switch (notionModuleType) {
+        case NotionModuleType.TOTAL_SUBJECTS:
+          return (
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="h5">{dashboardData?.totalSubjects || 0}</Typography>
+              <Typography variant="body2">教材数</Typography>
+            </Box>
+          );
+        case NotionModuleType.COMPLETED_SUBJECTS:
+          return (
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="h5">{dashboardData?.completedSubjects || 0}</Typography>
+              <Typography variant="body2">完了した教材</Typography>
+            </Box>
+          );
+        case NotionModuleType.STUDY_PROGRESS:
+          return (
+            <Box sx={{ p: 2, textAlign: 'center' }}>
+              <Typography variant="h5">
+                {`${Math.round(((dashboardData?.completedSubjects || 0) / (dashboardData?.totalSubjects || 1)) * 100)}%`}
+              </Typography>
+              <Typography variant="body2">学習進捗</Typography>
+            </Box>
+          );
+        // 他のケースも必要に応じて追加
+        default:
+          return (
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body2">{id}モジュールのコンテンツ</Typography>
+            </Box>
+          );
+      }
+    }
+    
+    // 従来のダッシュボードモジュール用のレンダリング処理
     return (
       <Box sx={{ p: 2 }}>
         <Typography variant="body2">{id}モジュールのコンテンツ</Typography>
       </Box>
     );
-  }, []);
+  }, [dashboardData]);
 
   // ダッシュボード設定ダイアログを開く
   const handleOpenSettingsDialog = useCallback(() => {
@@ -763,7 +810,7 @@ export const NotionDashboard: React.FC<NotionDashboardProps> = ({
                 ref={provided.innerRef}
                 sx={{ minHeight: 200 }}
               >
-                <DashboardSection title="カスタムモジュール" collapsible={true}>
+                <DashboardSection title="カスタムモジュール" collapsible={true} defaultCollapsed={true}>
                   <Grid container spacing={3}>
                     {modules.map((id, index) => {
                       const moduleConfig = moduleSettings[id] || { enabled: true, collapsed: false };
@@ -845,6 +892,12 @@ export const NotionDashboard: React.FC<NotionDashboardProps> = ({
 
 // モジュールIDからNotionモジュールタイプへのマッピング関数
 const mapModuleIdToNotionType = (id: string): NotionModuleType | null => {
+  // NotionModuleTypeの列挙値そのものであれば直接返す
+  if (Object.values(NotionModuleType).includes(id as NotionModuleType)) {
+    return id as NotionModuleType;
+  }
+  
+  // 従来のDASHBOARD_MODULESからのIDをマッピング
   const moduleTypeMap: Record<string, NotionModuleType> = {
     'stats': NotionModuleType.STUDY_PROGRESS,
     'dailyQuota': NotionModuleType.DAILY_QUOTA,
