@@ -122,13 +122,18 @@ export class QuotaService {
   private selectPrioritySubjects(subjects: Subject[], maxConcurrent: number): Subject[] {
     // 試験日順にソート
     const sorted = [...subjects].sort((a, b) => {
-      // 1. 試験日が近い順
+      // 1. 試験日が近い順（残り日数の小さい順）- 重みを2倍に
       const daysA = calculateDaysRemaining(a.examDate) || Infinity;
       const daysB = calculateDaysRemaining(b.examDate) || Infinity;
       
-      if (daysA !== daysB) return daysA - daysB;
+      // 残り日数に大きな差がある場合は、それを優先（重み付けを強化）
+      if (Math.abs(daysA - daysB) > 5) return daysA - daysB;
       
-      // 2. 優先度（high > medium > low）
+      // 残り日数が非常に少ない場合（7日以内）は最優先
+      if (daysA <= 7 && daysB > 7) return -1;
+      if (daysB <= 7 && daysA > 7) return 1;
+      
+      // 残り日数が同程度の場合は優先度で判断
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       return priorityOrder[b.priority || 'low'] - priorityOrder[a.priority || 'low'];
     });
@@ -333,8 +338,8 @@ export class QuotaService {
    * 科目の優先度に基づいて時間配分の重みを計算
    */
   private calculatePriorityWeights(subjects: Subject[]): Record<string, number> {
-    // 優先度ごとの重み
-    const weights = {
+    // 優先度ごとの基本的な重み
+    const priorityWeights = {
       high: 3,
       medium: 2,
       low: 1
@@ -345,7 +350,29 @@ export class QuotaService {
     let totalWeight = 0;
     
     subjects.forEach(subject => {
-      const weight = weights[subject.priority || 'low'];
+      // 基本の優先度の重み
+      let weight = priorityWeights[subject.priority || 'low'];
+      
+      // 試験日までの残り日数に基づく追加の重み
+      if (subject.examDate) {
+        const daysRemaining = calculateDaysRemaining(subject.examDate);
+        
+        // 残り日数に基づく乗数（日数が少ないほど大きな乗数）
+        let daysMultiplier = 1;
+        if (daysRemaining <= 3) {
+          daysMultiplier = 3.0; // 3日以内は3倍
+        } else if (daysRemaining <= 7) {
+          daysMultiplier = 2.5; // 1週間以内は2.5倍
+        } else if (daysRemaining <= 14) {
+          daysMultiplier = 2.0; // 2週間以内は2倍
+        } else if (daysRemaining <= 30) {
+          daysMultiplier = 1.5; // 1ヶ月以内は1.5倍
+        }
+        
+        // 重みに日数の乗数を適用
+        weight *= daysMultiplier;
+      }
+      
       subjectWeights[subject.id] = weight;
       totalWeight += weight;
     });

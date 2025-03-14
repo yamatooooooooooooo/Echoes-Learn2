@@ -26,10 +26,11 @@ export function calculatePriority(subjectOrDate: Subject | Date | null, currentP
 
     const daysUntilExam = calculateDaysRemaining(subject.examDate);
     
-    if (daysUntilExam <= 7) {
-      return 'high'; // 1週間以内は高優先度
-    } else if (daysUntilExam <= 30) {
-      return 'medium'; // 1ヶ月以内は中優先度
+    // 試験日までの日数の重みを大きくする
+    if (daysUntilExam <= 5) {
+      return 'high'; // 5日以内は高優先度
+    } else if (daysUntilExam <= 14) {
+      return 'medium'; // 2週間以内は中優先度
     } else {
       return subject.importance === 'high' ? 'medium' : 'low'; // それ以外は低優先度（ただし重要な科目は中優先度）
     }
@@ -46,20 +47,21 @@ export function calculatePriority(subjectOrDate: Subject | Date | null, currentP
     const remainingPercent = 100 - progressPercent;
     
     // ベーススコアの計算（残りページ％と残り日数からの基本計算）
-    let baseScore = (remainingPercent / daysRemaining) * 10;
+    // 残り日数の重みを2倍に増加（平方根を使って効果を強調）
+    let baseScore = (remainingPercent / Math.sqrt(daysRemaining)) * 15;
     
-    // 試験日までの日数に基づくボーナススコア
+    // 試験日までの日数に基づくボーナススコア（重みを増加）
     let bonusScore = 0;
     if (daysRemaining <= 3) {
-      bonusScore = 5; // 3日以内は緊急
+      bonusScore = 7; // 3日以内は緊急（7に増加）
     } else if (daysRemaining <= 7) {
-      bonusScore = 4; // 1週間以内は高優先
+      bonusScore = 6; // 1週間以内は高優先（6に増加）
     } else if (daysRemaining <= 14) {
-      bonusScore = 3; // 2週間以内は注意
+      bonusScore = 5; // 2週間以内は注意（5に増加）
     } else if (daysRemaining <= 30) {
-      bonusScore = 2; // 1ヶ月以内は計画的に
+      bonusScore = 3; // 1ヶ月以内は計画的に（3に増加）
     } else if (daysRemaining <= 60) {
-      bonusScore = 1; // 2ヶ月以内は視野に入れる
+      bonusScore = 1.5; // 2ヶ月以内は視野に入れる（1.5に増加）
     }
     
     // 進捗状況による調整（進捗が少ないほど優先度上昇）
