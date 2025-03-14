@@ -1,21 +1,15 @@
 import React, { useMemo } from 'react';
-import { 
-  PieChart, 
-  Pie, 
-  Cell, 
-  Tooltip, 
-  ResponsiveContainer 
-} from 'recharts';
-import { 
-  Box, 
-  Card, 
-  CardContent, 
-  Typography, 
-  Grid, 
-  useTheme, 
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  useTheme,
   LinearProgress,
   linearProgressClasses,
-  Theme
+  Theme,
 } from '@mui/material';
 import { format } from 'date-fns';
 import { CountdownData } from '../../../../domain/services/visualizationService';
@@ -58,6 +52,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
   }
   return null;
 };
+CustomTooltip.displayName = 'CustomTooltip';
 
 // 進捗状態の型定義
 interface ProgressState {
@@ -71,22 +66,22 @@ const useProgressStatus = (progress: number, theme: Theme) => {
     if (progress >= 80) {
       return {
         label: '良好',
-        color: theme.palette.success.main
+        color: theme.palette.success.main,
       };
     } else if (progress >= 50) {
       return {
         label: '順調',
-        color: theme.palette.primary.main
+        color: theme.palette.primary.main,
       };
     } else if (progress >= 30) {
       return {
         label: '注意',
-        color: theme.palette.warning.main
+        color: theme.palette.warning.main,
       };
     } else {
       return {
         label: '危険',
-        color: theme.palette.error.main
+        color: theme.palette.error.main,
       };
     }
   }, [progress, theme]);
@@ -107,11 +102,11 @@ const ProgressStatus: React.FC<ProgressStatusProps> = React.memo(({ progress, th
         <Typography variant="caption" color="text.secondary">
           進捗状況
         </Typography>
-        <Typography 
-          variant="caption" 
-          sx={{ 
+        <Typography
+          variant="caption"
+          sx={{
             color: progressState.color,
-            fontWeight: 'bold' 
+            fontWeight: 'bold',
           }}
         >
           {progressState.label}
@@ -124,9 +119,8 @@ const ProgressStatus: React.FC<ProgressStatusProps> = React.memo(({ progress, th
           height: 6,
           borderRadius: 3,
           [`&.${linearProgressClasses.colorPrimary}`]: {
-            backgroundColor: theme.palette.mode === 'dark' 
-              ? 'rgba(255, 255, 255, 0.12)' 
-              : 'rgba(0, 0, 0, 0.05)',
+            backgroundColor:
+              theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.05)',
           },
           [`& .${linearProgressClasses.bar}`]: {
             borderRadius: 3,
@@ -137,6 +131,7 @@ const ProgressStatus: React.FC<ProgressStatusProps> = React.memo(({ progress, th
     </Box>
   );
 });
+ProgressStatus.displayName = 'ProgressStatus';
 
 // 円グラフデータの型定義
 interface PieChartSectionProps {
@@ -152,7 +147,9 @@ const PieChartSection: React.FC<PieChartSectionProps> = React.memo(({ data, them
   if (!data || data.length === 0) {
     return (
       <Box sx={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Typography variant="caption" color="text.secondary">データなし</Typography>
+        <Typography variant="caption" color="text.secondary">
+          データなし
+        </Typography>
       </Box>
     );
   }
@@ -181,14 +178,14 @@ const PieChartSection: React.FC<PieChartSectionProps> = React.memo(({ data, them
           </PieChart>
         </ResponsiveContainer>
       </Box>
-      <Typography 
-        variant="body2" 
-        color="text.secondary" 
-        sx={{ 
-          textAlign: 'center', 
-          mt: 1, 
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{
+          textAlign: 'center',
+          mt: 1,
           fontSize: '0.75rem',
-          fontWeight: 'medium'
+          fontWeight: 'medium',
         }}
       >
         進捗率: {data[0].value}%
@@ -196,6 +193,7 @@ const PieChartSection: React.FC<PieChartSectionProps> = React.memo(({ data, them
     </>
   );
 });
+PieChartSection.displayName = 'PieChartSection';
 
 // カウントダウンの色を計算するカスタムフック
 const useCountdownColor = (remainingDays: number, theme: Theme) => {
@@ -217,52 +215,69 @@ const CountdownPieChart: React.FC<CountdownPieChartProps> = React.memo(({ data }
   const countdownColor = useCountdownColor(data.remainingDays, theme);
 
   return (
-    <Card sx={{ 
-      height: '100%', 
-      display: 'flex', 
-      flexDirection: 'column',
-      border: '1px solid',
-      borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-      borderRadius: 2,
-      boxShadow: theme.palette.mode === 'dark' 
-        ? '0 4px 12px rgba(0, 0, 0, 0.2)' 
-        : '0 4px 12px rgba(0, 0, 0, 0.05)',
-      '&:hover': {
-        boxShadow: theme.palette.mode === 'dark' 
-          ? '0 6px 16px rgba(0, 0, 0, 0.3)' 
-          : '0 6px 16px rgba(0, 0, 0, 0.1)',
-      }
-    }}>
+    <Card
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        border: '1px solid',
+        borderColor:
+          theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+        borderRadius: 2,
+        boxShadow:
+          theme.palette.mode === 'dark'
+            ? '0 4px 12px rgba(0, 0, 0, 0.2)'
+            : '0 4px 12px rgba(0, 0, 0, 0.05)',
+        '&:hover': {
+          boxShadow:
+            theme.palette.mode === 'dark'
+              ? '0 6px 16px rgba(0, 0, 0, 0.3)'
+              : '0 6px 16px rgba(0, 0, 0, 0.1)',
+        },
+      }}
+    >
       <CardContent sx={{ flexGrow: 1, p: 2 }}>
         <Grid container spacing={1} alignItems="center">
           <Grid item xs={7}>
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" component="div" color={countdownColor} sx={{ 
-                textAlign: 'center',
-                fontWeight: 600,
-                textShadow: theme.palette.mode === 'dark' 
-                  ? '0px 2px 4px rgba(0, 0, 0, 0.5)' 
-                  : 'none'
-              }}>
+              <Typography
+                variant="h3"
+                component="div"
+                color={countdownColor}
+                sx={{
+                  textAlign: 'center',
+                  fontWeight: 600,
+                  textShadow:
+                    theme.palette.mode === 'dark' ? '0px 2px 4px rgba(0, 0, 0, 0.5)' : 'none',
+                }}
+              >
                 {data.remainingDays}
               </Typography>
-              <Typography 
-                variant="subtitle2" 
-                color="text.secondary" 
-                sx={{ 
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                sx={{
                   textAlign: 'center',
-                  mb: 1
+                  mb: 1,
                 }}
               >
                 残り日数
               </Typography>
-              
+
               <ProgressStatus progress={data.progressData[0].value} theme={theme} />
-              
-              <Typography variant="h6" component="div" sx={{ mt: 2, textAlign: 'center', fontSize: '0.9rem' }}>
+
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{ mt: 2, textAlign: 'center', fontSize: '0.9rem' }}
+              >
                 {data.subject}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', fontSize: '0.75rem' }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ textAlign: 'center', fontSize: '0.75rem' }}
+              >
                 試験日: {format(data.dueDate, 'yyyy/MM/dd')}
               </Typography>
             </Box>
@@ -275,5 +290,6 @@ const CountdownPieChart: React.FC<CountdownPieChartProps> = React.memo(({ data }
     </Card>
   );
 });
+CountdownPieChart.displayName = 'CountdownPieChart';
 
-export default CountdownPieChart; 
+export default CountdownPieChart;
