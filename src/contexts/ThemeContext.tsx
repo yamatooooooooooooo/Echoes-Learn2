@@ -66,6 +66,24 @@ export const AppThemeProvider: FC<AppThemeProviderProps> = ({ children }) => {
     ? (prefersDarkMode ? 'dark' : 'light')
     : mode;
   
+  // テーマ状態をウィンドウオブジェクトに公開
+  useEffect(() => {
+    // グローバル変数としてテーマモードを公開
+    (window as any).echoesLearnTheme = {
+      mode: actualTheme,
+      isDark: actualTheme === 'dark'
+    };
+    
+    // カスタムイベントを発行してフッターに通知
+    const themeChangeEvent = new CustomEvent('themeChange', { 
+      detail: { mode: actualTheme, isDark: actualTheme === 'dark' } 
+    });
+    window.dispatchEvent(themeChangeEvent);
+    
+    // デバッグログ
+    console.log(`Theme mode updated: ${actualTheme}`);
+  }, [actualTheme]);
+  
   // サブジェクトテーマの状態管理を改善
   const [subjectThemes, setSubjectThemes] = useState<SubjectTheme[]>(() => {
     const savedThemes = localStorage.getItem('subjectThemes');

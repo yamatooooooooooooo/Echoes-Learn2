@@ -74,8 +74,72 @@
     </noscript>
     <div id="root"></div>
     
-    <footer>
+    <footer id="app-footer" style="position: fixed; bottom: 0; width: 100%; text-align: center; padding: 10px; font-size: 14px;">
       <p>&copy; 2024 Echoes Learn</p>
     </footer>
+
+    <script>
+      // ダークモード検出と適用
+      function updateFooterTheme() {
+        const isDarkMode = document.body.classList.contains('MuiDarkMode') || 
+                          document.documentElement.getAttribute('data-mui-color-scheme') === 'dark' ||
+                          document.body.classList.contains('dark-mode') ||
+                          document.body.style.backgroundColor === 'rgb(18, 18, 18)' ||
+                          window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        // グローバル変数からテーマ情報を取得（Reactアプリから提供）
+        const appTheme = window.echoesLearnTheme;
+        const isAppDarkMode = appTheme && appTheme.isDark;
+        
+        const footer = document.getElementById('app-footer');
+        if (footer) {
+          if (isAppDarkMode || isDarkMode) {
+            footer.style.backgroundColor = '#121212';
+            footer.style.color = '#ffffff';
+          } else {
+            footer.style.backgroundColor = '#ffffff';
+            footer.style.color = '#333333';
+          }
+        }
+      }
+
+      // DOMContentLoadedイベントで初期化
+      document.addEventListener('DOMContentLoaded', function() {
+        updateFooterTheme();
+        
+        // 少し遅延させて再度チェック（React描画後）
+        setTimeout(updateFooterTheme, 500);
+      });
+
+      // ページ読み込み完了時にも実行
+      window.addEventListener('load', function() {
+        updateFooterTheme();
+        // React描画後に再度チェック
+        setTimeout(updateFooterTheme, 1000);
+      });
+
+      // Reactアプリからのテーマ変更イベントをリッスン
+      window.addEventListener('themeChange', function(e) {
+        console.log('Theme change event received:', e.detail);
+        updateFooterTheme();
+      });
+
+      // 定期的にチェック（テーマの変更を確実に捕捉するため）
+      setInterval(updateFooterTheme, 2000);
+
+      // MutationObserverでテーマの変更を監視
+      const observer = new MutationObserver(function(mutations) {
+        updateFooterTheme();
+      });
+
+      // ボディとhtmlのクラス変更を監視
+      observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'style'] });
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-mui-color-scheme', 'class'] });
+
+      // システムのダークモード変更も監視
+      if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateFooterTheme);
+      }
+    </script>
   </body>
 </html> 
