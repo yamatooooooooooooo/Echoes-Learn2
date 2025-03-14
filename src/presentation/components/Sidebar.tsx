@@ -6,7 +6,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  AppBar,
   Toolbar,
   IconButton,
   Typography,
@@ -14,11 +13,9 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
-  SwipeableDrawer,
   Collapse,
   InputBase,
   Avatar,
-  Tooltip,
   Button,
   alpha
 } from '@mui/material';
@@ -30,16 +27,12 @@ import {
   Settings as SettingsIcon,
   EmojiEvents as EmojiEventsIcon,
   History as HistoryIcon,
-  KeyboardArrowDown as KeyboardArrowDownIcon,
-  KeyboardArrowRight as KeyboardArrowRightIcon,
   Search as SearchIcon,
   Add as AddIcon,
   Star as StarIcon,
   StarBorder as StarBorderIcon,
-  NoteAdd as NoteAddIcon,
   Folder as FolderIcon,
   MoreHoriz as MoreHorizIcon,
-  DragIndicator as DragIndicatorIcon,
   ExpandMore,
   ExpandLess,
   Backup as BackupIcon,
@@ -159,29 +152,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     e.stopPropagation();
     // 実際のアプリケーションではここでお気に入り状態を更新するロジックを実装
     console.log(`Toggled star for ${itemId}`);
-  };
-
-  // サイドバーのリサイズを開始
-  const startResize = (e: React.MouseEvent) => {
-    if (isMobile) return;
-    
-    e.preventDefault();
-    setResizing(true);
-    
-    const onMouseMove = (e: MouseEvent) => {
-      // 最小幅と最大幅を設定
-      const newWidth = Math.max(240, Math.min(400, e.clientX));
-      setSidebarWidth(newWidth);
-    };
-    
-    const onMouseUp = () => {
-      setResizing(false);
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    };
-    
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
   };
 
   // 再帰的にメニュー項目をレンダリング
@@ -371,50 +341,68 @@ export const Sidebar: React.FC<SidebarProps> = ({
     });
   };
 
-  const drawerContent = (
-    <Box 
-      sx={{ 
-        width: isMobile ? '85%' : sidebarWidth, 
-        maxWidth: isMobile ? 280 : '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        pt: 5
-      }} 
-      role="navigation"
-      ref={drawerRef}
-    >
-      {/* サイドバーヘッダー */}
-      <Box sx={{ 
-        p: 2,
-        display: 'flex', 
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
+  // サイドバーの開閉状態が変わった時にアクセシビリティ対応を行う
+  useEffect(() => {
+    const mainContent = document.querySelector('main');
+    if (mainContent && isMobile) {
+      applyAccessibility(mainContent as HTMLElement, open);
+    }
+    return () => {
+      if (mainContent && isMobile) {
+        applyAccessibility(mainContent as HTMLElement, false);
+      }
+    };
+  }, [open, isMobile]);
+
+  // ドロワーの内容コンポーネント
+  const DrawerContent = () => (
+    <>
+      <Toolbar 
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: 1.5,
+          py: 1.5,
+          backgroundColor: theme.palette.primary.main,
+          color: theme.palette.primary.contrastText
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar 
+          <Avatar
+            alt="Echoes Learn"
+            src="/logo.png"
             sx={{ 
               width: 32, 
               height: 32, 
               mr: 1,
-              bgcolor: theme.palette.primary.main,
-              fontSize: '1rem'
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              bgcolor: 'white'
             }}
           >
             E
           </Avatar>
-          <Typography variant="subtitle1" fontWeight={600}>
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ 
+              fontWeight: 700,
+              fontSize: '1.1rem',
+              color: 'white'
+            }}
+          >
             Echoes Learn
           </Typography>
         </Box>
-        <IconButton size="small" onClick={onToggle}>
-          <MoreHorizIcon />
+        <IconButton onClick={onToggle} sx={{ ml: 1, color: 'white' }}>
+          <ChevronLeftIcon />
         </IconButton>
-      </Box>
+      </Toolbar>
+      <Divider />
       
       {/* 検索ボックス */}
-      <Box sx={{ px: 2, pb: 1 }}>
+      <Box sx={{ px: 2, py: 1 }}>
         <Box
           sx={{
             display: 'flex',
@@ -440,136 +428,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }
             }}
           />
-          <Typography 
-            variant="caption" 
-            color="text.secondary" 
-            sx={{ 
-              backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.1) : alpha(theme.palette.common.black, 0.08),
-              p: '1px 4px',
-              borderRadius: '4px',
-              fontSize: '0.7rem',
-            }}
-          >
-            ⌘K
-          </Typography>
         </Box>
       </Box>
       
       <Divider sx={{ mx: 2, my: 0.5 }} />
-      
-      {/* メニューリスト */}
-      <Box sx={{ flex: 1, overflowY: 'auto', px: 1 }}>
-        <List disablePadding>
-          {renderMenuItems(sidebarItems)}
-        </List>
-      </Box>
-      
-      <Divider sx={{ mx: 2, my: 0.5 }} />
-      
-      {/* ページ作成ボタン */}
-      <Box sx={{ p: 2 }}>
-        <Button 
-          variant="outlined" 
-          startIcon={<AddIcon />}
-          fullWidth
-          size="small"
-          sx={{ 
-            justifyContent: 'flex-start',
-            textTransform: 'none',
-            borderRadius: '6px',
-            py: 0.8,
-            borderColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.1) : alpha(theme.palette.common.black, 0.1),
-            color: theme.palette.text.primary,
-            '&:hover': {
-              borderColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.2) : alpha(theme.palette.common.black, 0.2),
-              backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.05) : alpha(theme.palette.common.black, 0.03),
-            }
-          }}
-        >
-          新しいページ
-        </Button>
-      </Box>
-      
-      {/* リサイズハンドル */}
-      {!isMobile && (
-        <Box
-          sx={{
-            position: 'absolute',
-            height: '100%',
-            width: '5px',
-            top: 0,
-            right: 0,
-            cursor: 'ew-resize',
-            '&:hover': {
-              backgroundColor: theme.palette.primary.main,
-            },
-            ...(resizing && {
-              backgroundColor: theme.palette.primary.main,
-            })
-          }}
-          onMouseDown={startResize}
-        />
-      )}
-    </Box>
-  );
-
-  // サイドバーの開閉状態が変わった時にアクセシビリティ対応を行う
-  useEffect(() => {
-    const mainContent = document.querySelector('main');
-    if (mainContent && isMobile) {
-      applyAccessibility(mainContent as HTMLElement, open);
-    }
-    return () => {
-      if (mainContent && isMobile) {
-        applyAccessibility(mainContent as HTMLElement, false);
-      }
-    };
-  }, [open, isMobile]);
-
-  // ドロワーの内容コンポーネント - 先に定義する
-  const DrawerContent = () => (
-    <>
-      <Toolbar 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          px: 1,
-          py: 1.5
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar
-            alt="Echoes Learn"
-            src="/logo.png"
-            sx={{ 
-              width: 32, 
-              height: 32, 
-              mr: 1,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              bgcolor: 'background.paper'
-            }}
-          />
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ 
-              fontWeight: 600,
-              fontSize: '1.1rem',
-              background: 'linear-gradient(45deg, #4B8AF0 30%, #7367F0 90%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            Echoes Learn
-          </Typography>
-        </Box>
-        <IconButton onClick={onToggle} sx={{ ml: 1 }}>
-          <ChevronLeftIcon />
-        </IconButton>
-      </Toolbar>
-      <Divider />
       
       <Box sx={{ 
         overflowY: 'auto',
@@ -670,53 +532,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <nav>
-      {/* ヘッダーバー - モバイルとデスクトップ両方で表示 */}
-      <AppBar
-        position="fixed"
-        color="default"
-        elevation={0}
+      {/* フローティングメニューボタン - AppBarの代わり */}
+      <IconButton
+        color="inherit"
+        aria-label="open drawer"
+        edge="start"
+        onClick={onToggle}
+        size="small"
         sx={{
-          bgcolor: theme.palette.mode === 'dark' 
-            ? 'rgba(18, 18, 18, 0.8)' 
-            : 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderBottom: `1px solid ${theme.palette.divider}`,
+          position: 'fixed',
+          top: 12,
+          left: 12,
+          backgroundColor: theme.palette.background.paper,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           zIndex: theme.zIndex.drawer + 1,
+          width: 40, 
+          height: 40,
+          '&:hover': {
+            backgroundColor: theme.palette.action.hover,
+          }
         }}
       >
-        <Toolbar sx={{ 
-          px: { xs: 1, sm: 1.5 },
-          minHeight: { xs: '48px', sm: '56px' }
-        }}>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={onToggle}
-            size="small"
-            sx={{ mr: 1 }}
-          >
-            <MenuIcon fontSize="small" />
-          </IconButton>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar
-              sx={{
-                bgcolor: theme.palette.primary.main,
-                color: theme.palette.primary.contrastText,
-                width: 28,
-                height: 28,
-                mr: 1,
-                fontSize: '0.8rem'
-              }}
-            >
-              E
-            </Avatar>
-            <Typography variant="subtitle2" component="div" sx={{ fontWeight: 'medium' }}>
-              Echoes Learn
-            </Typography>
-          </Box>
-        </Toolbar>
-      </AppBar>
+        <MenuIcon fontSize="small" />
+      </IconButton>
       
       {/* デバイスタイプに応じたドロワーの表示 */}
       {isMobile ? mobileDrawer : desktopDrawer}

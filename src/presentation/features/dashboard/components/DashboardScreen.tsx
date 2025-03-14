@@ -176,7 +176,7 @@ const DashboardScreen: React.FC = () => {
         maxWidth: { xs: '100%', md: 1200 }, 
         mx: 'auto', 
         px: { xs: 0.5, sm: 1, md: 2 }, 
-        pt: { xs: 0, sm: 0 }, 
+        pt: { xs: 5, sm: 5 },  // メニューボタンのスペースを確保
         pb: { xs: 1, sm: 2 }
       }}>
         <Box sx={{ 
