@@ -172,20 +172,22 @@ export class QuotaService {
     // 最大同時並行数まで選択
     const selectedSubjects = subjectsWithScores.slice(0, maxConcurrent);
     
-    // 最高スコアの科目を見つける
+    // 最低スコア閾値を計算（最高スコアの50%を基準とする）
+    // これによりスコアが極端に低い科目は「high」にならないようにする
     const highestScore = selectedSubjects.length > 0 ? selectedSubjects[0].score : 0;
+    const scoreThreshold = highestScore * 0.5; // 最高スコアの50%以上のみ「high」の候補
     
     // 選択された科目から、各科目の優先度を決定
-    // 最高スコアの科目のみ「high」に設定
+    // 全ての並行科目に「high」を割り当てるが、スコア閾値を下回る場合は「medium」にする
     return selectedSubjects.map((item, index) => {
       const updatedSubject = { ...item.subject };
       
-      // 1番目の科目（最高スコア）のみ「high」に設定
-      if (index === 0 && item.score >= highestScore) {
+      // 全ての科目に対して、スコア閾値を超えていれば「high」に設定
+      if (item.score >= scoreThreshold) {
         updatedSubject.priority = 'high';
       } 
-      // 2番目以降で高スコア（トップ科目の80%以上）は「medium」
-      else if (item.score >= highestScore * 0.8 || item.daysRemaining <= 14) {
+      // スコアが閾値未満の場合は「medium」
+      else if (item.daysRemaining <= 30) {
         updatedSubject.priority = 'medium';
       } 
       // それ以外は「low」
