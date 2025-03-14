@@ -48,6 +48,7 @@ import { NotionModuleFactory, NotionModuleType } from './modules/NotionModuleFac
 import ProgressRadarChart from './ProgressRadarChart';
 import NotionLearningAnalysis from './NotionLearningAnalysis';
 import NotionNormaDisplay from './NotionNormaDisplay';
+import NotionSettingsDialog from './NotionSettingsDialog';
 
 // 各モジュールコンポーネントのインポート
 import { StatsOverviewCard } from './StatsOverviewCard';
@@ -796,7 +797,7 @@ export const NotionDashboard: React.FC<NotionDashboardProps> = ({
                             index={index}
                             title={DASHBOARD_MODULES[id]?.title || '不明なモジュール'}
                             icon={icon ? React.createElement(icon) : null}
-                            collapsed={moduleConfig?.collapsed}
+                            defaultCollapsed={moduleConfig?.collapsed}
                             onToggleCollapse={handleToggleCollapse}
                             onToggleVisibility={handleToggleVisibility}
                             isDraggingEnabled={editMode}
@@ -825,7 +826,7 @@ export const NotionDashboard: React.FC<NotionDashboardProps> = ({
         onAddModule={handleAddModule}
       />
 
-      <DashboardSettingsDialog
+      <NotionSettingsDialog
         open={settingsDialogOpen}
         onClose={handleCloseSettingsDialog}
         moduleSettings={moduleSettings}
