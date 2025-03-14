@@ -19,6 +19,11 @@ export function calculatePriority(subjectOrDate: Subject | Date | null, currentP
   if (subjectOrDate && typeof subjectOrDate === 'object' && 'id' in subjectOrDate) {
     const subject = subjectOrDate as Subject;
     
+    // 進捗が100%の場合は優先度を下げる
+    if (subject.currentPage >= subject.totalPages) {
+      return 'low';
+    }
+    
     // 試験日までの日数がない場合
     if (!subject.examDate) {
       return subject.importance === 'high' ? 'medium' : 'low';
@@ -39,6 +44,9 @@ export function calculatePriority(subjectOrDate: Subject | Date | null, currentP
   else {
     const examDate = subjectOrDate as (Date | null);
     if (!examDate || currentPage === undefined || totalPages === undefined) return 0;
+    
+    // 進捗が100%の場合はスコアを大幅に下げる
+    if (currentPage >= totalPages) return 0;
     
     const daysRemaining = calculateDaysRemaining(examDate);
     if (daysRemaining <= 0) return 10; // 試験日が過ぎている場合は最高優先度
@@ -146,6 +154,11 @@ export const getPriorityColor = (priority?: 'high' | 'medium' | 'low'): string =
  * 科目の状態に基づいた色を取得
  */
 export const getStatusColor = (subject: Subject): string => {
+  // 進捗が100%の場合は完了として扱う
+  if (subject.currentPage >= subject.totalPages) {
+    return '#4caf50'; // 完了 (緑色)
+  }
+  
   if (!subject.examDate) return '#9e9e9e'; // 試験日未設定
   
   const daysRemaining = calculateDaysRemaining(subject.examDate);
@@ -167,4 +180,33 @@ export const getStatusColor = (subject: Subject): string => {
   
   // 余裕あり
   return '#2196f3'; // 青
+};
+
+/**
+ * 科目が完了済みかどうかを判定
+ */
+export const isSubjectCompleted = (subject: Subject): boolean => {
+  return subject.currentPage >= subject.totalPages;
+};
+
+/**
+ * 科目の進捗ステータスを文字列で取得
+ */
+export const getProgressStatusText = (subject: Subject): string => {
+  if (isSubjectCompleted(subject)) {
+    return '完了';
+  }
+  
+  const progress = calculateProgress(subject.currentPage, subject.totalPages);
+  if (progress === 0) {
+    return '未着手';
+  } else if (progress < 25) {
+    return '開始';
+  } else if (progress < 50) {
+    return '進行中';
+  } else if (progress < 75) {
+    return '半分以上';
+  } else {
+    return '仕上げ中';
+  }
 }; 
