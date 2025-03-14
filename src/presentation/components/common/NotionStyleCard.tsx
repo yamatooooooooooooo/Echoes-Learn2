@@ -40,25 +40,43 @@ export const NotionStyleCard: React.FC<NotionStyleCardProps> = ({
       sx={{ 
         mb: 3, 
         border: '1px solid #E0E0E0',
+        borderRadius: '4px',
         transition: 'all 0.2s ease',
         '&:hover': {
-          borderColor: '#C0C0C0'
-        }
+          borderColor: '#C0C0C0',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)'
+        },
+        backgroundColor: 'background.paper'
       }}
     >
       <CardHeader
         sx={{ 
           borderBottom: collapsed ? 'none' : '1px solid #F0F0F0',
-          py: 2.5, 
-          px: 3
+          py: 2, 
+          px: { xs: 2, sm: 3 },
+          '& .MuiCardHeader-title': {
+            fontSize: { xs: '0.95rem', sm: '1.05rem' },
+          },
+          '& .MuiCardHeader-subheader': {
+            fontSize: { xs: '0.8rem', sm: '0.85rem' },
+          }
         }}
         avatar={icon && (
-          <Box sx={{ color: 'text.secondary', opacity: 0.8 }}>
+          <Box sx={{ 
+            color: 'text.secondary', 
+            opacity: 0.7,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
             {icon}
           </Box>
         )}
         title={
-          <Typography variant="h6" sx={{ fontWeight: 500 }}>
+          <Typography variant="h6" sx={{ 
+            fontWeight: 500,
+            lineHeight: 1.3
+          }}>
             {title}
           </Typography>
         }
@@ -66,7 +84,14 @@ export const NotionStyleCard: React.FC<NotionStyleCardProps> = ({
           <>
             {headerAction}
             {collapsible && (
-              <IconButton size="small" onClick={() => setCollapsed(!collapsed)}>
+              <IconButton 
+                size="small" 
+                onClick={() => setCollapsed(!collapsed)}
+                sx={{ 
+                  opacity: 0.7,
+                  '&:hover': { opacity: 1, backgroundColor: 'rgba(0, 0, 0, 0.04)' }
+                }}
+              >
                 {collapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
               </IconButton>
             )}
@@ -74,7 +99,11 @@ export const NotionStyleCard: React.FC<NotionStyleCardProps> = ({
         }
       />
       {!collapsed && (
-        <CardContent sx={{ p: 3 }}>
+        <CardContent sx={{ 
+          p: { xs: 2, sm: 3 },
+          pt: { xs: 1.5, sm: 2 },
+          '&:last-child': { pb: { xs: 2, sm: 3 } }
+        }}>
           {children}
         </CardContent>
       )}

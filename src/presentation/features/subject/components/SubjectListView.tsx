@@ -174,17 +174,18 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                 disablePadding 
                 onClick={() => onSubjectEdit && onSubjectEdit(subject)}
                 sx={{ 
-                  py: { xs: 1.5, sm: 2 }, 
-                  px: { xs: 1.5, sm: 2, md: 3 }, 
+                  py: { xs: 1.75, sm: 2 }, 
+                  px: { xs: 1.75, sm: 2, md: 2.5 }, 
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
                     bgcolor: theme.palette.mode === 'dark' 
-                      ? 'rgba(255, 255, 255, 0.05)' 
-                      : 'rgba(0, 0, 0, 0.03)'
+                      ? 'rgba(255, 255, 255, 0.06)' 
+                      : 'rgba(0, 0, 0, 0.02)',
+                    transform: 'translateY(-1px)'
                   },
                   borderLeft: '3px solid',
                   borderColor: `${getPriorityColorClass(subject.priority)}.main`,
-                  transition: 'background-color 0.2s'
                 }}
               >
                 <Box 
@@ -346,7 +347,13 @@ const SubjectListViewComponent: React.FC<SubjectListViewProps> = ({
                 </Box>
               </ListItem>
               
-              {index < subjects.length - 1 && <Divider />}
+              {index < subjects.length - 1 && (
+                <Divider 
+                  sx={{ 
+                    opacity: theme.palette.mode === 'dark' ? 0.1 : 0.6
+                  }} 
+                />
+              )}
             </React.Fragment>
           ))}
         </List>

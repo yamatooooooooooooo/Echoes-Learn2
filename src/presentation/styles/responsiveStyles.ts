@@ -32,23 +32,69 @@ export const responsiveContainerStyles = {
   mainContainer: {
     width: '100%',
     padding: {
-      xs: '16px',
-      sm: '24px',
-      md: '32px',
+      xs: '12px',
+      sm: '20px',
+      md: '28px',
     },
+    maxWidth: {
+      sm: '95%',
+      md: '92%',
+      lg: '1400px'
+    },
+    mx: 'auto',
   },
   cardContainer: {
     padding: {
-      xs: '12px',
-      sm: '16px',
-      md: '24px',
+      xs: '10px',
+      sm: '14px',
+      md: '20px',
     },
+    borderRadius: {
+      xs: '4px',
+      sm: '6px'
+    }
   },
   flexCenter: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  flexColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  flexBetween: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  gridContainer: {
+    display: 'grid',
+    gridGap: {
+      xs: '16px',
+      sm: '24px',
+      md: '32px'
+    },
+    gridTemplateColumns: {
+      xs: '1fr',
+      sm: 'repeat(auto-fill, minmax(280px, 1fr))',
+      md: 'repeat(auto-fill, minmax(320px, 1fr))'
+    }
+  },
+  // タッチデバイス向けの調整
+  touchFriendly: {
+    button: {
+      minHeight: '44px',
+      minWidth: '44px'
+    },
+    input: {
+      padding: '12px',
+      fontSize: '16px' // iOSでの自動ズームを防止
+    },
+    clickableArea: {
+      padding: '12px'
+    }
+  }
 };
 
 // レスポンシブデータ可視化スタイル
