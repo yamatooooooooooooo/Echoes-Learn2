@@ -172,6 +172,9 @@ const QuickInputButtons = memo(
   )
 );
 
+// displayNameを設定
+QuickInputButtons.displayName = 'QuickInputButtons';
+
 /**
  * 進捗記録フォームコンポーネント
  */

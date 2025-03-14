@@ -200,7 +200,7 @@ export const LearningAnalyticsCard: React.FC<LearningAnalyticsCardProps> = ({
   }, [subjectPerformances]);
 
   // 最適な学習時間帯を算出
-  const optimalStudyTimes = useMemo(() => {
+  const optimalStudyTimes: string[] = useMemo(() => {
     const sortedTimes = [...timeOfDayEfficiency].sort((a, b) => b.効率 - a.効率);
     return sortedTimes
       .filter((time) => time.効率 > 0)
@@ -210,7 +210,7 @@ export const LearningAnalyticsCard: React.FC<LearningAnalyticsCardProps> = ({
 
   // 学習推奨事項の生成
   const recommendations = useMemo(() => {
-    const recs = [];
+    const recs: string[] = [];
 
     // 最適な時間帯の提案
     if (optimalStudyTimes.length > 0) {

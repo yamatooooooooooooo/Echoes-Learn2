@@ -22,10 +22,12 @@ const NotionNormaDisplay: React.FC<NotionNormaDisplayProps> = ({ userId }) => {
 
   return (
     <Box sx={{ height: '100%' }}>
-      {/* @ts-ignore - NormaDisplayがuserIdプロパティを持っていなくても強制的に渡す */}
-      <NormaDisplay userId={userId} />
+      <NormaDisplay userId={userId as any} />
     </Box>
   );
 };
+
+// displayNameを設定
+NotionNormaDisplay.displayName = 'NotionNormaDisplay';
 
 export default NotionNormaDisplay; 

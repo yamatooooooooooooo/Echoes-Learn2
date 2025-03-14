@@ -25,10 +25,12 @@ const NotionLearningAnalysis: React.FC<NotionLearningAnalysisProps> = ({ userId 
 
   return (
     <Box sx={{ height: '100%' }}>
-      {/* @ts-ignore - LearningAnalysisがuserIdプロパティを持っていなくても強制的に渡す */}
-      <LearningAnalysis userId={userId} />
+      <LearningAnalysis userId={userId as any} />
     </Box>
   );
 };
+
+// displayNameを設定
+NotionLearningAnalysis.displayName = 'NotionLearningAnalysis';
 
 export default NotionLearningAnalysis; 
