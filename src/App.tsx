@@ -167,26 +167,45 @@ const App: React.FC = () => {
                   }),
                 }),
                 height: '100vh',
-                overflow: 'auto', // メインコンテナでのみスクロールを許可
+                overflow: 'hidden', // コンテナ自体はオーバーフローを隠す
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
-                paddingTop: { xs: 0, sm: 0, md: 0 },
+                paddingTop: 0,
                 marginTop: 0
               }}
             >
-              {/* スクロール可能なコンテンツエリア - シンプルに変更 */}
+              {/* スクロール可能なコンテンツエリア - 最適化 */}
               <Box 
                 sx={{ 
-                  padding: { xs: 1, sm: 2, md: 3 },
-                  paddingTop: { xs: 12, sm: 12, md: 12 }, // パディングを調整
-                  paddingBottom: { xs: 80, sm: 40, md: 20 }, // パディングを調整
+                  // デバイスサイズに応じたパディングの最適化
+                  padding: { xs: 1, sm: 2, md: 3, lg: 4 },
+                  // 上部のパディングを調整（モバイルでは小さく）
+                  paddingTop: { xs: 2, sm: 3, md: 4 },
+                  // 下部のパディングも最適化（スクロール時のスペース確保）
+                  paddingBottom: { xs: 20, sm: 16, md: 12 },
                   flexGrow: 1,
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
-                  minHeight: '100vh',
-                  overflow: 'visible' // 内部コンテナではスクロールを無効化
+                  height: '100%',
+                  // スクロールを有効化して柔軟なレイアウトに
+                  overflow: 'auto',
+                  // スクロールバーのカスタマイズ
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
+                    height: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    backgroundColor: theme.palette.background.default,
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: theme.palette.divider,
+                    borderRadius: '4px',
+                    '&:hover': {
+                      backgroundColor: theme.palette.action.hover,
+                    }
+                  }
                 }}
               >
                 <NavigationContext.Provider value={{ navigateTo }}>

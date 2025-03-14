@@ -172,16 +172,36 @@ const DashboardScreen: React.FC = () => {
   
   return (
     <Box sx={{ overflowX: 'hidden' }}>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', px: isMobile ? 2 : 3, pt: 3, pb: 6 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1" sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ 
+        maxWidth: { xs: '100%', md: 1200 }, 
+        mx: 'auto', 
+        px: { xs: 1, sm: 2, md: 3 }, 
+        pt: { xs: 2, sm: 3 }, 
+        pb: { xs: 4, sm: 6 }
+      }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: { xs: 2, sm: 3 },
+          flexWrap: 'wrap'
+        }}>
+          <Typography 
+            variant={isMobile ? "h5" : "h4"} 
+            component="h1" 
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              mb: isMobile ? 1 : 0 
+            }}
+          >
             <DashboardIcon sx={{ mr: 1 }} />
             ダッシュボード
           </Typography>
           
-          <Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <Tooltip title="表示設定">
-              <IconButton onClick={handleOpenMenu}>
+              <IconButton onClick={handleOpenMenu} size={isMobile ? "small" : "medium"}>
                 <SettingsIcon />
               </IconButton>
             </Tooltip>
@@ -207,7 +227,13 @@ const DashboardScreen: React.FC = () => {
           {/* データ可視化セクション - 最上部に移動 */}
           {settings.visualization && (
             <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
+              <Paper sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                borderRadius: 2,
+                boxShadow: (theme) => theme.shadows[isMobile ? 1 : 2],
+                // アニメーションを追加して表示をスムーズに
+                transition: 'all 0.3s ease-in-out'
+              }}>
                 <CardHeader
                   title="データ可視化"
                   subtitle="学習進捗と試験準備の状況を視覚的に確認できます"
@@ -220,41 +246,64 @@ const DashboardScreen: React.FC = () => {
             </Grid>
           )}
           
-          {/* 試験スケジュールカード */}
-          {settings.upcomingExams && (
-            <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
-                <CardHeader
-                  title="試験スケジュール"
-                  isVisible={settings.upcomingExams}
-                  onToggleVisibility={() => toggleCard('upcomingExams')}
-                />
-                <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
-              </Paper>
+          {/* 試験スケジュールとレポート締切を横並びに（タブレット以上のサイズで） */}
+          <Grid item>
+            <Grid container spacing={2}>
+              {/* 試験スケジュールカード */}
+              {settings.upcomingExams && (
+                <Grid item xs={12} md={settings.deadlines ? 6 : 12}>
+                  <Paper sx={{ 
+                    p: { xs: 2, sm: 3 }, 
+                    borderRadius: 2,
+                    height: '100%',
+                    boxShadow: (theme) => theme.shadows[isMobile ? 1 : 2],
+                    transition: 'all 0.3s ease-in-out'
+                  }}>
+                    <CardHeader
+                      title="試験スケジュール"
+                      isVisible={settings.upcomingExams}
+                      onToggleVisibility={() => toggleCard('upcomingExams')}
+                    />
+                    <UpcomingExamsCard subjects={dashboardData?.subjects || []} />
+                  </Paper>
+                </Grid>
+              )}
+              
+              {/* レポート締切カード */}
+              {settings.deadlines && (
+                <Grid item xs={12} md={settings.upcomingExams ? 6 : 12}>
+                  <Paper sx={{ 
+                    p: { xs: 2, sm: 3 }, 
+                    borderRadius: 2,
+                    height: '100%',
+                    boxShadow: (theme) => theme.shadows[isMobile ? 1 : 2],
+                    transition: 'all 0.3s ease-in-out'
+                  }}>
+                    <CardHeader
+                      title="レポート締切"
+                      isVisible={settings.deadlines}
+                      onToggleVisibility={() => toggleCard('deadlines')}
+                    />
+                    <DeadlinesCard subjects={dashboardData?.subjects || []} />
+                  </Paper>
+                </Grid>
+              )}
             </Grid>
-          )}
-          
-          {/* レポート締切カード */}
-          {settings.deadlines && (
-            <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
-                <CardHeader
-                  title="レポート締切"
-                  isVisible={settings.deadlines}
-                  onToggleVisibility={() => toggleCard('deadlines')}
-                />
-                <DeadlinesCard subjects={dashboardData?.subjects || []} />
-              </Paper>
-            </Grid>
-          )}
+          </Grid>
           
           {/* ノルマカードのコンテナ */}
           <Grid item>
             <Grid container spacing={2}>
               {/* 日次ノルマカード */}
               {settings.dailyQuota && (
-                <Grid item xs={12} md={6}>
-                  <Paper sx={{ /* existing styles */ }}>
+                <Grid item xs={12} sm={6} lg={settings.weeklyQuota ? 6 : 12}>
+                  <Paper sx={{ 
+                    p: { xs: 2, sm: 3 }, 
+                    borderRadius: 2,
+                    height: '100%',
+                    boxShadow: (theme) => theme.shadows[isMobile ? 1 : 2],
+                    transition: 'all 0.3s ease-in-out'
+                  }}>
                     <CardHeader
                       title="日次ノルマ"
                       isVisible={settings.dailyQuota}
@@ -270,8 +319,14 @@ const DashboardScreen: React.FC = () => {
               
               {/* 週次ノルマカード */}
               {settings.weeklyQuota && (
-                <Grid item xs={12} md={6}>
-                  <Paper sx={{ /* existing styles */ }}>
+                <Grid item xs={12} sm={6} lg={settings.dailyQuota ? 6 : 12}>
+                  <Paper sx={{ 
+                    p: { xs: 2, sm: 3 }, 
+                    borderRadius: 2,
+                    height: '100%',
+                    boxShadow: (theme) => theme.shadows[isMobile ? 1 : 2],
+                    transition: 'all 0.3s ease-in-out'
+                  }}>
                     <CardHeader
                       title="週次ノルマ"
                       isVisible={settings.weeklyQuota}
@@ -289,7 +344,12 @@ const DashboardScreen: React.FC = () => {
           
           {settings.progressBar && (
             <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
+              <Paper sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                borderRadius: 2,
+                boxShadow: (theme) => theme.shadows[isMobile ? 1 : 2],
+                transition: 'all 0.3s ease-in-out'
+              }}>
                 <CardHeader
                   title="進捗状況"
                   isVisible={settings.progressBar}
@@ -306,7 +366,12 @@ const DashboardScreen: React.FC = () => {
           {/* 最近の進捗 */}
           {settings.recentProgress && dashboardData?.recentProgress && dashboardData.recentProgress.length > 0 && (
             <Grid item>
-              <Paper sx={{ /* existing styles */ }}>
+              <Paper sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                borderRadius: 2,
+                boxShadow: (theme) => theme.shadows[isMobile ? 1 : 2],
+                transition: 'all 0.3s ease-in-out'
+              }}>
                 <CardHeader
                   title="最近の進捗"
                   isVisible={settings.recentProgress}
